@@ -1,0 +1,2119 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import { getCollection } from "astro:content";
+const posts = await getCollection("posts");
+const has = (c: string) => (p: any) => p.data.tags.map((t: string) => t.toLowerCase()).includes(c);
+const pc = {
+  total: posts.length,
+  ai: posts.filter(has("ai")).length,
+  search_engine: posts.filter(has("search engine")).length,
+  full_stack: posts.filter(has("full stack")).length,
+  devops: posts.filter(has("devops")).length,
+};
+---
+
+<Layout title="Sungjun Son — AI Engineer Portfolio | SON BLOG">
+  <main class="portfolio-root">
+<!-- ============================================
+     Section 1: Hero
+     ============================================ -->
+<section class="pf-hero">
+  <div class="pf-hero-mesh"></div>
+  <div class="pf-hero-inner">
+    <p class="pf-hero-greeting">AI Engineer</p>
+    <h1 class="pf-hero-name">Sungjun Son</h1>
+    <p class="pf-hero-keywords">LLM Serving &middot; Search Engine &middot; Full Stack &middot; DevOps</p>
+    <div class="pf-hero-stats">
+      <div class="pf-hero-stat">
+        <span class="pf-hero-stat-num">{pc.total}+</span>
+        <span class="pf-hero-stat-label">Tech Articles</span>
+      </div>
+      <div class="pf-hero-stat">
+        <span class="pf-hero-stat-num">4</span>
+        <span class="pf-hero-stat-label">Domains</span>
+      </div>
+      <div class="pf-hero-stat">
+        <span class="pf-hero-stat-num">4+</span>
+        <span class="pf-hero-stat-label">Years</span>
+      </div>
+    </div>
+    <p class="pf-hero-emails">sonsj97@plateer.com · sonsj97@gmail.com</p>
+    <div class="pf-hero-socials">
+      <a href="https://github.com/SonAIengine" class="pf-social-icon" target="_blank" rel="noopener" title="GitHub">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+      </a>
+      <a href="https://dev.to/sonaiengine" class="pf-social-icon" target="_blank" rel="noopener" title="Dev.to">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7.42 10.05c-.18-.16-.46-.23-.84-.23H6v4.36h.58c.37 0 .67-.08.84-.23.2-.17.31-.47.31-.95v-2c0-.49-.12-.8-.31-.95zm13.37-7.73H3.2A2.13 2.13 0 001 4.42v15.16c0 1.16.96 2.1 2.15 2.1H20.8c1.2 0 2.15-.94 2.15-2.1V4.42c.05-1.16-.9-2.1-2.16-2.1zM8.71 14.42c0 .93-.68 1.78-1.78 1.78H4.8V7.8h2.13c1.09 0 1.78.85 1.78 1.78v4.84zm4.5-4.83h-2.3v1.77h1.4v1.33h-1.4v1.77h2.3v1.33h-2.63c-.74.03-1.36-.53-1.4-1.27V9.14c-.03-.74.56-1.37 1.3-1.4h2.73v1.85zm5.62 5.42c-.46 1.07-1.33 1.25-1.9.38l-1.43-5.6v5.6h-1.6V7.8h1.6l1.43 5.42V7.8h1.6v8.62z"/></svg>
+      </a>
+    </div>
+    <div class="pf-hero-links">
+      <a href="/sonblog-astro/" class="pf-hero-btn pf-hero-btn--primary">Blog</a>
+      <a href="/sonblog-astro/" class="pf-hero-btn">Knowledge Graph</a>
+      <a href="/sonblog-astro/portfolio/" class="pf-hero-btn pf-hero-btn--lang">한국어</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================
+     Section 2: About
+     ============================================ -->
+<section class="pf-section">
+  <div class="pf-section-header">
+    <span class="pf-section-num">01.</span>
+    <h2 class="pf-section-title">About</h2>
+    <div class="pf-section-line"></div>
+  </div>
+  <div class="pf-about">
+    <p class="pf-about-text">
+      I started with commerce search engines.
+      I put OpenSearch keyword search into a live service handling 5,000+ TPS, then rewrote it in Rust to bring response time down to 28ms.
+      To improve search quality, I introduced OpenSearch k-NN and Qdrant hybrid search along with LLM query expansion, expanding into AI Search.
+    </p>
+    <p class="pf-about-text">
+      Since then I have been leading the development of an AI agent platform (XGEN 2.0).
+      From vLLM/llama.cpp-based multi-GPU (CUDA, ROCm) LLM serving, LangChain/LangGraph-based Iterative RAG,
+      a GraphDB knowledge graph, and MCP-based AI agents, to a workflow engine&mdash;
+      I build and operate the entire stack of an AI service: from search to inference, automation, and infrastructure,
+      running 7 microservices on Kubernetes/ArgoCD GitOps.
+    </p>
+    <p class="pf-about-text">
+      Recently I have been focusing on the MCP (Model Context Protocol) ecosystem.
+      I develop <a href="/sonblog-astro/posts/ai/agent/graph-tool-call-llm-agent-graph-based-tool-search-engine/">graph-tool-call</a>, an open-source engine that searches 1,000+ API tools on a graph,
+      and operate <a href="/sonblog-astro/posts/ai/agent/gwanjong-mcp-ai-social-agent-mcp-system-design-impl/">gwanjong-mcp</a>, an agent that automates 9 social platforms through an MCP pipeline.
+      From AI tool retrieval and social automation to a work knowledge base&mdash;I design and operate MCP in production.
+    </p>
+    <div class="pf-chips-group">
+      <div class="pf-chips-row">
+        <span class="pf-chips-label">Languages</span>
+        <span class="pf-chip">Rust</span>
+        <span class="pf-chip">Python</span>
+        <span class="pf-chip">TypeScript</span>
+        <span class="pf-chip">Go</span>
+      </div>
+      <div class="pf-chips-row">
+        <span class="pf-chips-label">Frameworks</span>
+        <span class="pf-chip">NestJS</span>
+        <span class="pf-chip">Next.js</span>
+        <span class="pf-chip">FastAPI</span>
+        <span class="pf-chip">Axum</span>
+        <span class="pf-chip">Tauri</span>
+        <span class="pf-chip">React</span>
+      </div>
+      <div class="pf-chips-row">
+        <span class="pf-chips-label">AI / ML</span>
+        <span class="pf-chip">vLLM</span>
+        <span class="pf-chip">llama.cpp</span>
+        <span class="pf-chip">Qdrant</span>
+        <span class="pf-chip">OpenSearch</span>
+        <span class="pf-chip">HuggingFace</span>
+        <span class="pf-chip">LangChain</span>
+        <span class="pf-chip">LangGraph</span>
+        <span class="pf-chip">MCP</span>
+      </div>
+      <div class="pf-chips-row">
+        <span class="pf-chips-label">Infra</span>
+        <span class="pf-chip">Kubernetes</span>
+        <span class="pf-chip">Docker</span>
+        <span class="pf-chip">ArgoCD</span>
+        <span class="pf-chip">Jenkins</span>
+        <span class="pf-chip">Redis</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================
+     Section 3: Expertise
+     ============================================ -->
+<section class="pf-section">
+  <div class="pf-section-header">
+    <span class="pf-section-num">02.</span>
+    <h2 class="pf-section-title">Expertise</h2>
+    <div class="pf-section-line"></div>
+  </div>
+  <div class="pf-expertise-grid">
+    <a href="/sonblog-astro/posts/search-engine/" class="pf-expertise-card">
+      <div class="pf-expertise-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      </div>
+      <h3>Search Engine</h3>
+      <span class="pf-card-count">{pc.search_engine} posts</span>
+      <ul class="pf-card-techs">
+        <li>OpenSearch k-NN / Hybrid Search</li>
+        <li>Qdrant Vector DB</li>
+        <li>Rust Axum Search API</li>
+        <li>NestJS Hybrid Search</li>
+        <li>RAG / Semantic Search</li>
+      </ul>
+    </a>
+    <a href="/sonblog-astro/posts/ai/" class="pf-expertise-card">
+      <div class="pf-expertise-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2a4 4 0 014 4v1a4 4 0 01-8 0V6a4 4 0 014-4z"/><path d="M6 10v1a6 6 0 0012 0v-1"/><path d="M12 17v4m-4 0h8"/></svg>
+      </div>
+      <h3>AI / ML</h3>
+      <span class="pf-card-count">{pc.ai} posts</span>
+      <ul class="pf-card-techs">
+        <li>vLLM / llama.cpp GPU Serving</li>
+        <li>MCP-based AI Agent Design</li>
+        <li>Graph-based Tool Retrieval Engine</li>
+        <li>LangChain / LangGraph RAG</li>
+        <li>XGEN AI Agent Platform</li>
+      </ul>
+    </a>
+    <a href="/sonblog-astro/posts/full-stack/" class="pf-expertise-card">
+      <div class="pf-expertise-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></svg>
+      </div>
+      <h3>Full Stack</h3>
+      <span class="pf-card-count">{pc.full_stack} posts</span>
+      <ul class="pf-card-techs">
+        <li>Next.js / React UI</li>
+        <li>Rust API Gateway</li>
+        <li>Tauri Desktop App</li>
+        <li>Python Async Services</li>
+        <li>WebSocket / SSE Realtime</li>
+      </ul>
+    </a>
+    <a href="/sonblog-astro/posts/devops/" class="pf-expertise-card">
+      <div class="pf-expertise-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      </div>
+      <h3>DevOps</h3>
+      <span class="pf-card-count">{pc.devops} posts</span>
+      <ul class="pf-card-techs">
+        <li>K8s / K3s Cluster Operations</li>
+        <li>ArgoCD GitOps Deployment</li>
+        <li>Jenkins CI/CD Pipeline</li>
+        <li>Docker Multi-stage Build</li>
+        <li>Istio / Let's Encrypt</li>
+      </ul>
+    </a>
+  </div>
+</section>
+
+<!-- ============================================
+     Section 4: Projects
+     ============================================ -->
+<section class="pf-section">
+  <div class="pf-section-header">
+    <span class="pf-section-num">03.</span>
+    <h2 class="pf-section-title">Projects</h2>
+    <div class="pf-section-line"></div>
+  </div>
+
+  <!-- Featured Project -->
+  <a href="/sonblog-astro/posts/ai/XGEN/xgen-2-0-model-serving-integration-architecture-refactoring/" class="pf-project pf-project--featured" data-spotlight>
+    <div class="pf-project-glow"></div>
+    <div class="pf-project-content">
+      <div class="pf-project-top">
+        <span class="pf-project-label">Featured Project</span>
+        <span class="pf-project-posts">40+ related posts</span>
+      </div>
+      <h3>XGEN 2.0 &mdash; AI Agent Platform</h3>
+      <div class="pf-project-tags">
+        <span class="pf-tag pf-tag--search">Search</span>
+        <span class="pf-tag pf-tag--ai">AI/ML</span>
+        <span class="pf-tag pf-tag--fullstack">Full Stack</span>
+        <span class="pf-tag pf-tag--devops">DevOps</span>
+      </div>
+      <p class="pf-project-desc">
+        An enterprise AI agent platform built from 7 microservices (Model Serving, API Gateway, Core, Workflow, Retrieval, Documents, Frontend).
+        A 4-tier Backend Adapter pattern auto-detects NVIDIA CUDA / AMD ROCm / Vulkan GPUs and dynamically switches vLLM and llama.cpp backends, serving up to 20 models concurrently on a single server.
+        An Iterative RAG pipeline (query expansion &rarr; large top-100 retrieval &rarr; iterative LLM filtering &rarr; compression) improved search accuracy over a simple top-k baseline,
+        and hybrid search (Dense + BM25 Sparse) was applied using Qdrant Prefetch + RRF (Reciprocal Rank Fusion).
+      </p>
+      <ul class="pf-project-highlights">
+        <li><strong>15x higher LLM inference throughput</strong> vs. Transformers (12.5 &rarr; 185.3 tokens/sec, vLLM PagedAttention + Continuous Batching)</li>
+        <li>3x faster container startup (45s &rarr; 15s), 20% less memory &mdash; after removing Ray Serve and moving to a single FastAPI process</li>
+        <li>3.75x faster embedding (45s &rarr; 12s for a 10MB PDF) &mdash; Switch-Backend dual mode + batch size 512 &rarr; 2048</li>
+        <li>ArgoCD GitOps pipeline cut deploy time 15min &rarr; 3min, 30s rollback, 90% fewer deploy errors, 99.9% availability</li>
+        <li>Enterprise RBAC (5-level role hierarchy) + full API I/O audit logging + MCP tool-level permission control</li>
+      </ul>
+      <div class="pf-project-stack-row">
+        <span class="pf-stack-item">Python</span>
+        <span class="pf-stack-item">Rust</span>
+        <span class="pf-stack-item">TypeScript</span>
+        <span class="pf-stack-item">K8s / K3s</span>
+        <span class="pf-stack-item">vLLM</span>
+        <span class="pf-stack-item">llama.cpp</span>
+        <span class="pf-stack-item">Qdrant</span>
+        <span class="pf-stack-item">FastAPI</span>
+        <span class="pf-stack-item">Next.js</span>
+        <span class="pf-stack-item">ArgoCD</span>
+      </div>
+    </div>
+  </a>
+
+  <!-- Project Grid -->
+  <div class="pf-project-grid" data-spotlight-grid>
+    <a href="/sonblog-astro/posts/ai/agent/graph-tool-call-llm-agent-graph-based-tool-search-engine/" class="pf-project" data-spotlight>
+      <div class="pf-project-content">
+        <div class="pf-project-top">
+          <span class="pf-tag pf-tag--ai">AI/ML</span>
+          <span class="pf-project-posts">4 posts</span>
+        </div>
+        <h3>graph-tool-call &mdash; Graph Tool Retrieval Engine</h3>
+        <p class="pf-project-desc">
+          A graph-based retrieval engine that lets an LLM precisely find the tool it needs among 1,000+ API tools.
+          It parses OpenAPI specs to build a 3-tier weighted graph (Tag &rarr; Operation &rarr; Parameter),
+          and achieves higher accuracy than Vector/BM25 via BFS propagation + IDF weighting.
+          An MCP Proxy mode provides a gateway that collapses many MCP servers into just 2 meta-tools.
+        </p>
+        <ul class="pf-project-highlights">
+          <li>On a 1,068-tool benchmark, <strong>2x recall and 40% higher accuracy</strong> vs. Vector</li>
+          <li>MCP Proxy gateway mode &mdash; N MCP servers collapsed into 2 meta-tools (1-hop direct calling)</li>
+          <li>Workflow chain engine &mdash; auto-composes multi-step tool calls into a DAG</li>
+        </ul>
+        <div class="pf-project-stack-row">
+          <span class="pf-stack-item">Python</span>
+          <span class="pf-stack-item">MCP</span>
+          <span class="pf-stack-item">OpenAPI</span>
+          <span class="pf-stack-item">Graph</span>
+          <span class="pf-stack-item">BFS</span>
+          <span class="pf-stack-item">PyPI</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="/sonblog-astro/posts/ai/agent/gwanjong-mcp-ai-social-agent-mcp-system-design-impl/" class="pf-project" data-spotlight>
+      <div class="pf-project-content">
+        <div class="pf-project-top">
+          <span class="pf-tag pf-tag--ai">AI/ML</span>
+          <span class="pf-tag pf-tag--fullstack">Full Stack</span>
+          <span class="pf-project-posts">2 posts</span>
+        </div>
+        <h3>gwanjong-mcp &mdash; AI Social Agent</h3>
+        <p class="pf-project-desc">
+          An AI social agent that automates 9 social platforms (Dev.to, Bluesky, Twitter, Reddit, Mastodon, HN, Stack Overflow, GitHub Discussions, Discourse)
+          through an MCP pipeline.
+          Platforms are abstracted with the devhub-social adapter pattern, and the mcp-pipeline stores/requires chain composes a 3-stage Scout &rarr; Draft &rarr; Strike pipeline.
+        </p>
+        <ul class="pf-project-highlights">
+          <li>Scaled 4 &rarr; 9 platforms &mdash; adapter pattern minimizes per-platform code</li>
+          <li>stores/requires chain auto-resolves dependencies across multi-step pipelines</li>
+          <li>Campaign GTM + anti-spam system &mdash; rate limiter, content validation, per-platform policy compliance</li>
+        </ul>
+        <div class="pf-project-stack-row">
+          <span class="pf-stack-item">Python</span>
+          <span class="pf-stack-item">MCP</span>
+          <span class="pf-stack-item">TypeScript</span>
+          <span class="pf-stack-item">9 Platforms</span>
+          <span class="pf-stack-item">Pipeline</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="https://github.com/PlateerLab/synaptic-memory" class="pf-project" data-spotlight target="_blank" rel="noopener">
+      <div class="pf-project-content">
+        <div class="pf-project-top">
+          <span class="pf-tag pf-tag--ai">AI/ML</span>
+          <span class="pf-project-posts">PyPI</span>
+        </div>
+        <h3>Synaptic Memory &mdash; Brain-inspired Knowledge Graph</h3>
+        <p class="pf-project-desc">
+          A brain-inspired knowledge graph library + MCP server for LLM agents.
+          With Spreading Activation (associative retrieval), Hebbian Learning (experiential learning), and 4-stage Memory Consolidation (L0~L3 auto promotion/eviction),
+          agents automatically structure and retrieve past experience.
+          It reached MRR 0.793 (finance/medical/legal) with FTS alone, and HotPotQA nDCG 0.636.
+        </p>
+        <ul class="pf-project-highlights">
+          <li>16 MCP tools &mdash; Auto-ontology (rules + LLM + embedding) construction</li>
+          <li>5-axis ranking (relevance &times; importance &times; recency &times; vitality &times; context)</li>
+          <li>Zero-dep core &mdash; swappable SQLite/PostgreSQL/Qdrant/Neo4j backends</li>
+        </ul>
+        <div class="pf-project-stack-row">
+          <span class="pf-stack-item">Python</span>
+          <span class="pf-stack-item">MCP</span>
+          <span class="pf-stack-item">Knowledge Graph</span>
+          <span class="pf-stack-item">Hebbian</span>
+          <span class="pf-stack-item">PyPI</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="/sonblog-astro/posts/search-engine/rust-search/rust-commerce-search-engine-build/" class="pf-project" data-spotlight>
+      <div class="pf-project-content">
+        <div class="pf-project-top">
+          <span class="pf-tag pf-tag--search">Search</span>
+          <span class="pf-project-posts">12 posts</span>
+        </div>
+        <h3>Rust Commerce Search Engine</h3>
+        <p class="pf-project-desc">
+          A commerce search API server rewritten in Rust/Axum to overcome the performance limits of a NestJS search engine.
+          It implements concurrent multi-index OpenSearch search, Redis caching, and unified search across multiple data sources (products/brands/categories).
+          Achieved 1/5 the memory, 30% faster response, and 2x indexing throughput vs. NestJS.
+        </p>
+        <ul class="pf-project-highlights">
+          <li>28ms average response, 2,100 req/s &mdash; Tokio async runtime + Tower middleware</li>
+          <li>12MB idle memory (vs. 60MB on NestJS, 1/5) &mdash; leveraging zero-cost abstractions</li>
+          <li>Jenkins &rarr; Docker &rarr; K8s automated deployment pipeline</li>
+        </ul>
+        <div class="pf-project-stack-row">
+          <span class="pf-stack-item">Rust</span>
+          <span class="pf-stack-item">Axum</span>
+          <span class="pf-stack-item">Tokio</span>
+          <span class="pf-stack-item">OpenSearch</span>
+          <span class="pf-stack-item">Redis</span>
+          <span class="pf-stack-item">Docker</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="/sonblog-astro/posts/ai/agent/ai-agent-based-browser-automation-system-setup/" class="pf-project" data-spotlight>
+      <div class="pf-project-content">
+        <div class="pf-project-top">
+          <span class="pf-tag pf-tag--ai">AI/ML</span>
+          <span class="pf-project-posts">15 posts</span>
+        </div>
+        <h3>AI Agent Browser Automation</h3>
+        <p class="pf-project-desc">
+          An LLM-based browser automation agent with a 4-layer architecture (Orchestrator &rarr; Planner &rarr; Navigator &rarr; Extractor).
+          It dynamically registers tools via MCP, and combines Playwright-based DOM parsing with CSS-selector confidence scoring
+          to build automation that is robust to web structure changes. Built from prototype to production in 49 commits over 4 days.
+        </p>
+        <ul class="pf-project-highlights">
+          <li>Human-in-the-Loop raised task completion from 30% &rarr; 95%</li>
+          <li>5.5x fewer MCP tool calls &mdash; DOM context pre-injected at the planning stage</li>
+          <li>No-code automation: scenario recorder &rarr; JSON playbook &rarr; repeatable execution</li>
+        </ul>
+        <div class="pf-project-stack-row">
+          <span class="pf-stack-item">TypeScript</span>
+          <span class="pf-stack-item">Python</span>
+          <span class="pf-stack-item">Playwright</span>
+          <span class="pf-stack-item">MCP</span>
+          <span class="pf-stack-item">LLM</span>
+          <span class="pf-stack-item">Next.js</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="/sonblog-astro/posts/search-engine/nestjs-search/semantic-search-keyword-search-hybrid-strategy/" class="pf-project" data-spotlight>
+      <div class="pf-project-content">
+        <div class="pf-project-top">
+          <span class="pf-tag pf-tag--search">Search</span>
+          <span class="pf-project-posts">10 posts</span>
+        </div>
+        <h3>NestJS Hybrid Search Engine</h3>
+        <p class="pf-project-desc">
+          A commerce hybrid search engine grown over 14 months and 318 commits.
+          It combines OpenSearch keyword search with Qdrant 384-dimensional vector semantic search via RRF,
+          and improved search accuracy by 40% through LLM-based query expansion (synonyms/intent analysis) and a reranking pipeline.
+          A Nori morphological analyzer detects Korean verbs to skip unnecessary GPT calls, cutting response time from 2~3s to 300ms.
+        </p>
+        <ul class="pf-project-highlights">
+          <li>40% higher search accuracy from semantic search (resolving keyword mismatch)</li>
+          <li>Nori verb detection optimizes GPT calls &mdash; 2~3s &rarr; 300ms response</li>
+          <li>Multi-tenant index design &mdash; multiple mall search services on a single cluster</li>
+        </ul>
+        <div class="pf-project-stack-row">
+          <span class="pf-stack-item">NestJS</span>
+          <span class="pf-stack-item">OpenSearch</span>
+          <span class="pf-stack-item">Qdrant</span>
+          <span class="pf-stack-item">Nori</span>
+          <span class="pf-stack-item">Python</span>
+          <span class="pf-stack-item">FastEmbed</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="/sonblog-astro/posts/full-stack/desktop/remote-webview-architecture-local-app-remote-server-integration/" class="pf-project" data-spotlight>
+      <div class="pf-project-content">
+        <div class="pf-project-top">
+          <span class="pf-tag pf-tag--fullstack">Full Stack</span>
+          <span class="pf-project-posts">10 posts</span>
+        </div>
+        <h3>Tauri 2.0 AI Desktop App</h3>
+        <p class="pf-project-desc">
+          A Tauri 2.0 cross-platform AI desktop app with 1/10 the binary size and 1/3 the memory of Electron.
+          A Remote WebView architecture renders a remote server UI directly in the local app without a frontend build,
+          and it implements mistral.rs-based local LLM inference, NAT traversal via a Bore tunnel, and automatic switching between 3 operating modes (local/remote/hybrid).
+        </p>
+        <ul class="pf-project-highlights">
+          <li>Rust Sidecar pattern &mdash; Python services auto start/stop with the app</li>
+          <li>Remote WebView removes the frontend build &mdash; shorter deploy time</li>
+          <li>Custom-built mistral.rs local LLM inference + Bore tunnel NAT traversal</li>
+        </ul>
+        <div class="pf-project-stack-row">
+          <span class="pf-stack-item">Tauri 2.0</span>
+          <span class="pf-stack-item">Rust</span>
+          <span class="pf-stack-item">React</span>
+          <span class="pf-stack-item">TypeScript</span>
+          <span class="pf-stack-item">mistral.rs</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="/sonblog-astro/posts/portfolio/search/ai-search-setup-case/" class="pf-project" data-spotlight>
+      <div class="pf-project-content">
+        <div class="pf-project-top">
+          <span class="pf-tag pf-tag--search">Search</span>
+          <span class="pf-tag pf-tag--ai">AI/ML</span>
+          <span class="pf-project-posts">Case Study</span>
+        </div>
+        <h3>i-Scream Mall AI Search</h3>
+        <p class="pf-project-desc">
+          A case study of building and operating an AI search system in production for an education-focused shopping mall (i-Scream Mall).
+          Semantic search + LLM query expansion were applied on a NestJS search engine to improve product search accuracy.
+          It reliably handles 5,000+ TPS peak traffic, and a later Rust rewrite further cut operating costs.
+        </p>
+        <ul class="pf-project-highlights">
+          <li>Stable handling of 5,000+ TPS peak traffic &mdash; zero-downtime production operation</li>
+          <li>Semantic search resolves keyword mismatch &mdash; improved search conversion</li>
+          <li>NestJS &rarr; Rust rewrite cut memory to 1/5 and improved response 30%</li>
+        </ul>
+        <div class="pf-project-stack-row">
+          <span class="pf-stack-item">NestJS</span>
+          <span class="pf-stack-item">Rust</span>
+          <span class="pf-stack-item">OpenSearch</span>
+          <span class="pf-stack-item">Nori</span>
+          <span class="pf-stack-item">LLM</span>
+        </div>
+      </div>
+    </a>
+  </div>
+</section>
+
+<!-- ============================================
+     Section 5: Open Source
+     ============================================ -->
+<section class="pf-section">
+  <div class="pf-section-header">
+    <span class="pf-section-num">04.</span>
+    <h2 class="pf-section-title">Open Source</h2>
+    <div class="pf-section-line"></div>
+  </div>
+  <div class="pf-oss-grid">
+    <a href="https://github.com/SonAIengine/graph-tool-call" class="pf-oss-card" target="_blank" rel="noopener">
+      <div class="pf-oss-header">
+        <svg class="pf-oss-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        <span class="pf-oss-lang">Python</span>
+      </div>
+      <h4>graph-tool-call</h4>
+      <p>An LLM-agent tool engine that searches 1,000+ API tools on a graph. Supports an MCP Proxy gateway.</p>
+      <div class="pf-oss-meta">
+        <a href="https://pypi.org/project/graph-tool-call/" target="_blank" rel="noopener" class="pf-oss-badge">PyPI</a>
+        <span class="pf-oss-stat">
+          <svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14"><path d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25z"/></svg>
+          4
+        </span>
+      </div>
+    </a>
+    <a href="https://github.com/PlateerLab/synaptic-memory" class="pf-oss-card" target="_blank" rel="noopener">
+      <div class="pf-oss-header">
+        <svg class="pf-oss-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2a4 4 0 014 4v1a4 4 0 01-8 0V6a4 4 0 014-4z"/><path d="M6 10v1a6 6 0 0012 0v-1"/><path d="M12 17v4m-4 0h8"/></svg>
+        <span class="pf-oss-lang">Python</span>
+      </div>
+      <h4>synaptic-memory</h4>
+      <p>A brain-inspired knowledge graph &mdash; Spreading Activation, Hebbian Learning, Memory Consolidation. MCP server with 16 tools.</p>
+      <div class="pf-oss-meta">
+        <a href="https://pypi.org/project/synaptic-memory/" target="_blank" rel="noopener" class="pf-oss-badge">PyPI</a>
+        <span class="pf-oss-stat">
+          <svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14"><path d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25z"/></svg>
+          24
+        </span>
+      </div>
+    </a>
+    <a href="https://github.com/SonAIengine/devhub-social" class="pf-oss-card" target="_blank" rel="noopener">
+      <div class="pf-oss-header">
+        <svg class="pf-oss-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        <span class="pf-oss-lang">Python</span>
+      </div>
+      <h4>devhub-social</h4>
+      <p>A unified async client for developer communities &mdash; Dev.to, Bluesky, Twitter/X, Reddit, and 9 platforms in total.</p>
+      <div class="pf-oss-meta">
+        <a href="https://pypi.org/project/devhub-social/" target="_blank" rel="noopener" class="pf-oss-badge">PyPI</a>
+        <span class="pf-oss-stat">
+          <svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14"><path d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25z"/></svg>
+          1
+        </span>
+      </div>
+    </a>
+    <a href="https://github.com/SonAIengine/ku-portal-mcp" class="pf-oss-card" target="_blank" rel="noopener">
+      <div class="pf-oss-header">
+        <svg class="pf-oss-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></svg>
+        <span class="pf-oss-lang">Python</span>
+      </div>
+      <h4>ku-portal-mcp</h4>
+      <p>An MCP server for Korea University's KUPID portal + Canvas LMS &mdash; notices, timetable, library, assignments, grades.</p>
+      <div class="pf-oss-meta">
+        <a href="https://pypi.org/project/ku-portal-mcp/" target="_blank" rel="noopener" class="pf-oss-badge">PyPI</a>
+        <span class="pf-oss-stat">
+          <svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14"><path d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25z"/></svg>
+          8
+        </span>
+      </div>
+    </a>
+  </div>
+</section>
+
+<!-- ============================================
+     Section 6: Tech Stack
+     ============================================ -->
+<section class="pf-section">
+  <div class="pf-section-header">
+    <span class="pf-section-num">05.</span>
+    <h2 class="pf-section-title">Tech Stack</h2>
+    <div class="pf-section-line"></div>
+  </div>
+  <div class="pf-stack-grid">
+    <div class="pf-stack-col">
+      <h4 class="pf-stack-label">Languages &amp; Frameworks</h4>
+      <div class="pf-stack-chips">
+        <span class="pf-stack-chip">Rust</span>
+        <span class="pf-stack-chip">Python</span>
+        <span class="pf-stack-chip">TypeScript</span>
+        <span class="pf-stack-chip">Go</span>
+        <span class="pf-stack-chip">Axum</span>
+        <span class="pf-stack-chip">NestJS</span>
+        <span class="pf-stack-chip">Next.js</span>
+        <span class="pf-stack-chip">FastAPI</span>
+        <span class="pf-stack-chip">Tauri</span>
+        <span class="pf-stack-chip">React</span>
+      </div>
+    </div>
+    <div class="pf-stack-col">
+      <h4 class="pf-stack-label">AI / ML</h4>
+      <div class="pf-stack-chips">
+        <span class="pf-stack-chip">vLLM</span>
+        <span class="pf-stack-chip">llama.cpp</span>
+        <span class="pf-stack-chip">Qdrant</span>
+        <span class="pf-stack-chip">OpenSearch k-NN</span>
+        <span class="pf-stack-chip">HuggingFace</span>
+        <span class="pf-stack-chip">LangChain</span>
+        <span class="pf-stack-chip">LangGraph</span>
+        <span class="pf-stack-chip">MCP</span>
+        <span class="pf-stack-chip">FAISS</span>
+        <span class="pf-stack-chip">FastEmbed</span>
+      </div>
+    </div>
+    <div class="pf-stack-col">
+      <h4 class="pf-stack-label">Infrastructure &amp; CI/CD</h4>
+      <div class="pf-stack-chips">
+        <span class="pf-stack-chip">Kubernetes</span>
+        <span class="pf-stack-chip">Docker</span>
+        <span class="pf-stack-chip">K3s</span>
+        <span class="pf-stack-chip">Redis</span>
+        <span class="pf-stack-chip">Istio</span>
+        <span class="pf-stack-chip">Jenkins</span>
+        <span class="pf-stack-chip">ArgoCD</span>
+        <span class="pf-stack-chip">Caddy</span>
+        <span class="pf-stack-chip">GitHub Actions</span>
+        <span class="pf-stack-chip">GitLab CI</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================
+     Section 7: Timeline
+     ============================================ -->
+<section class="pf-section">
+  <div class="pf-section-header">
+    <span class="pf-section-num">06.</span>
+    <h2 class="pf-section-title">Timeline</h2>
+    <div class="pf-section-line"></div>
+  </div>
+  <div class="pf-timeline">
+    <div class="pf-tl-item">
+      <div class="pf-tl-dot"></div>
+      <div class="pf-tl-card">
+        <span class="pf-tl-year">2026</span>
+        <ul class="pf-tl-list">
+          <li><a href="/sonblog-astro/posts/ai/agent/graph-tool-call-llm-agent-graph-based-tool-search-engine/">Developed graph-tool-call open source (1,068-tool graph search, MCP Proxy, PyPI release)</a></li>
+          <li><a href="/sonblog-astro/posts/ai/agent/gwanjong-mcp-ai-social-agent-mcp-system-design-impl/">gwanjong-mcp AI social agent (9 platforms, MCP Pipeline)</a></li>
+          <li><a href="https://github.com/PlateerLab/synaptic-memory" target="_blank" rel="noopener">Developed Synaptic Memory open source (brain-inspired knowledge graph, MCP server, PyPI release)</a></li>
+          <li><a href="/sonblog-astro/posts/ai/agent/hive-corp-synaptic-memory-graph-tool-call-integration/">Integrated synaptic-memory + graph-tool-call into the Hive Corp autonomous AI ops platform</a></li>
+          <li><a href="/sonblog-astro/posts/full-stack/poc/cashflow-prediction-timeseries-ml-ensemble-rolling-cv/">Cash-flow prediction time-series ML ensemble system</a></li>
+          <li><a href="/sonblog-astro/posts/ai/XGEN/xgen-2-0-model-serving-integration-architecture-refactoring/">Built the XGEN 2.0 AI agent platform (K8s/ArgoCD infra, frontend, workflow)</a></li>
+          <li><a href="/sonblog-astro/">Developed the Knowledge Graph visualization system</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="pf-tl-item">
+      <div class="pf-tl-dot"></div>
+      <div class="pf-tl-card">
+        <span class="pf-tl-year">2025</span>
+        <ul class="pf-tl-list">
+          <li><a href="/sonblog-astro/posts/full-stack/desktop/remote-webview-architecture-local-app-remote-server-integration/">Developed a Tauri 2.0 cross-platform desktop app</a></li>
+          <li><a href="/sonblog-astro/posts/search-engine/rust-search/rust-commerce-search-engine-build/">Built a Rust commerce search engine (28ms, 2,100 req/s)</a></li>
+          <li><a href="/sonblog-astro/posts/ai/agent/ai-agent-based-browser-automation-system-setup/">Built an AI agent browser automation system</a></li>
+          <li>Operated Moon / i-Scream Mall commerce search services</li>
+          <li><a href="/sonblog-astro/posts/ai/XGEN/xgen-1-0-gpu-model-serving-impl/">Built XGEN 1.0 infrastructure and GPU model serving</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="pf-tl-item">
+      <div class="pf-tl-dot"></div>
+      <div class="pf-tl-card">
+        <span class="pf-tl-year">2024</span>
+        <ul class="pf-tl-list">
+          <li><a href="/sonblog-astro/posts/search-engine/nestjs-search/semantic-search-keyword-search-hybrid-strategy/">Built a NestJS hybrid search engine (318 commits, 14 months)</a></li>
+          <li><a href="/sonblog-astro/posts/search-engine/semantic-search/vector-semantic-search/">Designed and developed a semantic search API</a></li>
+          <li><a href="/sonblog-astro/posts/search-engine/Qdrant/capacity-planning/">Built Qdrant vector-DB-based semantic search</a></li>
+          <li><a href="/sonblog-astro/posts/search-engine/OpenSearch/approximate-k-nn/">Developed the Aurora commerce search API (OpenSearch multi-index)</a></li>
+          <li>Demand forecasting API / persona recommendation system</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================
+     Section 8: By the Numbers
+     ============================================ -->
+<section class="pf-section">
+  <div class="pf-section-header">
+    <span class="pf-section-num">07.</span>
+    <h2 class="pf-section-title">By the Numbers</h2>
+    <div class="pf-section-line"></div>
+  </div>
+  <div class="pf-numbers-grid">
+    <div class="pf-number-card">
+      <span class="pf-number-value">{pc.total}+</span>
+      <span class="pf-number-label">Tech Blog Posts</span>
+    </div>
+    <div class="pf-number-card">
+      <span class="pf-number-value">7</span>
+      <span class="pf-number-label">Microservices (XGEN)</span>
+    </div>
+    <div class="pf-number-card">
+      <span class="pf-number-value">5</span>
+      <span class="pf-number-label">Open Source Projects</span>
+    </div>
+    <div class="pf-number-card">
+      <span class="pf-number-value">1,068</span>
+      <span class="pf-number-label">Tool Benchmark (graph-tool-call)</span>
+    </div>
+    <div class="pf-number-card">
+      <span class="pf-number-value">9</span>
+      <span class="pf-number-label">Social Platforms Automated (gwanjong)</span>
+    </div>
+    <div class="pf-number-card">
+      <span class="pf-number-value">28ms</span>
+      <span class="pf-number-label">Rust Search Engine Response</span>
+    </div>
+    <div class="pf-number-card">
+      <span class="pf-number-value">5,000+</span>
+      <span class="pf-number-label">TPS Peak Traffic Handled</span>
+    </div>
+    <div class="pf-number-card">
+      <span class="pf-number-value">15x</span>
+      <span class="pf-number-label">LLM Inference Throughput Gain</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================
+     Section 9: Footer
+     ============================================ -->
+<section class="pf-footer">
+  <div class="pf-footer-stats">
+    <span>{pc.total}+ Tech Articles</span>
+    <span class="pf-footer-sep">&middot;</span>
+    <span>4 Categories</span>
+  </div>
+  <div class="pf-footer-links">
+    <a href="/sonblog-astro/" class="pf-footer-btn">All Posts</a>
+    <a href="/sonblog-astro/" class="pf-footer-btn">Knowledge Graph</a>
+    <a href="https://github.com/SonAIengine" class="pf-footer-btn" target="_blank" rel="noopener">GitHub</a>
+  </div>
+</section>
+
+<!-- spotlight is handled by initSpotlight() in custom.js -->
+  </main>
+</Layout>
+
+<style is:global>
+
+@media (max-width: 600px) {
+.hero {
+    padding: 2rem 1rem 1.5rem;
+  }
+.hero h1 {
+    font-size: 1.3rem;
+  }
+.hero-subtitle {
+    font-size: 0.8rem;
+  }
+.hero-desc {
+    font-size: 0.72rem;
+  }
+.hero-orb { display: none; }
+.hero-buttons {
+    gap: 0.4rem;
+  }
+a.hero-portfolio-link {
+    font-size: 0.65rem;
+    padding: 0.2rem 0.7rem;
+  }
+}
+@media screen and (max-width: 960px) {
+.pf-expertise-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+.pf-project-grid {
+    grid-template-columns: 1fr;
+  }
+.pf-oss-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+.pf-numbers-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+.pf-stack-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+.pf-hero-stats {
+    gap: 1.5rem;
+  }
+}
+@media screen and (max-width: 600px) {
+/* Hero */
+  .pf-hero {
+    padding: 2.5rem 1.2rem 2rem;
+  }
+.pf-hero-keywords {
+    font-size: 0.78rem;
+    word-spacing: -0.5px;
+  }
+.pf-hero-stats {
+    gap: 1.5rem;
+  }
+.pf-hero-stat-num {
+    font-size: 1.3rem;
+  }
+.pf-hero-emails {
+    font-size: 0.7rem;
+    word-break: break-all;
+  }
+.pf-hero-links {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+a.pf-hero-btn,
+  a.pf-hero-btn:link,
+  a.pf-hero-btn:visited {
+    padding: 0.45rem 1rem;
+    font-size: 0.75rem;
+  }
+/* Section */
+  .pf-section {
+    padding: 2rem 1rem 0;
+  }
+.pf-section-header {
+    margin-bottom: 1.2rem;
+  }
+.pf-section-line {
+    display: none;
+  }
+/* About */
+  .pf-about-text {
+    font-size: 0.85rem;
+    line-height: 1.75;
+  }
+.pf-chips-group {
+    gap: 0.5rem;
+  }
+.pf-chips-row {
+    gap: 0.3rem;
+  }
+.pf-chips-label {
+    min-width: 100%;
+    font-size: 0.62rem;
+    margin-bottom: 0.1rem;
+  }
+.pf-chip {
+    font-size: 0.68rem;
+    padding: 0.2rem 0.55rem;
+  }
+/* Expertise - 1열 레이아웃 */
+  .pf-expertise-grid {
+    grid-template-columns: 1fr;
+    gap: 0.7rem;
+  }
+.pf-expertise-card {
+    padding: 1.2rem;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0 0.8rem;
+  }
+.pf-expertise-icon {
+    width: 32px;
+    height: 32px;
+    margin-bottom: 0;
+  }
+.pf-expertise-card h3 {
+    font-size: 0.92rem;
+    flex: 1;
+    line-height: 32px;
+    margin: 0;
+  }
+.pf-card-count {
+    font-size: 0.65rem;
+    position: absolute;
+    right: 1.2rem;
+    top: 1.35rem;
+  }
+.pf-expertise-card {
+    position: relative;
+  }
+.pf-card-techs {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.15rem 0;
+    margin-top: 0.4rem;
+  }
+.pf-card-techs li {
+    font-size: 0.78rem;
+    line-height: 1.55;
+    width: 50%;
+    box-sizing: border-box;
+    padding-left: 0.7rem;
+  }
+.pf-card-techs li::before {
+    width: 3px;
+    height: 3px;
+    top: 0.55em;
+  }
+/* Featured Project */
+  .pf-project--featured h3 {
+    font-size: 1.05rem;
+  }
+.pf-project-content {
+    padding: 1.2rem;
+  }
+.pf-project-desc {
+    font-size: 0.8rem;
+    line-height: 1.65;
+  }
+.md-typeset .pf-project-highlights li,
+  .pf-project-highlights li {
+    font-size: 0.76rem;
+    line-height: 1.55;
+    padding-left: 0.8rem;
+    margin-bottom: 0.4rem;
+  }
+.pf-project-highlights li::before {
+    width: 4px;
+    height: 4px;
+  }
+.pf-project-stack-row {
+    gap: 0.3rem;
+  }
+.pf-stack-item {
+    font-size: 0.62rem;
+    padding: 0.12rem 0.4rem;
+  }
+/* Project Grid */
+  .pf-project-grid {
+    grid-template-columns: 1fr;
+    gap: 0.8rem;
+  }
+.pf-project h3 {
+    font-size: 0.92rem;
+  }
+/* Tech Stack */
+  .pf-stack-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+.pf-stack-chip {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.6rem;
+  }
+/* Timeline */
+  .pf-tl-card {
+    padding: 1rem 1.2rem;
+  }
+.pf-tl-list a {
+    font-size: 0.8rem;
+  }
+.pf-tl-item {
+    margin-bottom: 1.5rem;
+  }
+/* Open Source */
+  .pf-oss-grid {
+    grid-template-columns: 1fr;
+    gap: 0.8rem;
+  }
+.pf-oss-card {
+    padding: 1.1rem;
+  }
+/* By the Numbers */
+  .pf-numbers-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.8rem;
+  }
+.pf-number-value {
+    font-size: 1.4rem;
+  }
+.pf-number-label {
+    font-size: 0.68rem;
+  }
+/* Social Icons */
+  .pf-hero-socials {
+    gap: 0.7rem;
+  }
+a.pf-social-icon,
+  a.pf-social-icon:link,
+  a.pf-social-icon:visited {
+    width: 36px;
+    height: 36px;
+  }
+a.pf-social-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+/* Footer */
+  .pf-footer {
+    padding: 2rem 1rem 1.5rem;
+  }
+.pf-footer-links {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+}
+@media screen and (max-width: 400px) {
+.pf-hero {
+    padding: 2rem 0.8rem 1.8rem;
+  }
+.pf-hero-greeting {
+    font-size: 0.78rem;
+  }
+.pf-hero-keywords {
+    font-size: 0.72rem;
+  }
+.pf-hero-stats {
+    gap: 1rem;
+  }
+.pf-hero-stat-num {
+    font-size: 1.1rem;
+  }
+.pf-hero-stat-label {
+    font-size: 0.65rem;
+  }
+.pf-section {
+    padding: 1.5rem 0.8rem 0;
+  }
+.pf-expertise-card {
+    padding: 1rem;
+  }
+.pf-card-techs li {
+    width: 100%;
+    font-size: 0.75rem;
+  }
+.pf-project-content {
+    padding: 1rem;
+  }
+.pf-project--featured h3 {
+    font-size: 0.95rem;
+  }
+.pf-project-desc {
+    font-size: 0.76rem;
+  }
+.pf-footer {
+    padding: 1.5rem 0.8rem 1.2rem;
+  }
+}
+/* ============================================
+   HERO SECTION (Home Page)
+   ============================================ */
+
+.hero {
+  background: linear-gradient(135deg, #1a237e 0%, #283593 30%, #3949ab 60%, #5c6bc0 100%);
+  padding: 2.5rem 2rem 2rem;
+  text-align: center;
+  margin: -1.2rem -1.2rem 1.2rem -1.2rem;
+  border-radius: 0 0 0.8rem 0.8rem;
+  position: relative;
+  overflow: hidden;
+}
+.hero h1 {
+  color: #ffffff;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 0.2rem 0;
+  letter-spacing: -0.02em;
+  border: none;
+  padding: 0;
+}
+/* === Dark Mode Home Page === */
+
+[data-md-color-scheme="slate"] .hero {
+  background: linear-gradient(135deg, #0d1117 0%, #161b22 30%, #1a237e 60%, #283593 100%);
+}
+/* ============================================
+   PORTFOLIO PAGE — Modern Dark Theme
+   ============================================ */
+
+/* 포트폴리오 페이지 md-content 너비 제한 해제 */
+.md-content__inner:has(.pf-hero) {
+  max-width: none;
+}
+/* ── Hero ── */
+.pf-hero {
+  background: #0a0e1a;
+  padding: 5rem 2rem 3.5rem;
+  text-align: center;
+  margin: -1.2rem -1.2rem 0 -1.2rem;
+  position: relative;
+  overflow: hidden;
+}
+.pf-hero-mesh {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(99, 102, 241, 0.18) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(139, 92, 246, 0.12) 0%, transparent 50%),
+    radial-gradient(ellipse at 60% 80%, rgba(59, 130, 246, 0.08) 0%, transparent 50%);
+  pointer-events: none;
+}
+.pf-hero-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 700px;
+  margin: 0 auto;
+}
+.pf-hero-greeting {
+  color: #818cf8;
+  font-size: 0.85rem;
+  font-weight: 500;
+  font-family: var(--md-code-font);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin: 0 0 0.8rem 0;
+}
+.pf-hero-name {
+  color: #e2e8f0 !important;
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  font-weight: 800;
+  margin: 0 0 0.6rem 0;
+  letter-spacing: -0.03em;
+  border: none;
+  padding: 0;
+  line-height: 1.1;
+}
+.pf-hero-keywords {
+  color: rgba(148, 163, 184, 0.7);
+  font-size: 0.9rem;
+  font-family: var(--md-code-font);
+  margin: 0 0 2rem 0;
+}
+.pf-hero-stats {
+  display: flex;
+  justify-content: center;
+  gap: 2.5rem;
+  margin-bottom: 2rem;
+}
+.pf-hero-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+.pf-hero-stat-num {
+  color: #e2e8f0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-family: var(--md-code-font);
+}
+.pf-hero-stat-label {
+  color: #64748b;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.pf-hero-emails {
+  margin: 0 0 1.2rem 0;
+  color: rgba(148, 163, 184, 0.7);
+  font-size: 0.78rem;
+  font-family: var(--md-code-font);
+  text-align: center;
+}
+.pf-hero-socials {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.2rem;
+}
+a.pf-social-icon,
+a.pf-social-icon:link,
+a.pf-social-icon:visited {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  color: rgba(199, 210, 254, 0.8) !important;
+  text-decoration: none !important;
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+a.pf-social-icon svg {
+  width: 20px;
+  height: 20px;
+}
+a.pf-social-icon:hover {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: rgba(99, 102, 241, 0.5);
+  color: #e0e7ff !important;
+  transform: translateY(-3px);
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.2);
+}
+.pf-hero-links {
+  display: flex;
+  justify-content: center;
+  gap: 0.8rem;
+}
+a.pf-hero-btn,
+a.pf-hero-btn:link,
+a.pf-hero-btn:visited {
+  display: inline-block;
+  color: #c7d2fe !important;
+  font-size: 0.78rem;
+  font-weight: 500;
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  border-radius: 8px;
+  padding: 0.5rem 1.2rem;
+  text-decoration: none !important;
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+a.pf-hero-btn:hover {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+}
+a.pf-hero-btn--primary,
+a.pf-hero-btn--primary:link,
+a.pf-hero-btn--primary:visited {
+  background: rgba(99, 102, 241, 0.2) !important;
+  border-color: rgba(99, 102, 241, 0.4) !important;
+  color: #e0e7ff !important;
+}
+/* 언어 토글(KR ⇄ EN) — 점선 테두리로 다른 동작임을 구분 */
+a.pf-hero-btn--lang,
+a.pf-hero-btn--lang:link,
+a.pf-hero-btn--lang:visited {
+  background: transparent !important;
+  border-style: dashed !important;
+  border-color: rgba(99, 102, 241, 0.4) !important;
+  color: #a5b4fc !important;
+  letter-spacing: 0.02em;
+}
+a.pf-hero-btn--lang:hover {
+  background: rgba(99, 102, 241, 0.12) !important;
+  border-style: solid !important;
+}
+/* ── Section Common ── */
+.pf-section {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 3rem 2rem 0;
+}
+.pf-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 1.5rem;
+}
+.pf-section-num {
+  font-family: var(--md-code-font);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #6366f1;
+}
+.pf-section-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+  padding: 0;
+  border: none;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.pf-section-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, #e2e8f0, transparent);
+}
+/* ── About ── */
+.pf-about-text {
+  font-size: 0.92rem;
+  color: #475569;
+  line-height: 1.85;
+  margin: 0 0 1.5rem 0;
+}
+.pf-chips-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.pf-chips-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.pf-chips-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #94a3b8;
+  min-width: 85px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-family: var(--md-code-font);
+}
+.pf-chip {
+  font-size: 0.72rem;
+  color: #6366f1;
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+.pf-chip:hover {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.3);
+  transform: translateY(-1px);
+}
+/* ── Expertise Grid ── */
+.pf-expertise-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+.pf-expertise-card {
+  display: flex;
+  flex-direction: column;
+  padding: 1.25rem;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  text-decoration: none !important;
+  color: inherit;
+  transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  position: relative;
+  overflow: hidden;
+}
+.pf-expertise-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.3), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.pf-expertise-card:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 4px 6px rgba(0, 0, 0, 0.04),
+    0 10px 24px rgba(99, 102, 241, 0.08);
+  border-color: rgba(99, 102, 241, 0.2);
+  text-decoration: none !important;
+}
+.pf-expertise-card:hover::after {
+  opacity: 1;
+}
+.pf-expertise-icon {
+  width: 36px;
+  height: 36px;
+  color: #6366f1;
+  margin-bottom: 0.8rem;
+}
+.pf-expertise-icon svg {
+  width: 100%;
+  height: 100%;
+}
+.pf-expertise-card h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 0 0 0.4rem 0;
+  padding: 0;
+  border: none;
+  color: #1e293b;
+  text-decoration: none;
+}
+.pf-card-count {
+  font-size: 0.68rem;
+  color: #6366f1;
+  font-weight: 600;
+  font-family: var(--md-code-font);
+  margin-bottom: 0.6rem;
+}
+.pf-card-techs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex-grow: 1;
+}
+.pf-card-techs li {
+  font-size: 0.78rem;
+  color: #64748b;
+  line-height: 1.6;
+  margin-bottom: 0.1rem;
+  padding-left: 0.8rem;
+  position: relative;
+}
+.pf-card-techs li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.6em;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #c7d2fe;
+}
+/* ── Projects ── */
+.pf-project {
+  display: flex;
+  flex-direction: column;
+  padding: 1px;
+  border-radius: 12px;
+  text-decoration: none !important;
+  color: inherit;
+  position: relative;
+  overflow: hidden;
+  background: #e2e8f0;
+  transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+/* Spotlight gradient that follows cursor */
+.pf-project::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    500px circle at var(--mx, 50%) var(--my, 50%),
+    rgba(99, 102, 241, 0.25),
+    transparent 40%
+  );
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: 1;
+}
+.pf-project:hover::before {
+  opacity: 1;
+}
+.pf-project-content {
+  position: relative;
+  z-index: 2;
+  background: #ffffff;
+  border-radius: 11px;
+  padding: 1.5rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.pf-project-content .pf-project-desc {
+  flex: 1;
+}
+.pf-project:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06);
+  text-decoration: none !important;
+}
+/* Featured */
+.pf-project--featured {
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6, #a78bfa);
+}
+.pf-project--featured::before {
+  background: radial-gradient(
+    600px circle at var(--mx, 50%) var(--my, 50%),
+    rgba(255, 255, 255, 0.12),
+    transparent 40%
+  );
+}
+.pf-project--featured .pf-project-content {
+  background: linear-gradient(135deg, #fafafe, #f5f3ff);
+}
+.pf-project-glow {
+  display: none;
+}
+.pf-project-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.6rem;
+}
+.pf-project-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #6366f1;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-family: var(--md-code-font);
+}
+.pf-project h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  padding: 0;
+  border: none;
+  color: #1e293b;
+  text-decoration: none;
+}
+.pf-project--featured h3 {
+  font-size: 1.2rem;
+  color: #312e81;
+}
+.pf-project-tags {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.6rem;
+}
+.pf-tag {
+  font-size: 0.62rem;
+  font-weight: 600;
+  padding: 0.15rem 0.55rem;
+  border-radius: 100px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border: 1px solid transparent;
+}
+.pf-tag--search { background: rgba(59, 130, 246, 0.08); color: #3b82f6; border-color: rgba(59, 130, 246, 0.15); }
+.pf-tag--ai { background: rgba(168, 85, 247, 0.08); color: #a855f7; border-color: rgba(168, 85, 247, 0.15); }
+.pf-tag--fullstack { background: rgba(34, 197, 94, 0.08); color: #16a34a; border-color: rgba(34, 197, 94, 0.15); }
+.pf-tag--devops { background: rgba(249, 115, 22, 0.08); color: #ea580c; border-color: rgba(249, 115, 22, 0.15); }
+.pf-project-desc {
+  font-size: 0.85rem;
+  color: #64748b;
+  line-height: 1.7;
+  margin: 0 0 0.8rem 0;
+}
+.pf-project-posts {
+  font-size: 0.68rem;
+  color: #6366f1;
+  font-weight: 600;
+  font-family: var(--md-code-font);
+}
+.md-typeset .pf-project-highlights,
+.pf-project-highlights {
+  list-style: none !important;
+  margin: 0 0 0.8rem 0 !important;
+  padding: 0 !important;
+}
+.md-typeset .pf-project-highlights li,
+.pf-project-highlights li {
+  list-style: none !important;
+  font-size: 0.8rem;
+  color: #475569;
+  line-height: 1.65;
+  margin-bottom: 0.3rem;
+  padding-left: 1rem;
+  position: relative;
+  margin-left: 0 !important;
+}
+.md-typeset .pf-project-highlights li::marker,
+.pf-project-highlights li::marker {
+  content: none !important;
+  font-size: 0 !important;
+}
+.pf-project-highlights li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.6em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #6366f1;
+}
+.pf-project-highlights li strong {
+  color: #1e293b;
+  font-weight: 700;
+}
+.pf-project-stack-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.pf-stack-item {
+  font-size: 0.68rem;
+  color: #94a3b8;
+  font-family: var(--md-code-font);
+  padding: 0.15rem 0.5rem;
+  background: rgba(148, 163, 184, 0.08);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 4px;
+}
+.pf-project-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+/* ── Tech Stack ── */
+.pf-stack-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+}
+.pf-stack-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.pf-stack-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-family: var(--md-code-font);
+  margin: 0 0 0.3rem 0;
+  padding: 0 0 0.4rem 0;
+  border: none;
+  border-bottom: 1px solid #e2e8f0;
+  text-decoration: none;
+}
+.pf-stack-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.pf-stack-chip {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.78rem;
+  color: #475569;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 0.3rem 0.7rem;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  cursor: default;
+}
+.pf-stack-chip:hover {
+  background: rgba(99, 102, 241, 0.06);
+  border-color: rgba(99, 102, 241, 0.2);
+  color: #6366f1;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(99, 102, 241, 0.08);
+}
+/* ── Timeline ── */
+.pf-timeline {
+  position: relative;
+  padding-left: 0;
+  max-width: 700px;
+}
+.pf-timeline::before {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  background: linear-gradient(to bottom, #6366f1, #c7d2fe, transparent);
+  border-radius: 2px;
+}
+.pf-tl-item {
+  position: relative;
+  padding-left: 2.5rem;
+  margin-bottom: 2rem;
+}
+.pf-tl-item:last-child {
+  margin-bottom: 0;
+}
+.pf-tl-dot {
+  position: absolute;
+  left: 0;
+  top: 6px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #6366f1;
+  border: 3px solid #f8fafc;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+  z-index: 1;
+}
+.pf-tl-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 1.2rem 1.5rem;
+  transition: all 0.3s ease;
+}
+.pf-tl-card:hover {
+  border-color: rgba(99, 102, 241, 0.2);
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.06);
+  transform: translateX(4px);
+}
+.pf-tl-year {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #6366f1;
+  font-family: var(--md-code-font);
+  display: block;
+  margin-bottom: 0.6rem;
+}
+.pf-tl-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.pf-tl-list li {
+  margin-bottom: 0.35rem;
+  padding-left: 0.8rem;
+  position: relative;
+}
+.pf-tl-list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #c7d2fe;
+}
+.pf-tl-list li:last-child {
+  margin-bottom: 0;
+}
+.pf-tl-list a {
+  font-size: 0.85rem;
+  color: #475569;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.pf-tl-list a:hover {
+  color: #6366f1;
+}
+/* ── Footer ── */
+.pf-footer {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 3rem 2rem 2rem;
+  text-align: center;
+}
+.pf-footer-stats {
+  color: #94a3b8;
+  font-size: 0.78rem;
+  font-family: var(--md-code-font);
+  margin-bottom: 1rem;
+}
+.pf-footer-sep {
+  margin: 0 0.4rem;
+}
+.pf-footer-links {
+  display: flex;
+  justify-content: center;
+  gap: 0.8rem;
+}
+a.pf-footer-btn,
+a.pf-footer-btn:link,
+a.pf-footer-btn:visited {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #6366f1 !important;
+  background: rgba(99, 102, 241, 0.06);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  border-radius: 8px;
+  padding: 0.4rem 1rem;
+  text-decoration: none !important;
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+a.pf-footer-btn:hover {
+  background: rgba(99, 102, 241, 0.12);
+  border-color: rgba(99, 102, 241, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(99, 102, 241, 0.1);
+}
+/* ── Open Source Grid ── */
+.pf-oss-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.2rem;
+}
+a.pf-oss-card,
+a.pf-oss-card:link,
+a.pf-oss-card:visited {
+  display: flex;
+  flex-direction: column;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.4rem;
+  text-decoration: none !important;
+  color: inherit !important;
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+a.pf-oss-card:hover {
+  border-color: rgba(99, 102, 241, 0.4);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.08);
+}
+.pf-oss-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.6rem;
+}
+.pf-oss-icon {
+  width: 22px;
+  height: 22px;
+  color: #6366f1;
+}
+.pf-oss-lang {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: #6366f1;
+  background: rgba(99, 102, 241, 0.08);
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+}
+.pf-oss-card h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 0.4rem 0;
+}
+.pf-oss-card p {
+  font-size: 0.8rem;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0 0 0.8rem 0;
+  flex-grow: 1;
+}
+.pf-oss-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+a.pf-oss-badge,
+a.pf-oss-badge:link,
+a.pf-oss-badge:visited {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #6366f1 !important;
+  background: rgba(99, 102, 241, 0.08);
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  text-decoration: none !important;
+}
+.pf-oss-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+/* ── By the Numbers ── */
+.pf-numbers-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.2rem;
+}
+.pf-number-card {
+  text-align: center;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.6rem 1rem;
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.pf-number-card:hover {
+  border-color: rgba(99, 102, 241, 0.3);
+  transform: translateY(-2px);
+}
+.pf-number-value {
+  display: block;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #6366f1;
+  font-family: var(--md-code-font);
+  line-height: 1.2;
+  margin-bottom: 0.3rem;
+}
+.pf-number-label {
+  display: block;
+  font-size: 0.75rem;
+  color: #64748b;
+  line-height: 1.3;
+}
+/* ── Responsive ── */
+
+
+
+
+/* 아주 좁은 화면 (400px 이하) */
+
+
+/* ── Dark Mode ── */
+[data-md-color-scheme="slate"] .pf-hero {
+  background: #0a0e1a;
+}
+[data-md-color-scheme="slate"] .pf-section-num {
+  color: #818cf8;
+}
+[data-md-color-scheme="slate"] .pf-section-title {
+  color: #e2e8f0;
+}
+[data-md-color-scheme="slate"] .pf-section-line {
+  background: linear-gradient(90deg, #1e293b, transparent);
+}
+[data-md-color-scheme="slate"] .pf-about-text {
+  color: #94a3b8;
+}
+[data-md-color-scheme="slate"] .pf-chips-label {
+  color: #64748b;
+}
+[data-md-color-scheme="slate"] .pf-chip {
+  color: #a5b4fc;
+  background: rgba(99, 102, 241, 0.1);
+  border-color: rgba(99, 102, 241, 0.2);
+}
+[data-md-color-scheme="slate"] .pf-chip:hover {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: rgba(99, 102, 241, 0.4);
+}
+[data-md-color-scheme="slate"] .pf-expertise-card {
+  background: #0f172a;
+  border-color: #1e293b;
+}
+[data-md-color-scheme="slate"] .pf-expertise-card:hover {
+  border-color: rgba(99, 102, 241, 0.3);
+  box-shadow:
+    0 4px 6px rgba(0, 0, 0, 0.2),
+    0 10px 24px rgba(99, 102, 241, 0.08);
+}
+[data-md-color-scheme="slate"] .pf-expertise-card::after {
+  background: linear-gradient(90deg, transparent, rgba(129, 140, 248, 0.4), transparent);
+}
+[data-md-color-scheme="slate"] .pf-expertise-icon {
+  color: #818cf8;
+}
+[data-md-color-scheme="slate"] .pf-expertise-card h3 {
+  color: #e2e8f0;
+}
+[data-md-color-scheme="slate"] .pf-card-count {
+  color: #818cf8;
+}
+[data-md-color-scheme="slate"] .pf-card-techs li {
+  color: #64748b;
+}
+[data-md-color-scheme="slate"] .pf-card-techs li::before {
+  background: #334155;
+}
+/* Dark mode projects */
+[data-md-color-scheme="slate"] .pf-project {
+  background: #1e293b;
+}
+[data-md-color-scheme="slate"] .pf-project-content {
+  background: #0f172a;
+}
+[data-md-color-scheme="slate"] .pf-project:hover {
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+[data-md-color-scheme="slate"] .pf-project--featured {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed, #6d28d9);
+}
+[data-md-color-scheme="slate"] .pf-project--featured .pf-project-content {
+  background: linear-gradient(135deg, #0f172a, #1a1033);
+}
+[data-md-color-scheme="slate"] .pf-project-label {
+  color: #818cf8;
+}
+[data-md-color-scheme="slate"] .pf-project h3 {
+  color: #e2e8f0;
+}
+[data-md-color-scheme="slate"] .pf-project--featured h3 {
+  color: #e0e7ff;
+}
+[data-md-color-scheme="slate"] .pf-tag--search { background: rgba(59, 130, 246, 0.12); color: #60a5fa; border-color: rgba(59, 130, 246, 0.2); }
+[data-md-color-scheme="slate"] .pf-tag--ai { background: rgba(168, 85, 247, 0.12); color: #c084fc; border-color: rgba(168, 85, 247, 0.2); }
+[data-md-color-scheme="slate"] .pf-tag--fullstack { background: rgba(34, 197, 94, 0.12); color: #4ade80; border-color: rgba(34, 197, 94, 0.2); }
+[data-md-color-scheme="slate"] .pf-tag--devops { background: rgba(249, 115, 22, 0.12); color: #fb923c; border-color: rgba(249, 115, 22, 0.2); }
+[data-md-color-scheme="slate"] .pf-project-desc {
+  color: #64748b;
+}
+[data-md-color-scheme="slate"] .pf-project-highlights li {
+  color: #94a3b8;
+}
+[data-md-color-scheme="slate"] .pf-project-highlights li::before {
+  background: #818cf8;
+}
+[data-md-color-scheme="slate"] .pf-project-highlights li strong {
+  color: #e2e8f0;
+}
+[data-md-color-scheme="slate"] .pf-project-posts {
+  color: #818cf8;
+}
+[data-md-color-scheme="slate"] .pf-stack-item {
+  color: #64748b;
+  background: rgba(100, 116, 139, 0.08);
+  border-color: rgba(100, 116, 139, 0.15);
+}
+/* Dark mode tech stack */
+[data-md-color-scheme="slate"] .pf-stack-label {
+  color: #64748b;
+  border-bottom-color: #1e293b;
+}
+[data-md-color-scheme="slate"] .pf-stack-chip {
+  color: #94a3b8;
+  background: #0f172a;
+  border-color: #1e293b;
+}
+[data-md-color-scheme="slate"] .pf-stack-chip:hover {
+  background: rgba(99, 102, 241, 0.1);
+  border-color: rgba(99, 102, 241, 0.25);
+  color: #a5b4fc;
+}
+/* Dark mode timeline */
+[data-md-color-scheme="slate"] .pf-timeline::before {
+  background: linear-gradient(to bottom, #6366f1, #334155, transparent);
+}
+[data-md-color-scheme="slate"] .pf-tl-dot {
+  background: #818cf8;
+  border-color: #0f172a;
+  box-shadow: 0 0 0 2px rgba(129, 140, 248, 0.2);
+}
+[data-md-color-scheme="slate"] .pf-tl-card {
+  background: #0f172a;
+  border-color: #1e293b;
+}
+[data-md-color-scheme="slate"] .pf-tl-card:hover {
+  border-color: rgba(99, 102, 241, 0.25);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+[data-md-color-scheme="slate"] .pf-tl-year {
+  color: #818cf8;
+}
+[data-md-color-scheme="slate"] .pf-tl-list li::before {
+  background: #334155;
+}
+[data-md-color-scheme="slate"] .pf-tl-list a {
+  color: #94a3b8;
+}
+[data-md-color-scheme="slate"] .pf-tl-list a:hover {
+  color: #818cf8;
+}
+/* Dark mode footer */
+[data-md-color-scheme="slate"] .pf-footer-stats {
+  color: #475569;
+}
+[data-md-color-scheme="slate"] a.pf-footer-btn,
+[data-md-color-scheme="slate"] a.pf-footer-btn:link,
+[data-md-color-scheme="slate"] a.pf-footer-btn:visited {
+  color: #a5b4fc !important;
+  background: rgba(99, 102, 241, 0.08);
+  border-color: rgba(99, 102, 241, 0.15);
+}
+[data-md-color-scheme="slate"] a.pf-footer-btn:hover {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.3);
+}
+/* Dark mode: Open Source */
+[data-md-color-scheme="slate"] a.pf-oss-card,
+[data-md-color-scheme="slate"] a.pf-oss-card:link,
+[data-md-color-scheme="slate"] a.pf-oss-card:visited {
+  background: rgba(15, 23, 42, 0.6);
+  border-color: rgba(99, 102, 241, 0.1);
+  color: inherit !important;
+}
+[data-md-color-scheme="slate"] a.pf-oss-card:hover {
+  border-color: rgba(99, 102, 241, 0.35);
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.1);
+}
+[data-md-color-scheme="slate"] .pf-oss-card h4 {
+  color: #e2e8f0;
+}
+[data-md-color-scheme="slate"] .pf-oss-card p {
+  color: #94a3b8;
+}
+/* Dark mode: By the Numbers */
+[data-md-color-scheme="slate"] .pf-number-card {
+  background: rgba(15, 23, 42, 0.6);
+  border-color: rgba(99, 102, 241, 0.1);
+}
+[data-md-color-scheme="slate"] .pf-number-card:hover {
+  border-color: rgba(99, 102, 241, 0.3);
+}
+[data-md-color-scheme="slate"] .pf-number-value {
+  color: #818cf8;
+}
+[data-md-color-scheme="slate"] .pf-number-label {
+  color: #94a3b8;
+}
+/* ============================================
+   Linear-style Mono Accents (Geist Mono)
+   메타·라벨·숫자에 모노 악센트 — 개발자 도구 룩
+   ============================================ */
+
+/* 메타/라벨 — 모노 + 약한 자간 */
+.pf-hero-stat-label,
+.pf-section-num,
+.home-card-count,
+.recent-category,
+.recent-date,
+.md-search-result__meta {
+  font-family: var(--mono-accent);
+  letter-spacing: 0.03em;
+}
+/* 영문 라벨 — 대문자 트리트먼트 (Linear 시그니처) */
+.pf-hero-keywords,
+.pf-project-label,
+.pf-card-count,
+.pf-project-posts,
+.pf-stack-label {
+  font-family: var(--mono-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+/* 숫자 — 모노 + tabular, 큰 숫자는 타이트하게 */
+.pf-hero-stat-num,
+.pf-number-value,
+.pf-tl-year {
+  font-family: var(--mono-accent);
+  font-feature-settings: "tnum" 1;
+  letter-spacing: -0.02em;
+}
+/* 표면 카드 — 얇은 흰색 반투명 보더로 면 분리 또렷하게 */
+[data-md-color-scheme="slate"] .home-card,
+[data-md-color-scheme="slate"] .pf-expertise-card,
+[data-md-color-scheme="slate"] .pf-project,
+[data-md-color-scheme="slate"] .pf-number-card,
+[data-md-color-scheme="slate"] .pf-oss-card,
+[data-md-color-scheme="slate"] .pf-tl-card {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+/* ============================================
+   글 상세 — Linear article (좁은 중앙 컬럼)
+   home/portfolio/graph/posts 커스텀 페이지는 마커로 제외
+   ============================================ */
+.md-content__inner:not(:has(.home-cards)):not(:has(.pf-hero)):not(:has(.graph-page)):not(:has(.posts-page)) {
+  max-width: 768px;
+  margin-left: auto;
+  margin-right: auto;
+}
+/* 본문 타이포 살짝 키워 읽기 편하게 */
+.md-content__inner:not(:has(.home-cards)):not(:has(.pf-hero)):not(:has(.graph-page)):not(:has(.posts-page)) > .md-typeset {
+  font-size: 0.85rem;
+}
+/* 카드 보더 Linear 톤 통일 */
+[data-md-color-scheme="default"] .home-card,
+[data-md-color-scheme="default"] .recent-card,
+[data-md-color-scheme="default"] .featured-card,
+[data-md-color-scheme="default"] .pf-expertise-card,
+[data-md-color-scheme="default"] .pf-project,
+[data-md-color-scheme="default"] .pf-oss-card {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+</style>
