@@ -19,8 +19,6 @@ featured: true
 ---
 
 
-# graph-tool-call: LLM Agent를 위한 그래프 기반 도구 검색 엔진
-
 ## 문제: Tool이 너무 많다
 
 LLM Agent가 실제 업무에 투입되면, 사용할 수 있는 도구(tool)의 수가 급격히 늘어난다. 회사 내부 커머스 플랫폼인 X2BEE의 BO(Back Office) API만 해도 **1,077개의 endpoint**가 있다. 이 모든 tool 정의를 LLM의 context window에 넣는 것은 불가능하다. Claude의 200K 토큰이든, GPT-4o의 128K 토큰이든, 1,000개 이상의 tool schema를 한 번에 넘기면 토큰 비용이 폭발하고 정확도가 급락한다.

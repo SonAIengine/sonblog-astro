@@ -17,8 +17,6 @@ tags:
 ---
 
 
-# XGEN GPU 벤더 추상화 — Vulkan 의존 제거와 멀티 벤더 Dockerfile 전략
-
 ## 개요
 
 XGEN 모델 서버(xgen-model)는 NVIDIA와 AMD GPU를 모두 지원하는 멀티 벤더 LLM 서빙 시스템이다. llama-server(GGUF 모델)와 vLLM(HuggingFace 모델)을 백엔드로 사용하며, GPU 종류에 따라 적절한 백엔드를 자동 선택한다.

@@ -18,8 +18,6 @@ tags:
 ---
 
 
-# ArgoCD 멀티 고객사 배포 아키텍처 — ApplicationSet 시행착오와 단일 진입점 설계
-
 ## 배경
 
 XGEN 2.0은 AI Agent 플랫폼이다. 처음에는 자사 개발 서버(244) 하나에만 배포했지만, 고객사가 늘어나면서 상황이 달라졌다. 롯데이마트 운영 서버(243), 제주 환경, 추후 다른 고객사까지 — 동일한 7개 마이크로서비스(frontend, gateway, core, workflow, documents, mcp-station, model)를 고객사별로 다른 도메인, 다른 리소스, 다른 서비스 구성으로 배포해야 했다.

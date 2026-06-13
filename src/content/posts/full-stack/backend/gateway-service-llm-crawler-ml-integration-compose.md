@@ -13,8 +13,6 @@ tags:
 ---
 
 
-# Gateway 서비스 매핑: LLM/Crawler/ML 통합 구성
-
 > 2025.10 ~ 2026.02 | Rust, Axum, YAML, Microservices
 
 ## 개요

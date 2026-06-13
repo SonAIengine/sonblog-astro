@@ -16,8 +16,6 @@ tags:
 ---
 
 
-# AMD GPU에서 LLM 돌리기: Vulkan vs ROCm 비교
-
 AMD GPU로 LLM을 서빙하는 건 NVIDIA에 비해 선택지가 복잡하다. ROCm을 쓸 수도 있고, Vulkan을 쓸 수도 있다. 이 둘은 접근 방식이 근본적으로 다르고, 실제로 어떤 상황에서 어떤 게 낫지도 꽤 다르다. XGEN 모델 서버를 AMD GPU(Strix Halo, gfx1151)에서 운영하면서 겪은 실전 경험을 정리한다.
 
 ## 배경

@@ -15,8 +15,6 @@ tags:
 
 
 
-# 목적에 맞는 OpenSearch Docker Compose 구성
-
 ## 1. 개발/PoC 용 단일 노드 (`docker-compose-poc.yml`)
 
 ```yaml

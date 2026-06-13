@@ -13,8 +13,6 @@ tags:
 ---
 
 
-# Playwright 스크롤바 강제 표시: headless 환경의 UI 트릭
-
 ## 개요
 
 XGEN 2.0의 브라우저 자동화 Agent를 테스트하다가 이상한 점을 발견했다. Playwright로 열린 브라우저에서 스크롤바가 보이지 않는 것이다. 페이지 내용이 뷰포트보다 길어도 스크롤바가 없었다. 일반 Chrome 브라우저에서는 정상적으로 보이는데, Playwright Chromium에서만 사라졌다.

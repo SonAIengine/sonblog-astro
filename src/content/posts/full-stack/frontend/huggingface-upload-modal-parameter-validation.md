@@ -13,8 +13,6 @@ tags:
 ---
 
 
-# HuggingFace 업로드 모달: 파라미터 검증과 에러 핸들링
-
 ## 개요
 
 XGEN 2.0의 데이터 프로세서에서 전처리한 데이터셋을 HuggingFace Hub에 직접 업로드할 수 있다. 리포지토리 ID, 파일명, 공개/비공개 설정, HuggingFace 계정 정보를 입력하면 백엔드가 Hub API를 호출해서 업로드한다.

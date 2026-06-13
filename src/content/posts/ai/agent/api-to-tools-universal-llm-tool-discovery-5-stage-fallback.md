@@ -17,8 +17,6 @@ tags:
 ---
 
 
-# api-to-tools: 어떤 API든 LLM 도구로 변환하는 5단계 Fallback 디스커버리 전략
-
 ## 왜 이걸 만들었나
 
 이전 글들에서 [graph-tool-call](./graph-tool-call-llm-agent-graph-based-tool-search-engine.md)을 다뤘다. graph-tool-call은 "이미 정의된 tool 수백 개에서 LLM이 호출할 후보를 빠르게 찾아주는" 검색 엔진이다. 그런데 정작 현장에서 가장 큰 병목은 검색이 아니라 **그 앞단 — tool 정의를 만드는 일** 자체였다.

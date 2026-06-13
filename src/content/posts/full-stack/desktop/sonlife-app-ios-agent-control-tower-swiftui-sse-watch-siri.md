@@ -18,8 +18,6 @@ tags:
 ---
 
 
-# sonlife-app iOS 컨트롤 타워: SwiftUI + SSE 실시간 인박스 + APNs 인라인 승인 + Watch + Siri
-
 ## 음성 녹음 앱이 컨트롤 타워가 된 이유
 
 sonlife-app은 원래 단순한 음성 녹음 앱이었다. iOS에서 백그라운드 녹음을 하고, 청크 단위로 서버에 업로드하고, STT 결과를 받아오는 게 전부였다. 프로젝트명도 `VoiceRecorder`였다.

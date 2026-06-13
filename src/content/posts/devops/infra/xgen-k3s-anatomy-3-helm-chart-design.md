@@ -18,8 +18,6 @@ tags:
 ---
 
 
-# XGEN K3s 인프라 완전 해부 (3) — Helm 차트 설계: 하나의 Chart로 6개 서비스 배포
-
 ## 시리즈 목차
 
 - [1편: 전체 구조와 컨테이너 빌드 전략](xgen-k3s-anatomy-1-docker-build-strategy.md)

@@ -18,8 +18,6 @@ tags:
 ---
 
 
-# XGEN MS 365 MCP 통합 — Device Code Flow 인증부터 워크플로우 노드까지
-
 ## 배경
 
 XGEN 2.0은 AI Agent가 워크플로우를 통해 외부 서비스를 호출하는 플랫폼이다. 기존에 Teams 전용 MCP 노드(`teams_mcp`)가 있었지만, 커버리지가 Teams 메시지 전송에 한정되어 있었다. Microsoft 365 전체 — Outlook 메일, 캘린더, Teams, OneDrive, Planner, To Do, OneNote, Excel, SharePoint — 를 하나의 MCP 노드로 통합하는 작업을 진행했다.

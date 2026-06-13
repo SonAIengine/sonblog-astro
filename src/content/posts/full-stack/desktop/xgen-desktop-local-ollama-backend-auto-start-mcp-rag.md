@@ -16,8 +16,6 @@ tags:
 ---
 
 
-# XGEN 데스크톱 앱 고도화: Tauri에서 로컬 Ollama, 백엔드 자동기동, MCP/RAG를 한 번에 연결하기
-
 ## 데스크톱 앱은 웹을 감싸는 것으로 끝나지 않는다
 
 [Tauri 2.0으로 AI 데스크톱 앱 만들기](./tauri-2-0-ai-desktop-app-build.md)에서는 XGEN 웹 프론트엔드를 데스크톱 앱으로 가져오는 기본 구조를 정리했다. Remote WebView, Rust sidecar, 로컬 LLM, 터널, API 추상화 같은 기반이 핵심이었다.

@@ -17,8 +17,6 @@ tags:
 ---
 
 
-# gwanjong-mcp 운영기 — 9개 플랫폼 확장, 캠페인 GTM, 스팸 방지 실전
-
 ## 개요
 
 [이전 글](/ai/agent/gwanjong-mcp-ai-social-agent-mcp-system-design-impl/)에서 gwanjong-mcp의 시스템 설계를 다뤘다. Scout/Draft/Strike 3단계 파이프라인, devhub-social 어댑터 레이어, mcp-pipeline 상태 관리가 핵심이었다.

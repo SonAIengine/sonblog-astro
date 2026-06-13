@@ -18,8 +18,6 @@ series: DevOps 실전
 seriesOrder: 1
 ---
 
-# Search API와 LLMOps Docker 구성기
-
 > 2024년 11월 프로젝트에서 검색 API 성능 최적화와 LLMOps 파이프라인의 Docker 환경 구성을 진행했다. 이 과정에서 마주친 아키텍처 설계와 컨테이너화 전략을 공유한다.
 
 ## 문제 상황

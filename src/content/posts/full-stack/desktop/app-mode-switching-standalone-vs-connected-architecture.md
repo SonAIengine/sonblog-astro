@@ -13,8 +13,6 @@ tags:
 ---
 
 
-# 앱 모드 전환: Standalone vs Connected 아키텍처
-
 ## 왜 하나의 앱에 세 가지 모드가 필요한가
 
 XGEN 데스크톱 앱(xgen-app)은 Tauri 2.0 기반으로 만든 AI 워크스테이션이다. 이 앱이 놓이는 환경은 크게 세 가지다.

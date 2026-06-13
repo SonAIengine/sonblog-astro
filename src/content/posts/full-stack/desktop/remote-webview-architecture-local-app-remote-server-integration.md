@@ -12,8 +12,6 @@ tags:
 ---
 
 
-# Remote WebView 아키텍처: 로컬 앱과 원격 서버 연동
-
 ## 개요: 왜 Remote WebView인가
 
 Tauri로 데스크톱 앱을 만들 때 일반적인 방식은 프론트엔드를 로컬에 번들링하는 것이다. `tauri.conf.json`의 `beforeBuildCommand`에 `npm run build`를 넣으면, Tauri가 빌드 시 프론트엔드 에셋(HTML, JS, CSS)을 바이너리 안에 포함시킨다. 앱을 실행하면 `tauri://localhost`라는 커스텀 프로토콜로 로컬 파일을 렌더링한다.

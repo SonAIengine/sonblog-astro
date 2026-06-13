@@ -17,8 +17,6 @@ tags:
 ---
 
 
-# AI 회사 자율운영 플랫폼에 synaptic-memory + graph-tool-call 통합기
-
 ## 배경: 왜 라이브러리를 도입했는가
 
 Hive Corp은 AI 에이전트들이 자율적으로 회사를 운영하는 플랫폼이다. CEO(사용자)가 Matrix 채팅으로 지시하면, CTO 에이전트가 LLM으로 판단하고, Developer 에이전트가 코드를 작성하고, 스프린트를 돌리고, 성장 엔진이 조직을 최적화한다.

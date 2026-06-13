@@ -17,8 +17,6 @@ tags:
 ---
 
 
-# xgen-model v2 아키텍처 — MinIO 모델 허브, vLLM 0.17.0, Inference Proxy
-
 ## 개요
 
 XGEN 플랫폼에서 LLM 모델 서빙을 담당하는 서비스가 xgen-model이다. v1은 단일 파일에 모든 로직이 섞여 있었고, 모델 파일은 Pod의 로컬 디스크에만 존재했다. GPU 벤더(NVIDIA/AMD)별 분기도 하드코딩이었다.

@@ -17,8 +17,6 @@ tags:
 ---
 
 
-# graph-tool-call v0.19: Tool Result 지능형 압축으로 76K → 116 토큰 (97.6% 절감)
-
 ## 진짜 병목은 검색이 아니라 응답이었다
 
 [graph-tool-call v0.15](./graph-tool-call-v015-workflow-chain-competitive-benchmark.md)에서 그래프 기반 tool 검색의 정확도와 토큰 절감을 다뤘다. 그 글을 쓴 시점부터 한 가지 의문이 계속 남아 있었다.

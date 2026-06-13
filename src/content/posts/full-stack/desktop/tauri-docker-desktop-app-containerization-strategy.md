@@ -14,8 +14,6 @@ tags:
 ---
 
 
-# Tauri + Docker: 데스크톱 앱의 컨테이너화 전략
-
 ## 왜 데스크톱 앱에 Docker가 필요한가
 
 XGEN 데스크톱 앱(xgen-app)은 Tauri 2.0 기반 AI 워크스테이션이다. Rust 백엔드에서 mistral.rs로 로컬 LLM 추론을 돌리고, Next.js 프론트엔드를 WebView로 렌더링한다. 여기까지만 보면 Docker가 필요 없어 보인다. 데스크톱 앱이니까 `cargo tauri build`로 바이너리를 뽑으면 끝이다.

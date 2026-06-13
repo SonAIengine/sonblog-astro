@@ -13,8 +13,6 @@ tags:
 ---
 
 
-# Redis 기반 SSE 세션 상태 공유: 멀티 POD 환경
-
 > 2026.01 | xgen-documents 서비스의 SSE 세션 관리를 단일 POD에서 멀티 POD로 전환한 과정
 
 ## 배경

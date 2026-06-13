@@ -19,8 +19,6 @@ tags:
 ---
 
 
-# graph-tool-call v0.15: 1068 Tool 스트레스 테스트와 워크플로우 체인 엔진
-
 ## 이전 글에서
 
 [이전 글](graph-tool-call-llm-agent-graph-based-tool-search-engine.md)에서 graph-tool-call의 기본 아키텍처를 다뤘다. OpenAPI 스펙에서 tool을 수집하고, BM25 + 그래프 확장 + 임베딩을 결합한 하이브리드 검색으로 LLM에 필요한 tool만 전달하는 구조였다. Kubernetes 248 tools에서 baseline 12% → 78% 정확도를 달성했다.

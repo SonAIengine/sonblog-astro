@@ -17,8 +17,6 @@ tags:
 ---
 
 
-# K3s 위에 AI 플랫폼 올리기: 인프라 설계부터 배포까지
-
 > 2025.12 ~ 2026.02 | K3s, Helm, ArgoCD, Docker Compose, Jenkins, Istio
 
 ## 개요

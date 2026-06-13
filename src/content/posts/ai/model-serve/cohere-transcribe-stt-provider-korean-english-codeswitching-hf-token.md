@@ -18,8 +18,6 @@ tags:
 ---
 
 
-# Cohere Transcribe STT Provider 도입: 한/영 코드스위칭과 HF Gated Repo 자동 인증
-
 ## faster-whisper에서 갈아탄 이유
 
 sonlife는 라이프로그 STT를 faster-whisper의 `large-v3` 모델로 처리해왔다. 한국어 회의/통화/메모를 받아쓰는 데 큰 불만은 없었지만, 두 가지 작은 누적 문제가 있었다.

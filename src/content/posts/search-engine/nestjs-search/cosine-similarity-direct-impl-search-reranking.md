@@ -14,8 +14,6 @@ tags:
 ---
 
 
-# Cosine Similarity 직접 구현으로 검색 재순위화
-
 OpenSearch에는 Painless 스크립트에서 사용할 수 있는 내장 `cosineSimilarity()` 함수가 있다. 검색 쿼리의 `script_score`에서 문서 벡터와 쿼리 벡터 간 유사도를 계산하는 표준적인 방법이다. 그런데 왜 NestJS 서버 측에서 cosine similarity를 직접 구현해야 했을까?
 
 이유는 간단하다. OpenSearch에 쿼리를 보내기 **전에** 검색어의 의도를 분석해야 했기 때문이다. "빨간 겨울 코트"라는 검색어가 들어오면, 이 검색어가 색상(빨간)과 계절(겨울)을 얼마나 강하게 의미하는지 판단하고, 그 결과에 따라 OpenSearch 쿼리의 필터와 boost를 동적으로 구성해야 한다. 이 판단 과정에서 검색어 벡터와 미리 정의된 속성 벡터(계절, 성별, 색상) 간 cosine similarity를 서버 측에서 직접 계산한다.

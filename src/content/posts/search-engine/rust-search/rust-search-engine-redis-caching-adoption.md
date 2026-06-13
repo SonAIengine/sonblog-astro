@@ -19,8 +19,6 @@ series: Rust 커머스 검색 엔진
 seriesOrder: 4
 ---
 
-# Rust 검색 엔진에 Redis 캐싱 적용기
-
 ## 개요
 
 커머스 검색 엔진을 Rust(Axum)로 운영하면서, 검색 요청이 들어올 때마다 OpenSearch에 인덱스 매핑 정보를 조회하는 오버헤드가 점점 눈에 띄기 시작했다. 상품 검색, 마케팅 검색, 이벤트 검색 등 다양한 인덱스 타입마다 필드 설정(어떤 필드가 exact match인지, phrase match인지, primary/secondary인지)을 매번 OpenSearch 클러스터에 질의하고 있었는데, 이 정보는 인덱싱 시점에만 변경되고 검색 시점에는 사실상 불변 데이터다.

@@ -14,8 +14,6 @@ tags:
 ---
 
 
-# Orama BM25로 MkDocs 블로그 검색을 완전히 교체한 과정
-
 ## 개요
 
 MkDocs Material은 기본으로 lunr.js 기반 검색을 제공한다. 한국어 토크나이징이 부실하고, 결과 랭킹이 단순하며, 검색 결과 UI를 커스터마이징할 여지가 거의 없다. [Knowledge Graph](knowledge-graph.md)를 만들면서 그래프 노드 검색에 Orama BM25를 도입했는데, 성능과 유연성이 좋아서 사이트 전체 검색도 Orama로 교체하기로 했다.

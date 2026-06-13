@@ -15,8 +15,6 @@ tags:
 ---
 
 
-# Jenkins 자격증명 하드코딩 제거: K8s Secret + JCasC 변수 참조 전환과 부수 인프라 fix
-
 ## 왜 이 작업이 미뤄지고 있었나
 
 JCasC(Jenkins Configuration as Code)로 Jenkins를 관리하기 시작했을 때, 가장 빠르게 굴리는 방법은 admin 자격증명을 YAML에 그대로 적는 것이다. 첫 부팅이 한 번에 되고, JCasC가 의도대로 동작하는지 확인하기 쉽고, 어차피 dev 환경이라는 핑계가 통한다.

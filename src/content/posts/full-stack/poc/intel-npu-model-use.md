@@ -13,8 +13,6 @@ tags:
 ---
 
 
-# Intel NPU 가속을 활용한 TinyLlama 챗봇 구현
-
 ## Intel NPU Acceleration Library 소개
 Intel® NPU Acceleration Library는 Intel Neural Processing Unit (NPU)의 성능을 활용하여 애플리케이션의 효율성을 향상시키는 Python 라이브러리입니다. 호환되는 하드웨어에서 고속 연산을 수행할 수 있도록 설계되었습니다.
 

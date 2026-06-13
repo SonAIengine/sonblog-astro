@@ -19,8 +19,6 @@ series: Rust 커머스 검색 엔진
 seriesOrder: 9
 ---
 
-# Rust 검색 엔진의 CI/CD 파이프라인 구축 (GitLab + EC2)
-
 ## 개요
 
 검색 엔진을 운영하다 보면 코드 배포 외에도 "설정 파일 배포"가 필요한 순간이 온다. 대표적인 것이 동의어(synonym) 사전이다. OpenSearch의 동의어 사전은 인덱스 생성 시점이 아니라 분석기(analyzer)가 로드하는 시점에 파일을 읽는다. 동의어를 추가하거나 수정하면 해당 파일을 OpenSearch 노드에 배포하고, 인덱스를 닫았다 열어야(close/open) 반영된다.

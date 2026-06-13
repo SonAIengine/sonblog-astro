@@ -20,8 +20,6 @@ tags:
 ---
 
 
-# XGEN AWS EKS 신규 고객사 배포기 — 온프레미스에서 클라우드로
-
 ## 배경 — "yaml 하나면 끝"이 진짜인가
 
 XGEN 2.0은 AI Agent 플랫폼이다. 지금까지는 온프레미스 K3s 클러스터에서 운영했고, 고객사(롯데홈쇼핑 등)에도 같은 온프레미스 구조로 배포했다. 이전 글 "[ArgoCD 멀티 고객사 배포 아키텍처](argocd-multi-client-site-deploy-architecture-applicationset-trial-error-single-entry-point-design.md)"에서 `projects/*.yaml` 단일 진입점 구조를 만들었고, 당시 결론은 이랬다:

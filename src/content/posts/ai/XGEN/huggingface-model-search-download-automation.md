@@ -14,8 +14,6 @@ tags:
 ---
 
 
-# HuggingFace 모델 검색 및 다운로드 자동화
-
 LLM 서빙 서버에 모델을 올리려면 먼저 모델을 서버에 가져와야 한다. 처음엔 수동으로 `huggingface-cli download`를 쳤지만, 사용자가 UI에서 직접 모델을 검색하고 다운로드하는 기능이 필요했다. xgen-model에 HuggingFace 모델 검색/다운로드 API를 붙인 과정을 정리한다.
 
 ## 배경

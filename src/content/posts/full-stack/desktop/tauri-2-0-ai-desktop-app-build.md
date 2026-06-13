@@ -13,8 +13,6 @@ tags:
 ---
 
 
-# Tauri 2.0으로 AI 데스크톱 앱 만들기
-
 ## 개요
 
 XGEN 2.0은 AI 워크플로우 에디터, 모델 서빙, RAG, 브라우저 자동화를 하나의 플랫폼에 통합하는 AI 에이전트 플랫폼이다. 이미 xgen-frontend(Next.js)와 xgen-backend-gateway(Rust) 기반의 웹 버전이 운영 중이었지만, 데스크톱 네이티브 앱이 필요한 상황이 왔다.

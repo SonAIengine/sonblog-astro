@@ -16,8 +16,6 @@ tags:
 ---
 
 
-# OpenAI 호환 API 서버 직접 만들기
-
 LLM 서빙 서버를 직접 만들면서 가장 잘한 결정 중 하나는 OpenAI API 포맷을 그대로 따른 것이다. `/v1/chat/completions`, `/v1/embeddings`, `/v1/models` — 이 세 가지 엔드포인트만 맞추면 LangChain, OpenAI 클라이언트, 웬만한 AI 도구들이 전부 연동된다. XGEN 모델 서버가 이 호환 레이어를 어떻게 구현했는지 정리한다.
 
 ## 배경: 왜 직접 만드나

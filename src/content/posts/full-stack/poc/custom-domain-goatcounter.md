@@ -17,8 +17,6 @@ tags:
 ---
 
 
-# GitHub Pages 커스텀 도메인 마이그레이션 + GoatCounter 조회수 연동
-
 ## 배경
 
 MkDocs Material + GitHub Pages로 운영하던 기술 블로그의 URL이 `sonaiengine.github.io/sonblog/`였다. GitHub Pages 프로젝트 사이트 특성상 `/sonblog/` 하위 경로에 배포되는 구조인데, 이 경로가 코드 곳곳에 하드코딩되어 있었다.

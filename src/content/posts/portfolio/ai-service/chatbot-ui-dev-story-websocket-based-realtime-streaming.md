@@ -19,8 +19,6 @@ series: AI 서비스 개발
 seriesOrder: 1
 ---
 
-# 챗봇 UI 개발기 - WebSocket 기반 실시간 스트리밍
-
 ## 개요
 
 2024년 3월, chatbot-ui-next 프로젝트에서 WebSocket 기반의 실시간 채팅 UI를 개발했다. 기존 HTTP 기반의 단순 요청/응답 구조에서 벗어나 실시간 스트리밍 응답 처리와 사용자 경험을 향상시키는 것이 주요 목표였다.

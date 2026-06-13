@@ -17,8 +17,6 @@ tags:
 ---
 
 
-# graph-tool-call v0.20 개발기: RPC 탐지에서 Plan-and-Execute 컴파일러까지
-
 ## v0.19는 결과를 줄였고, v0.20은 실행 경로를 만들기 시작했다
 
 `graph-tool-call`은 처음에는 LLM Agent의 tool 목록을 줄이기 위한 라이브러리였다. Kubernetes API처럼 tool이 수백 개만 되어도 모든 tool schema를 prompt에 넣는 방식은 바로 한계에 닿는다. 그래서 OpenAPI, MCP, Python 함수에서 tool을 수집하고, BM25와 그래프 관계, optional embedding을 조합해 필요한 tool만 찾아오는 구조로 시작했다.

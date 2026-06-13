@@ -16,8 +16,6 @@ tags:
 ---
 
 
-# llama.cpp 서버 운영기: ROCm GPU에서의 삽질과 해결
-
 > 2026년 1월, XGEN 2.0 플랫폼에서 AMD GPU 기반 llama.cpp 서버를 운영하면서 ROCm GPU page fault, 메모리 fitting 크래시, Flash Attention 비호환 등 수많은 문제를 만났다. NVIDIA GPU에서는 한 번에 되던 것들이 AMD에서는 하나하나 삽질의 연속이었다. 약 6시간 동안 집중적으로 디버깅하며 해결한 과정을 기록한다.
 
 ## 왜 llama.cpp인가

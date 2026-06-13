@@ -16,8 +16,6 @@ tags:
 ---
 
 
-# XGEN Workbench 분산 실행 인프라: KVM 컴퓨트 풀, GPU 워커, PriorityClass, NetworkPolicy까지
-
 ## 왜 Workbench가 필요했나
 
 XGEN은 처음에는 "워크플로우를 만들고 실행하는 플랫폼"에 가까웠다. 사용자가 캔버스에서 노드를 연결하고, 에이전트가 도구를 호출하고, 결과를 스트리밍으로 받는다. 이 구조만으로도 많은 업무 자동화가 가능하다.

@@ -13,8 +13,6 @@ tags:
 ---
 
 
-# CSS 셀렉터 대체 전략: selector_alternatives로 안정성 확보
-
 ## 개요
 
 브라우저 자동화에서 가장 흔하게 깨지는 것이 CSS 셀렉터다. 녹화 시점에는 `#submit-btn`이었던 버튼이, 다음 배포에서 `#submit-button-v2`로 바뀌거나, CSS Module 해시가 `Button_active__x7k2p`에서 `Button_active__m3j9r`로 변경되면 재생이 실패한다.

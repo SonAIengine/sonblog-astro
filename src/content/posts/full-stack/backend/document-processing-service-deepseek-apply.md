@@ -13,8 +13,6 @@ tags:
 ---
 
 
-# 문서 처리 서비스에 DeepSeek 지시문 적용하기
-
 > 2025.12 | xgen-documents, xgen-model, xgen-backend-gateway | DeepSeek, vLLM, LangChain, Prompt Engineering
 
 ## 개요

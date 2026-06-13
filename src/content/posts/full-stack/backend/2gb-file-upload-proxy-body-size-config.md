@@ -12,8 +12,6 @@ tags:
 ---
 
 
-# 2GB 파일 업로드를 위한 프록시 body size 설정
-
 > 2025.11 | Rust, Axum, reqwest, tokio-tungstenite
 
 ## 개요

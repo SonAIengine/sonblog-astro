@@ -13,8 +13,6 @@ tags:
 ---
 
 
-# Admin 모델 서빙 매니저: GPU 현황과 모델 배포 UI
-
 ## 개요
 
 XGEN 2.0은 LLM과 임베딩 모델을 자체 서버에 배포해서 사용하는 플랫폼이다. 초기에는 모델 배포 기능이 `AdminLLMvLLMConfig`(LLM 설정)와 `AdminVectordbConfig`(벡터DB 설정)에 분산되어 있었다. 배포할 때마다 두 곳을 왔다 갔다 해야 했고, GPU 상태 확인은 터미널에서 직접 해야 했다.

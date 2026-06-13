@@ -14,8 +14,6 @@ tags:
 ---
 
 
-# camelCase 직렬화로 Rust와 Frontend 데이터 통신
-
 ## 문제: 두 세계의 네이밍 컨벤션 충돌
 
 Rust는 `snake_case`를 쓴다. `app_mode`, `server_url`, `tunnel_connected`. TypeScript(JavaScript)는 `camelCase`를 쓴다. `appMode`, `serverUrl`, `tunnelConnected`. 두 언어의 관례는 각각의 생태계에서 확고하게 자리 잡고 있다.

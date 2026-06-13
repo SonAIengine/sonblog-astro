@@ -16,8 +16,6 @@ tags:
 ---
 
 
-# Reusable GitHub Actions와 Helm으로 K3s 범용 배포 플랫폼 구축하기
-
 ## 개요
 
 개인 프로젝트 두 개를 K3s 단일 노드 서버에서 운영하고 있었다.
