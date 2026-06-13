@@ -68,9 +68,25 @@ const structuredData = {
 <script is:inline>
   // mermaid는 런타임에 CDN에서 로드 (번들 제외 — 빌드 경량화)
   (function () {
+    // base64(UTF-8) 디코드
+    function b64(s) {
+      var bin = atob(s);
+      var bytes = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      return new TextDecoder("utf-8").decode(bytes);
+    }
     function renderMermaid() {
-      var nodes = document.querySelectorAll("pre.mermaid:not([data-processed])");
+      var nodes = document.querySelectorAll(
+        "pre.mermaid[data-mermaid-src]:not([data-processed])"
+      );
       if (!nodes.length) return;
+      // data 속성의 raw 코드를 textContent로 채움 (escape 우회)
+      nodes.forEach(function (n) {
+        if (!n.getAttribute("data-filled")) {
+          n.textContent = b64(n.getAttribute("data-mermaid-src"));
+          n.setAttribute("data-filled", "1");
+        }
+      });
       import("https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs").then(
         function (m) {
           var mermaid = m.default;
