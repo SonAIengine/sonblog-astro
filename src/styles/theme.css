@@ -1,0 +1,34 @@
+/* Register design tokens for Tailwind v4 */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --font-app: var(--font-google-sans-code);
+}
+
+/* Light theme — Linear 톤 */
+:root,
+[data-theme="light"] {
+  --background: #fcfcfd;
+  --foreground: #08090a;
+  --accent: #5b6cf0;
+  --accent-foreground: #ffffff;
+  --muted: #f1f1f3;
+  --muted-foreground: #6b7280;
+  --border: #e8e8ea;
+}
+
+/* Dark theme — Linear 톤 (깊은 무채색 + indigo accent + 시그니처 회색) */
+[data-theme="dark"] {
+  --background: #08090a;
+  --foreground: #f7f8f8;
+  --accent: #7c8af5;
+  --accent-foreground: #ffffff;
+  --muted: #16181d;
+  --muted-foreground: #8a8f98;
+  --border: #23252b;
+}
