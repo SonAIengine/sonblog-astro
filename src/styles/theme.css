@@ -15,7 +15,7 @@
 [data-theme="light"] {
   --background: #fcfcfd;
   --foreground: #08090a;
-  --accent: #0d9488;
+  --accent: #0f766e;
   --accent-foreground: #ffffff;
   --muted: #f1f1f3;
   --muted-foreground: #6b7280;
@@ -26,7 +26,7 @@
 [data-theme="dark"] {
   --background: #08090a;
   --foreground: #f7f8f8;
-  --accent: #2dd4bf;
+  --accent: #14b8a6;
   --accent-foreground: #08090a;
   --muted: #16181d;
   --muted-foreground: #8a8f98;
