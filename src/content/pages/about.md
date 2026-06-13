@@ -1,37 +1,24 @@
 ---
 title: "About"
-description: "A bit about me and this blog."
+description: "AI Engineer 손성준 — LLM 서빙, AI 검색엔진, RAG, MCP 에이전트, Kubernetes 인프라."
 ---
 
-AstroPaper is a minimal, accessible and SEO-friendly blog theme built with [Astro](https://astro.build/) and [Tailwind CSS](https://tailwindcss.com/).
+AI Engineer 손성준입니다. 커머스 검색 엔진에서 출발해 AI 에이전트 플랫폼까지, AI 서비스의 전체 스택을 직접 만들고 운영합니다.
 
-![Astro Paper](@/assets/images/astropaper-og.jpg)
+OpenSearch 키워드 검색을 5,000+ TPS 실 서비스에 적용하고, Rust로 리라이트하여 응답 28ms까지 끌어내렸습니다. 검색 품질을 높이기 위해 OpenSearch k-NN과 Qdrant 하이브리드 검색, LLM 쿼리 확장을 도입하며 AI Search로 확장했습니다.
 
-AstroPaper provides a solid foundation for blogs, or even portfolios\_ with full markdown support, built-in dark mode, and a clean layout that works out-of-the-box.
+이후 AI 에이전트 플랫폼(XGEN 2.0) 개발을 맡아, vLLM/llama.cpp 기반 멀티 GPU LLM 서빙, LangChain/LangGraph 기반 Iterative RAG, GraphDB 지식 그래프, MCP 기반 AI Agent, 워크플로우 엔진까지 7개 마이크로서비스를 Kubernetes/ArgoCD GitOps로 운영하고 있습니다.
 
-The blog posts in this theme also serve as guides, docs or example articles\_ making AstroPaper a flexible starting point for your next content-driven site.
+최근에는 MCP(Model Context Protocol) 생태계에 집중하고 있습니다. 1,000+ API 도구를 그래프 기반으로 검색하는 graph-tool-call 엔진을 오픈소스로 개발하고, 9개 소셜 플랫폼을 MCP 파이프라인으로 자동화하는 gwanjong-mcp 에이전트를 운영 중입니다.
 
-## Features
+## 전문 영역
 
-AstroPaper comes with a set of useful features that make content publishing easy and effective:
+- **Search Engine** — OpenSearch k-NN / Hybrid Search, Qdrant, Rust Axum 검색 API, RAG
+- **AI / ML** — vLLM / llama.cpp GPU 서빙, MCP 기반 AI Agent, 그래프 기반 도구 검색, LangChain / LangGraph
+- **Full Stack** — Next.js / React, Rust API Gateway, Tauri 데스크톱 앱, Python 비동기
+- **DevOps** — K8s / K3s, ArgoCD GitOps, Jenkins CI/CD, Docker
 
-- SEO-friendly
-- Fast performance
-- Light & dark mode
-- Highly customizable
-- Organizable blog posts
-- Responsive & accessible
-- Static search with [PageFind](https://pagefind.app/)
-- Automatic social image generation
+## Links
 
-and so much more.
-
-## Show your support
-
-If you like [AstroPaper](https://github.com/satnaing/astro-paper), consider giving it a star ⭐️.
-
-Found a bug 🐛 or have an improvement ✨ in mind? Feel free to open an [issue](https://github.com/satnaing/astro-paper/issues), submit a [pull request](https://github.com/satnaing/astro-paper/pulls) or start a [discussion](https://github.com/satnaing/astro-paper/discussions).
-
-If you find this theme helpful, you can also [sponsor me on GitHub](https://github.com/sponsors/satnaing) or [buy me a coffee](https://buymeacoffee.com/satnaing) to show your support — every penny counts.
-
-Kyay zuu! 🙏🏼
+- GitHub: [SonAIengine](https://github.com/SonAIengine)
+- Email: sonsj97@gmail.com
