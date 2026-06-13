@@ -15,19 +15,19 @@
 [data-theme="light"] {
   --background: #fcfcfd;
   --foreground: #08090a;
-  --accent: #5b6cf0;
+  --accent: #0d9488;
   --accent-foreground: #ffffff;
   --muted: #f1f1f3;
   --muted-foreground: #6b7280;
   --border: #e8e8ea;
 }
 
-/* Dark theme — Linear 톤 (깊은 무채색 + indigo accent + 시그니처 회색) */
+/* Dark theme — Linear 톤 (깊은 무채색 + teal accent + 시그니처 회색) */
 [data-theme="dark"] {
   --background: #08090a;
   --foreground: #f7f8f8;
-  --accent: #7c8af5;
-  --accent-foreground: #ffffff;
+  --accent: #2dd4bf;
+  --accent-foreground: #08090a;
   --muted: #16181d;
   --muted-foreground: #8a8f98;
   --border: #23252b;
