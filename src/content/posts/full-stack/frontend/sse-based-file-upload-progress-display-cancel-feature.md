@@ -52,8 +52,8 @@ flowchart LR
     Backend -->|이벤트 스트림| Route
     Route -->|이벤트 전달| SSEFunc
     SSEFunc -->|onProgress 콜백| Modal
-    AbortCtrl -->|abort()| SSEFunc
-    SSEFunc -->|cancelSession()| Cancel
+    AbortCtrl -->|"abort()"| SSEFunc
+    SSEFunc -->|"cancelSession()"| Cancel
     Context -->|activeSSECount| Modal
 ```
 

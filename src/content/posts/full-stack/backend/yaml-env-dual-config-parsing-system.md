@@ -87,15 +87,15 @@ fn redis_url_from_env() -> String {
 
 ```mermaid
 flowchart LR
-    subgraph "계층 1: config.yml"
+    subgraph L1["계층 1: config.yml"]
         A[APP_SITE + APP_ENV<br/>site/env별 오버라이드]
     end
 
-    subgraph "계층 2: services.yaml"
+    subgraph L2["계층 2: services.yaml"]
         B[서비스 매핑 + DB/Redis<br/>환경별 3종 파일]
     end
 
-    subgraph "계층 3: 환경변수"
+    subgraph L3["계층 3: 환경변수"]
         C[SERVICE_XXX_URL<br/>개별 모듈 오버라이드]
     end
 
@@ -119,7 +119,7 @@ flowchart LR
     C --> D{SERVICES_CONFIG_FILE<br/>환경변수?}
     D -->|있음| E[해당 경로 로드]
     D -->|없음| F[후보 경로 순회]
-    F --> G[/app/config/services.yaml]
+    F --> G["/app/config/services.yaml"]
     G --> H[config/services.yaml]
     E --> I[ServicesConfig 파싱]
     H --> I

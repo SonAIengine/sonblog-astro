@@ -42,9 +42,9 @@ flowchart TD
     end
 
     subgraph 검색_API["검색 API"]
-        Client[클라이언트] --> GoodsRecom[/goods-recomword]
-        Client --> MarketingRecom[/marketing-recomword]
-        Client --> EventRecom[/event-recomword]
+        Client[클라이언트] --> GoodsRecom["/goods-recomword"]
+        Client --> MarketingRecom["/marketing-recomword"]
+        Client --> EventRecom["/event-recomword"]
 
         GoodsRecom --> QueryBuilder[쿼리 빌더]
         MarketingRecom --> QueryBuilder
