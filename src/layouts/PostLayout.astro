@@ -68,8 +68,8 @@ const structuredData = {
 <script is:inline>
   // mermaid는 런타임에 CDN에서 로드 (번들 제외 — 빌드 경량화)
   (function () {
-    // 노드당 1회만 렌더 (직접 호출 + astro:page-load 중복 방지 — race 차단)
-    var seen = new WeakSet();
+    var seen = new WeakSet(); // 노드당 1회만 렌더 (중복 호출 차단)
+    var idc = 0;
     // base64(UTF-8) 디코드
     function b64(s) {
       var bin = atob(s);
@@ -78,16 +78,15 @@ const structuredData = {
       return new TextDecoder("utf-8").decode(bytes);
     }
     function renderMermaid() {
-      var pending = [];
+      var els = [];
       document
         .querySelectorAll("pre.mermaid[data-mermaid-src]")
         .forEach(function (n) {
           if (seen.has(n)) return;
-          seen.add(n); // 동기 — 동시 호출이 같은 노드를 중복 처리하지 못함
-          n.textContent = b64(n.getAttribute("data-mermaid-src"));
-          pending.push(n);
+          seen.add(n);
+          els.push(n);
         });
-      if (!pending.length) return;
+      if (!els.length) return;
       import("https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs").then(
         function (m) {
           var mermaid = m.default;
@@ -98,7 +97,18 @@ const structuredData = {
             theme: dark ? "dark" : "neutral",
             securityLevel: "loose",
           });
-          mermaid.run({ nodes: pending });
+          // render(id, code) — 코드를 직접 넘기고 결과 SVG를 삽입 (run의 노드 처리 모호함 회피)
+          els.forEach(function (el) {
+            var code = b64(el.getAttribute("data-mermaid-src"));
+            mermaid
+              .render("mmd-" + idc++, code)
+              .then(function (res) {
+                el.innerHTML = res.svg;
+              })
+              .catch(function (e) {
+                console.error("mermaid render failed:", e);
+              });
+          });
         }
       );
     }
