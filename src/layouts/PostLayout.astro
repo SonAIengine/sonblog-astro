@@ -97,17 +97,16 @@ const structuredData = {
             theme: dark ? "dark" : "neutral",
             securityLevel: "loose",
           });
-          // render(id, code) — 코드를 직접 넘기고 결과 SVG를 삽입 (run의 노드 처리 모호함 회피)
+          // 검증된 방식: 새 div에 코드를 textContent로 넣고 run (pre 직접 run이 깨지는 문제 회피)
           els.forEach(function (el) {
             var code = b64(el.getAttribute("data-mermaid-src"));
-            mermaid
-              .render("mmd-" + idc++, code)
-              .then(function (res) {
-                el.innerHTML = res.svg;
-              })
-              .catch(function (e) {
-                console.error("mermaid render failed:", e);
-              });
+            var div = document.createElement("div");
+            div.className = "mermaid";
+            div.textContent = code;
+            el.replaceWith(div);
+            mermaid.run({ nodes: [div] }).catch(function (e) {
+              console.error("mermaid failed:", e);
+            });
           });
         }
       );
