@@ -15,6 +15,8 @@ tags:
 - 커머스
 - 집계검색
 - Search Engine
+series: Rust 커머스 검색 엔진
+seriesOrder: 7
 ---
 
 # OpenSearch Aggregation 검색 구현 및 에러 핸들링 전략

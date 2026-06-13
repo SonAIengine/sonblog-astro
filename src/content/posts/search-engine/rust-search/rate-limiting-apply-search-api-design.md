@@ -15,6 +15,8 @@ tags:
 - 검색엔진
 - 백엔드
 - Search Engine
+series: Rust 커머스 검색 엔진
+seriesOrder: 12
 ---
 
 # Rate Limiting이 적용된 검색 API 설계

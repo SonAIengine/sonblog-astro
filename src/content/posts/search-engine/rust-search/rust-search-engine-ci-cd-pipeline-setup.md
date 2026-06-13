@@ -15,6 +15,8 @@ tags:
 - 인프라
 - 자동화
 - Search Engine
+series: Rust 커머스 검색 엔진
+seriesOrder: 9
 ---
 
 # Rust 검색 엔진의 CI/CD 파이프라인 구축 (GitLab + EC2)

@@ -15,6 +15,8 @@ tags:
 - FastAPI
 - 텍스트분석
 - Portfolio
+series: AI 서비스 개발
+seriesOrder: 2
 ---
 
 # 상품 리뷰 분석 API 개발기 - 형태소 분석기 성능 최적화

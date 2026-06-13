@@ -1,0 +1,65 @@
+---
+import { getCollection } from "astro:content";
+
+interface Props {
+  tags: string[];
+  currentId: string;
+}
+const { tags, currentId } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
+
+const all = await getCollection("posts", ({ data }) => !data.draft);
+const scored = all
+  .filter(p => p.id !== currentId)
+  .map(p => ({
+    p,
+    score: p.data.tags.filter((t: string) => tags.includes(t)).length,
+  }))
+  .filter(x => x.score > 0)
+  .sort(
+    (a, b) =>
+      b.score - a.score ||
+      +new Date(b.p.data.pubDatetime) - +new Date(a.p.data.pubDatetime)
+  )
+  .slice(0, 4);
+---
+
+{
+  scored.length > 0 && (
+    <section class="related-posts">
+      <h2>관련 글</h2>
+      <ul>
+        {scored.map(({ p }) => (
+          <li>
+            <a href={`${base}posts/${p.id}/`}>{p.data.title}</a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
+<style>
+  .related-posts {
+    margin: 2rem 0;
+  }
+  .related-posts h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+  }
+  .related-posts ul {
+    list-style: none;
+    padding: 0;
+  }
+  .related-posts li {
+    margin: 0.4rem 0;
+  }
+  .related-posts a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .related-posts a:hover {
+    text-decoration: underline;
+  }
+</style>

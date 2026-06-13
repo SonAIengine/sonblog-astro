@@ -14,6 +14,8 @@ tags:
 - 최적화
 - 데이터파이프라인
 - Search Engine
+series: Rust 커머스 검색 엔진
+seriesOrder: 13
 ---
 
 # 커서 기반 인덱싱 vs 전체 인덱싱: 성능 비교

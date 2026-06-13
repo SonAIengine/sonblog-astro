@@ -15,6 +15,8 @@ tags:
 - LLM
 - 성능튜닝
 - AI
+series: XGEN 개발기
+seriesOrder: 5
 ---
 
 # XGEN 2.0 임베딩 전용 서버와 배치 처리 최적화

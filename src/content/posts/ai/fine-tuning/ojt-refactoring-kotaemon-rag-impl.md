@@ -15,6 +15,8 @@ tags:
 - 프레임워크
 - AI개발
 - AI
+series: LLM 파인튜닝
+seriesOrder: 2
 ---
 
 # OJT 리팩토링과 Kotaemon RAG 구현기

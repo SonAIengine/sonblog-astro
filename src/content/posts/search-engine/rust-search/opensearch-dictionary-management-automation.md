@@ -15,6 +15,8 @@ tags:
 - 인덱싱
 - DevOps
 - Search Engine
+series: Rust 커머스 검색 엔진
+seriesOrder: 11
 ---
 
 # OpenSearch 동의어(Synonym) 사전 관리 자동화

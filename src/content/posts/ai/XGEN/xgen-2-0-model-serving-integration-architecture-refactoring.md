@@ -16,6 +16,8 @@ tags:
 - 백엔드스위칭
 - AI
 featured: true
+series: XGEN 개발기
+seriesOrder: 4
 ---
 
 # XGEN 2.0 모델 서빙 통합 아키텍처 리팩토링

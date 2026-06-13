@@ -15,6 +15,8 @@ tags:
 - React
 - UI개발
 - Portfolio
+series: AI 서비스 개발
+seriesOrder: 1
 ---
 
 # 챗봇 UI 개발기 - WebSocket 기반 실시간 스트리밍

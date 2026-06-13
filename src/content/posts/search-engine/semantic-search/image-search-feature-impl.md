@@ -15,6 +15,8 @@ tags:
 - 임베딩
 - 커머스
 - Search Engine
+series: AI 시맨틱 검색
+seriesOrder: 2
 ---
 
 # 이미지 검색 기능 구현기 - 시맨틱 검색과 AI 분류의 만남

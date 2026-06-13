@@ -15,6 +15,8 @@ tags:
 - 보안
 - 미들웨어
 - AI
+series: XGEN 개발기
+seriesOrder: 6
 ---
 
 # XGEN 2.0 워크플로우 접근 제어와 IO 로깅 시스템

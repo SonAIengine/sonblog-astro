@@ -15,6 +15,8 @@ tags:
 - 동시성
 - 비동기
 - Search Engine
+series: Rust 커머스 검색 엔진
+seriesOrder: 5
 ---
 
 # OpenSearch 인덱싱 서비스: 스트리밍 vs 배치 처리 비교

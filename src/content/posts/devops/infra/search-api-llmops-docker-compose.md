@@ -14,6 +14,8 @@ tags:
 - 마이크로서비스
 - DevOps
 - 배포
+series: DevOps 실전
+seriesOrder: 1
 ---
 
 # Search API와 LLMOps Docker 구성기

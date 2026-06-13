@@ -15,6 +15,8 @@ tags:
 - NLP
 - AI검색
 - Search Engine
+series: AI 시맨틱 검색
+seriesOrder: 1
 ---
 
 # 벡터 기반 시맨틱 검색 구현기

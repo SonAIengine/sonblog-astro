@@ -15,6 +15,8 @@ tags:
 - 모니터링
 - 쿠버네티스
 - DevOps
+series: DevOps 실전
+seriesOrder: 2
 ---
 
 # XGEN 2.0 인프라: K8s + ArgoCD 운영 배포

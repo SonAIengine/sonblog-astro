@@ -15,6 +15,8 @@ tags:
 - 인덱싱
 - 상품검색
 - Search Engine
+series: Rust 커머스 검색 엔진
+seriesOrder: 8
 ---
 
 # 커머스 상품 추천 검색 API 설계 (goods + marketing)

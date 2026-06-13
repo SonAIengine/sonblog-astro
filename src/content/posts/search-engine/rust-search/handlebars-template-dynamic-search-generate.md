@@ -15,6 +15,8 @@ tags:
 - 쿼리생성
 - 백엔드
 - Search Engine
+series: Rust 커머스 검색 엔진
+seriesOrder: 10
 ---
 
 # Handlebars 템플릿으로 동적 검색 쿼리 생성하기

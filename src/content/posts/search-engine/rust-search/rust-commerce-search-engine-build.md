@@ -15,6 +15,8 @@ tags:
 - 백엔드
 - Search Engine
 featured: true
+series: Rust 커머스 검색 엔진
+seriesOrder: 1
 ---
 
 

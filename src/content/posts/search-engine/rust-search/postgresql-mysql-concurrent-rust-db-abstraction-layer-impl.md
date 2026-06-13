@@ -15,6 +15,8 @@ tags:
 - sqlx
 - 백엔드
 - Search Engine
+series: Rust 커머스 검색 엔진
+seriesOrder: 3
 ---
 
 # PostgreSQL과 MySQL 동시 지원하는 Rust DB 추상화 레이어 구현

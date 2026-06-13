@@ -17,6 +17,8 @@ tags:
 - 미들웨어
 - 백엔드
 - Search Engine
+series: Rust 커머스 검색 엔진
+seriesOrder: 2
 ---
 
 

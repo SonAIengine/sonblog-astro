@@ -1,6 +1,8 @@
 ---
 import { type CollectionEntry, getCollection, render } from "astro:content";
 import PostLayout from "@/layouts/PostLayout.astro";
+import SeriesNav from "@/components/SeriesNav.astro";
+import RelatedPosts from "@/components/RelatedPosts.astro";
 import Header from "@/components/Header.astro";
 import Footer from "@/components/Footer.astro";
 import Datetime from "@/components/Datetime.astro";
@@ -132,6 +134,8 @@ const ogImage = ogImageUrl
       <EditPost {hideEditPost} {post} class="max-sm:hidden" />
     </div>
 
+    <SeriesNav series={post.data.series} currentId={post.id} />
+
     <article
       id="article"
       class:list={[
@@ -152,6 +156,8 @@ const ogImage = ogImageUrl
     <ul class="mt-4 mb-8 flex flex-wrap gap-4 sm:my-8">
       {tags.map(tag => <Tag tag={slugifyStr(tag)} tagName={tag} size="sm" />)}
     </ul>
+
+    <RelatedPosts tags={post.data.tags} currentId={post.id} />
 
     <ShareLinks />
 

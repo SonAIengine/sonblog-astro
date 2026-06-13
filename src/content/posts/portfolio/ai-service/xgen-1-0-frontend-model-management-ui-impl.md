@@ -15,6 +15,8 @@ tags:
 - UI개발
 - GPU관리
 - Portfolio
+series: AI 서비스 개발
+seriesOrder: 3
 ---
 
 # XGEN 1.0 프론트엔드 모델 관리 UI 구현

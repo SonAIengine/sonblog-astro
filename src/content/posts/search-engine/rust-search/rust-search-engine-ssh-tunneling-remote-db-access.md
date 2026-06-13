@@ -15,6 +15,8 @@ tags:
 - DevOps
 - 인프라
 - Search Engine
+series: Rust 커머스 검색 엔진
+seriesOrder: 6
 ---
 
 # Rust 검색 엔진에서 SSH 터널링으로 원격 DB 접근하기

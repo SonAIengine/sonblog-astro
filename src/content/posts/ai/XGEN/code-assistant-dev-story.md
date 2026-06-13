@@ -15,6 +15,8 @@ tags:
 - AI개발
 - 코드검색
 - AI
+series: XGEN 개발기
+seriesOrder: 1
 ---
 
 # Code Assistant 개발기 - AI 기반 개발 도우미 시스템 구축

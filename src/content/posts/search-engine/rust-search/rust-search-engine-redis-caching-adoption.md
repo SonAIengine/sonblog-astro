@@ -15,6 +15,8 @@ tags:
 - 백엔드
 - 인프라
 - Search Engine
+series: Rust 커머스 검색 엔진
+seriesOrder: 4
 ---
 
 # Rust 검색 엔진에 Redis 캐싱 적용기

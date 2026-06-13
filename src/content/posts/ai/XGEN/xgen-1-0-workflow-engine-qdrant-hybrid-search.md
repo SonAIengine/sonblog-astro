@@ -15,6 +15,8 @@ tags:
 - 검색엔진
 - MCP
 - AI
+series: XGEN 개발기
+seriesOrder: 3
 ---
 
 # XGEN 1.0 워크플로우 엔진과 Qdrant 하이브리드 검색

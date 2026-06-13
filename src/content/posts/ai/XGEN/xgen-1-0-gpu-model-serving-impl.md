@@ -15,6 +15,8 @@ tags:
 - 성능최적화
 - 프로덕션
 - AI
+series: XGEN 개발기
+seriesOrder: 2
 ---
 
 # XGEN 1.0 GPU 모델 서빙 구현기 - vLLM과 llama.cpp 최적화

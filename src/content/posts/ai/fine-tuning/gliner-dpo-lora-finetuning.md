@@ -15,6 +15,8 @@ tags:
 - 모델학습
 - NLP
 - AI
+series: LLM 파인튜닝
+seriesOrder: 1
 ---
 
 # GliNER과 DPO-LoRA를 활용한 모델 파인튜닝
