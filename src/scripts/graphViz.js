@@ -297,6 +297,66 @@ window.initGraphViz = function initGraphViz() {
   const TYPE_ORDER = { post: 0, tag: 1, subcategory: 2, category: 3, series: 4 };
   let currentQuery = "";
 
+  // ── 검색 엔진 (Phase 1: 텍스트 BM25) ───────────────────────────────────────
+  const BASE = import.meta.env.BASE_URL.replace(/\/$/, ""); // "/sonblog-astro"
+  // 글 URL → graph 노드 매핑 (검색 결과를 그래프와 연결)
+  const urlToNode = new Map();
+  data.nodes.forEach(n => {
+    if (n.type === "post" && n.url) urlToNode.set(n.url.replace(/\/$/, ""), n);
+  });
+
+  let _orama = null; // { db, search, docs }
+  let _oramaPromise = null;
+  function ensureSearch() {
+    if (_orama) return Promise.resolve(_orama);
+    if (_oramaPromise) return _oramaPromise;
+    _oramaPromise = (async () => {
+      const orama = await import("@orama/orama");
+      const docs = await fetch(`${BASE}/search-index.json`).then(r => r.json());
+      const db = await orama.create({
+        schema: {
+          title: "string",
+          description: "string",
+          tags: "string[]",
+          body: "string",
+          category: "string",
+          url: "string",
+          date: "string",
+        },
+        components: { tokenizer: { stemming: false } },
+      });
+      await orama.insertMultiple(db, docs);
+      _orama = { db, search: orama.search, docs };
+      return _orama;
+    })();
+    return _oramaPromise;
+  }
+
+  // 쿼리 주변 스니펫 추출
+  function snippetFor(doc, q) {
+    const hay = `${doc.body || ""}`;
+    const i = hay.toLowerCase().indexOf(q);
+    if (i >= 0) {
+      const s = Math.max(0, i - 50);
+      return (s > 0 ? "…" : "") + hay.slice(s, i + q.length + 90).trim() + "…";
+    }
+    const desc = doc.description || doc.body || "";
+    return desc ? desc.slice(0, 130) + (desc.length > 130 ? "…" : "") : "";
+  }
+  // 첫 매치 1곳만 <mark> 강조 (안전하게 escape)
+  function highlight(text, q) {
+    if (!q) return escapeHtml(text);
+    const i = text.toLowerCase().indexOf(q);
+    if (i < 0) return escapeHtml(text);
+    return (
+      escapeHtml(text.slice(0, i)) +
+      "<mark>" +
+      escapeHtml(text.slice(i, i + q.length)) +
+      "</mark>" +
+      escapeHtml(text.slice(i + q.length))
+    );
+  }
+
   // 노드 상세 HTML 빌더
   function buildDetailHTML(node) {
     const typeLabel = TYPE_LABELS[node.type] || node.type;
@@ -404,53 +464,29 @@ window.initGraphViz = function initGraphViz() {
     }
   }
 
-  // 검색/브라우즈 결과 목록 렌더
-  function renderList(query) {
-    if (!sideBody) return;
-    currentQuery = query || "";
-    const q = currentQuery.trim().toLowerCase();
-    if (searchClear) searchClear.style.display = q ? "flex" : "none";
-
-    let items, headLabel;
-    if (!q) {
-      items = allPosts;
-      headLabel = "전체 글";
-    } else {
-      items = data.nodes
-        .filter(n => (n.label || "").toLowerCase().includes(q))
-        .sort((a, b) => {
-          const d = (TYPE_ORDER[a.type] ?? 9) - (TYPE_ORDER[b.type] ?? 9);
-          if (d) return d;
-          return (
-            (b.date || "").localeCompare(a.date || "") ||
-            degreeOf(b.id) - degreeOf(a.id)
-          );
-        })
-        .slice(0, 80);
-      headLabel = "검색결과";
-    }
-
-    let html = `<div class="gs-section-head">${headLabel}<span class="gs-count">${items.length}</span></div>`;
-    if (!items.length) {
-      sideBody.innerHTML = html + `<div class="gs-empty">결과가 없습니다</div>`;
-      return;
-    }
-    html += `<ul class="gs-list">`;
-    items.forEach(n => {
-      const date = n.date ? `<span class="gs-item-date">${escapeHtml(n.date)}</span>` : "";
-      html +=
-        `<li class="gs-item" data-node-id="${escapeHtml(n.id)}">` +
-        `<span class="gt-type gt-type--${n.type}">${escapeHtml(TYPE_LABELS[n.type] || n.type)}</span>` +
-        `<span class="gs-item-label">${escapeHtml(n.label)}</span>${date}</li>`;
+  // 결과 항목 렌더 (entries: {nodeId,label,type,date,snippetHtml,labelHtml})
+  function renderEntries(sections) {
+    let html = "";
+    sections.forEach(sec => {
+      if (!sec.entries.length) return;
+      html += `<div class="gs-section-head">${sec.head}<span class="gs-count">${sec.count ?? sec.entries.length}</span></div><ul class="gs-list">`;
+      sec.entries.forEach(e => {
+        const date = e.date ? `<span class="gs-item-date">${escapeHtml(e.date)}</span>` : "";
+        const snip = e.snippetHtml ? `<div class="gs-item-snippet">${e.snippetHtml}</div>` : "";
+        html +=
+          `<li class="gs-item" data-node-id="${escapeHtml(e.nodeId)}">` +
+          `<div class="gs-item-main"><span class="gt-type gt-type--${e.type}">${escapeHtml(TYPE_LABELS[e.type] || e.type)}</span>` +
+          `<span class="gs-item-label">${e.labelHtml || escapeHtml(e.label)}</span>${date}</div>${snip}</li>`;
+      });
+      html += `</ul>`;
     });
-    html += `</ul>`;
+    if (!html) html = `<div class="gs-section-head">검색결과<span class="gs-count">0</span></div><div class="gs-empty">결과가 없습니다</div>`;
     sideBody.innerHTML = html;
     sideBody.scrollTop = 0;
     sideBody.querySelectorAll(".gs-item").forEach(el => {
       el.addEventListener("click", () => {
         const node = nodesById.get(el.dataset.nodeId);
         if (!node) return;
-        // 해당 타입이 꺼져 있으면 켜서 그래프에 보이게
         if (!activeTypes.has(node.type)) {
           activeTypes.add(node.type);
           const cb = document.querySelector(`.graph-filter-cb[data-type="${node.type}"]`);
@@ -463,6 +499,103 @@ window.initGraphViz = function initGraphViz() {
     });
   }
 
+  // 검색/브라우즈 결과 목록 렌더
+  async function renderList(query) {
+    if (!sideBody) return;
+    currentQuery = query || "";
+    const q = currentQuery.trim();
+    if (searchClear) searchClear.style.display = q ? "flex" : "none";
+
+    // 빈 쿼리 → 전체 글 브라우즈
+    if (!q) {
+      renderEntries([
+        {
+          head: "전체 글",
+          entries: allPosts.map(n => ({
+            nodeId: n.id,
+            label: n.label,
+            type: n.type,
+            date: n.date,
+          })),
+        },
+      ]);
+      return;
+    }
+
+    // 로딩 표시 (인덱스 첫 로드 시)
+    if (!_orama) {
+      sideBody.innerHTML = `<div class="gs-section-head">검색 중…</div>`;
+    }
+
+    const ql = q.toLowerCase();
+    const reqQuery = currentQuery; // 경쟁 조건 가드
+    let engine;
+    try {
+      engine = await ensureSearch();
+    } catch (e) {
+      engine = null;
+    }
+    if (reqQuery !== currentQuery) return; // 그 사이 쿼리 바뀜 → 폐기
+
+    const seen = new Set();
+    const postEntries = [];
+    const pushDoc = doc => {
+      const node = urlToNode.get((doc.url || "").replace(/\/$/, ""));
+      if (!node || seen.has(node.id)) return;
+      seen.add(node.id);
+      postEntries.push({
+        nodeId: node.id,
+        type: "post",
+        date: doc.date,
+        labelHtml: highlight(doc.title, ql),
+        snippetHtml: highlight(snippetFor(doc, ql), ql),
+      });
+    };
+
+    if (engine) {
+      // BM25 텍스트 검색 (제목>태그>설명>본문 가중)
+      try {
+        const res = await engine.search(engine.db, {
+          term: q,
+          properties: ["title", "description", "tags", "body"],
+          boost: { title: 4, tags: 3, description: 2, body: 1 },
+          tolerance: 1,
+          limit: 60,
+        });
+        res.hits.forEach(h => pushDoc(h.document));
+      } catch (e) {
+        /* noop */
+      }
+      // 부분일치 폴백 (한국어 토큰 부분검색 보완)
+      engine.docs.forEach(doc => {
+        if (postEntries.length >= 80) return;
+        if (
+          doc.title.toLowerCase().includes(ql) ||
+          (doc.tags || []).some(t => t.toLowerCase().includes(ql)) ||
+          (doc.body || "").toLowerCase().includes(ql)
+        )
+          pushDoc(doc);
+      });
+    }
+
+    // 매칭되는 태그/주제 노드 (그래프 탐색용)
+    const nodeEntries = data.nodes
+      .filter(n => n.type !== "post" && (n.label || "").toLowerCase().includes(ql))
+      .sort((a, b) => degreeOf(b.id) - degreeOf(a.id))
+      .slice(0, 10)
+      .map(n => ({
+        nodeId: n.id,
+        type: n.type,
+        labelHtml: highlight(n.label, ql),
+      }));
+
+    if (reqQuery !== currentQuery) return;
+    renderEntries([
+      { head: "글", entries: postEntries },
+      { head: "태그·주제", entries: nodeEntries },
+    ]);
+  }
+
   // ── 필터 ─────────────────────────────────────────────────────────────────
   document.querySelectorAll(".graph-filter-cb").forEach(cb => {
     cb.addEventListener("change", () => {
@@ -473,13 +606,24 @@ window.initGraphViz = function initGraphViz() {
     });
   });
 
-  // ── 검색 입력 ──────────────────────────────────────────────────────────────
-  searchInput?.addEventListener("input", e => renderList(e.target.value));
+  // ── 검색 입력 (디바운스) ────────────────────────────────────────────────────
+  let _searchTimer = 0;
+  searchInput?.addEventListener("input", e => {
+    const v = e.target.value;
+    clearTimeout(_searchTimer);
+    _searchTimer = setTimeout(() => renderList(v), 120);
+  });
   searchClear?.addEventListener("click", () => {
     if (searchInput) searchInput.value = "";
     renderList("");
     searchInput?.focus();
   });
+  // 인덱스 idle 프리페치 → 첫 검색 지연 최소화
+  if ("requestIdleCallback" in window) {
+    requestIdleCallback(() => ensureSearch().catch(() => {}), { timeout: 4000 });
+  } else {
+    setTimeout(() => ensureSearch().catch(() => {}), 2500);
+  }
 
   // ── 초기화 버튼 ───────────────────────────────────────────────────────────
   document.getElementById("graph-reset")?.addEventListener("click", () => {
