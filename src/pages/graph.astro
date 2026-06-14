@@ -267,26 +267,30 @@ const gm = graphData.metadata;
 .graph-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.2rem;
-  padding: 0.28rem 0.55rem;
-  border: 1px solid var(--md-default-fg-color--lighter);
-  border-radius: 5px;
-  background: var(--md-default-bg-color);
-  color: var(--md-default-fg-color);
+  gap: 0.32rem;
+  padding: 0.34rem 0.7rem;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--md-default-fg-color--light);
   font-size: 0.72rem;
+  font-weight: 500;
   cursor: pointer;
   font-family: var(--md-text-font);
-  transition: border-color 0.15s, color 0.15s;
+  transition: background 0.14s, color 0.14s;
   white-space: nowrap;
 }
+.graph-btn svg { opacity: 0.85; transition: transform 0.3s ease; }
+.graph-btn:hover svg { transform: rotate(-90deg); }
 .graph-btn:hover {
-  border-color: var(--md-primary-fg-color);
-  color: var(--md-primary-fg-color);
+  background: var(--md-default-fg-color--lightest);
+  color: var(--md-default-fg-color);
 }
+.graph-btn:active { transform: translateY(0.5px); }
 [data-md-color-scheme="slate"] .graph-btn {
-  border-color: #1e293b; background: #0f172a; color: #94a3b8;
+  background: transparent; color: #94a3b8;
 }
-[data-md-color-scheme="slate"] .graph-btn:hover { border-color: #a78bfa; color: #c4b5fd; }
+[data-md-color-scheme="slate"] .graph-btn:hover { background: #1e293b; color: #e2e8f0; }
 /* ── 필터 바 ────────────────────────────────────────────────────────────────── */
 
 .graph-filter-chip {
