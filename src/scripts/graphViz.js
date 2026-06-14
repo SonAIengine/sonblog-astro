@@ -1,919 +1,458 @@
-import Graph from "graphology";
-import Sigma from "sigma";
-import forceAtlas2 from "graphology-layout-forceatlas2";
-import louvain from "graphology-communities-louvain";
-import { create, insert, search as oramaSearch } from "@orama/orama";
-
-let currentRenderer = null;
-let starfieldAnimId  = null;
+// Knowledge Graph — Cosmograph(GPU force-graph) 기반 렌더러
+// 기존 Sigma 구현은 graphViz.sigma.js.bak 에 백업되어 있음.
+// 패널(gp-*)·툴팁(gt-*) HTML 구조는 graph.astro의 CSS를 그대로 재사용한다.
+import { Cosmograph } from "@cosmograph/cosmograph";
 
 // ── 공통 상수 ────────────────────────────────────────────────────────────────
-
 const TYPE_LABELS = {
-  category: "카테고리", subcategory: "서브카테고리",
-  series: "시리즈", tag: "태그", post: "포스트",
+  category: "카테고리",
+  subcategory: "서브카테고리",
+  series: "시리즈",
+  tag: "태그",
+  post: "포스트",
 };
 
-const TYPE_LABELS_SHORT = {
-  category: "카테고리", subcategory: "서브",
-  series: "시리즈", tag: "태그", post: "포스트",
-};
-
-function getThemeColors(dark) {
-  const NODE_COLORS = dark ? {
-    category: "#a78bfa", subcategory: "#60a5fa",
-    series: "#fb923c", tag: "#34d399", post: "#f472b6",
-  } : {
-    category: "#7C3AED", subcategory: "#2563EB",
-    series: "#EA580C", tag: "#0D9488", post: "#DC2626",
-  };
-
-  const EDGE_COLORS = dark ? {
-    inCategory: "rgba(167,139,250,0.5)", inSubcategory: "rgba(96,165,250,0.4)",
-    inSeries: "rgba(251,146,60,0.55)", hasTag: "rgba(52,211,153,0.4)",
-    related: "rgba(192,132,252,0.55)", dependsOn: "rgba(96,165,250,0.6)",
-    tagCooccurs: "rgba(253,224,71,0.3)",
-  } : {
-    inCategory: "#9333ea", inSubcategory: "#3b82f6",
-    inSeries: "#ea580c", hasTag: "#0d9488",
-    related: "#8b5cf6", dependsOn: "#2563eb",
-    tagCooccurs: "#94a3b8",
-  };
-
-  return {
-    NODE_COLORS,
-    EDGE_COLORS,
-    LABEL_COLOR:  dark ? "#e2e8f0" : "#1a1a2e",
-    LABEL_BG:     dark ? "rgba(7,11,24,0.7)" : "rgba(255,255,255,0)",
-    DEFAULT_EDGE: dark ? "rgba(148,163,184,0.25)" : "#94a3b8",
-  };
-}
-
-// ── 다크모드 감지 ────────────────────────────────────────────────────────────
+const DIFFICULTY_LABELS = { beginner: "입문", intermediate: "중급", advanced: "고급" };
 
 function isDarkMode() {
-  return document.documentElement.getAttribute("data-md-color-scheme") === "slate";
+  return document.documentElement.getAttribute("data-theme") === "dark";
 }
 
-// ── 별 파티클 배경 (다크모드 전용) ──────────────────────────────────────────
-
-function startStarfield(container) {
-  const old = container.querySelector(".starfield-canvas");
-  if (old) old.remove();
-  if (starfieldAnimId) { cancelAnimationFrame(starfieldAnimId); starfieldAnimId = null; }
-
-  const canvas = document.createElement("canvas");
-  canvas.className = "starfield-canvas";
-  canvas.style.cssText = `
-    position: absolute; inset: 0; width: 100%; height: 100%;
-    pointer-events: none; z-index: 0;
-  `;
-  container.style.position = "relative";
-  container.prepend(canvas);
-
-  function resize() {
-    canvas.width  = container.offsetWidth  || 800;
-    canvas.height = container.offsetHeight || 600;
-  }
-  resize();
-
-  const ctx = canvas.getContext("2d");
-
-  const stars = Array.from({ length: 200 }, () => ({
-    x:  Math.random() * canvas.width,
-    y:  Math.random() * canvas.height,
-    r:  Math.random() * 1.2 + 0.2,
-    alpha: Math.random() * 0.6 + 0.2,
-    dAlpha: (Math.random() * 0.005 + 0.001) * (Math.random() < 0.5 ? 1 : -1),
-  }));
-
-  function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    stars.forEach(s => {
-      s.alpha += s.dAlpha;
-      if (s.alpha > 0.85 || s.alpha < 0.1) s.dAlpha *= -1;
-      ctx.beginPath();
-      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(180, 200, 255, ${s.alpha})`;
-      ctx.fill();
-    });
-    starfieldAnimId = requestAnimationFrame(draw);
-  }
-
-  draw();
-
-  const ro = new ResizeObserver(resize);
-  ro.observe(container);
-  canvas._ro = ro;
+// 다크/라이트에 따른 캔버스 색상
+function themeColors(dark) {
+  return dark
+    ? {
+        background: "#070b18",
+        link: "rgba(150, 170, 210, 0.16)",
+        label: "#c8d6e8",
+        hoverRing: "#a78bfa",
+      }
+    : {
+        background: "#ffffff",
+        link: "rgba(20, 30, 60, 0.10)",
+        label: "#1f2937",
+        hoverRing: "#0f766e",
+      };
 }
 
-function stopStarfield(container) {
-  if (starfieldAnimId) { cancelAnimationFrame(starfieldAnimId); starfieldAnimId = null; }
-  const c = container?.querySelector(".starfield-canvas");
-  if (c) { c._ro?.disconnect(); c.remove(); }
+function escapeHtml(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 }
 
-// ── 그래프 구성 ──────────────────────────────────────────────────────────────
+// ── 메인 진입점 ──────────────────────────────────────────────────────────────
+let _instance = null;
 
-function buildGraph(rawData, colors) {
-  const { NODE_COLORS, EDGE_COLORS, DEFAULT_EDGE } = colors;
+window.initGraphViz = function initGraphViz() {
+  const container = document.getElementById("sigma-container");
+  const data = window.__GRAPH_DATA__;
+  if (!container || !data) return;
 
-  const NODE_HIDDEN_BY_TYPE = {
-    category: false, subcategory: false,
-    series: false, tag: false, post: true,
-  };
+  // astro:page-load가 중복 호출될 수 있으므로 컨테이너 단위로 가드
+  if (container.__cosmoInited) return;
+  container.__cosmoInited = true;
 
-  // 연결 수 계산
-  const degreeMap = {};
-  rawData.nodes.forEach(n => { degreeMap[n.id] = 0; });
-  rawData.edges.forEach(e => {
-    if (degreeMap[e.source] !== undefined) degreeMap[e.source]++;
-    if (degreeMap[e.target] !== undefined) degreeMap[e.target]++;
-  });
-
-  function computeNodeSize(node) {
-    const deg = degreeMap[node.id] || 0;
-    switch (node.type) {
-      case "category":    return 28;
-      case "subcategory": return 16 + Math.min(deg * 0.3, 7);
-      case "tag":         return Math.max(7, Math.min(18, 6 + deg * 0.8));
-      case "series":      return Math.max(10, Math.min(22, 10 + deg * 0.4));
-      case "post":        return Math.max(6, Math.min(16, 5 + deg * 1.5));
-      default:            return 8;
+  // 이전 인스턴스가 살아있으면 정리 (뷰 트랜지션 대비)
+  if (_instance) {
+    try {
+      _instance.remove();
+    } catch (e) {
+      /* noop */
     }
+    _instance = null;
   }
 
-  const graph = new Graph({ multi: false, type: "directed" });
+  // ── 데이터 인덱싱 ──────────────────────────────────────────────────────────
+  const nodesById = new Map();
+  data.nodes.forEach(n => nodesById.set(n.id, n));
 
-  rawData.nodes.forEach(node => {
-    graph.addNode(node.id, {
-      label:      node.label,
-      size:       computeNodeSize(node),
-      color:      NODE_COLORS[node.type] || "#a78bfa",
-      nodeType:   node.type,
-      url:        node.url        || null,
-      date:       node.date       || null,
-      series:     node.series     || null,
-      difficulty: node.difficulty || null,
-      hidden:     NODE_HIDDEN_BY_TYPE[node.type] ?? false,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-    });
-  });
-
-  const edgeSet = new Set();
-  rawData.edges.forEach(edge => {
-    const key    = `${edge.source}--${edge.target}`;
-    const revKey = `${edge.target}--${edge.source}`;
-    if (
-      edgeSet.has(key) || edgeSet.has(revKey) ||
-      !graph.hasNode(edge.source) || !graph.hasNode(edge.target) ||
-      edge.source === edge.target
-    ) return;
-    edgeSet.add(key);
-
-    const isDirected = edge.type === "dependsOn" || edge.type === "related";
-    graph.addDirectedEdge(edge.source, edge.target, {
-      edgeType: edge.type,
-      weight:   edge.weight,
-      color:    EDGE_COLORS[edge.type] || DEFAULT_EDGE,
-      size:     edge.type === "tagCooccurs" ? Math.min(edge.weight * 0.5, 2.0) : 1.2,
-      type:     isDirected ? "arrow" : "line",
-    });
-  });
-
-  return graph;
-}
-
-// ── 레이아웃: Louvain 커뮤니티 시딩 + ForceAtlas2 ────────────────────────────
-
-function computeLayout(graph) {
-  // Louvain은 undirected 그래프가 필요 → 임시 복사본 생성
-  const undirectedGraph = new Graph({ multi: false, type: "undirected" });
-  graph.forEachNode((node, attrs) => {
-    undirectedGraph.addNode(node, { weight: attrs.size || 1 });
-  });
-  graph.forEachEdge((_edge, attrs, source, target) => {
-    if (source !== target && !undirectedGraph.hasEdge(source, target)) {
-      undirectedGraph.addEdge(source, target, { weight: attrs.weight || 1 });
+  // 인접 노드 (양방향)
+  const adjacency = new Map();
+  data.nodes.forEach(n => adjacency.set(n.id, []));
+  data.edges.forEach(e => {
+    const a = adjacency.get(e.source);
+    const b = adjacency.get(e.target);
+    if (a && b) {
+      a.push(e.target);
+      b.push(e.source);
     }
   });
+  const degreeOf = id => (adjacency.get(id) || []).length;
 
-  // Louvain 커뮤니티 감지
-  const communities = louvain(undirectedGraph, {
-    resolution: 1.2,
-    getEdgeWeight: "weight",
+  // graph-data.json의 모든 노드 x/y가 0이라, 그대로 넣으면 force layout이
+  // 한 점에 겹친 채 시작해 퍼지지 않는다. x/y를 제거해 Cosmograph가
+  // 무작위 초기 위치를 잡도록 한다. (색/크기/url 등 나머지 속성은 유지)
+  const renderNodes = data.nodes.map(({ x, y, ...rest }) => rest);
+
+  // ── 상태 ───────────────────────────────────────────────────────────────────
+  // 체크박스 기본값과 동기화: post는 기본 off
+  const activeTypes = new Set();
+  document.querySelectorAll(".graph-filter-cb").forEach(cb => {
+    if (cb.checked) activeTypes.add(cb.dataset.type);
   });
+  if (activeTypes.size === 0) {
+    ["category", "subcategory", "series", "tag"].forEach(t => activeTypes.add(t));
+  }
 
-  // 커뮤니티별 노드 그룹핑
-  const communityNodes = {};
-  Object.entries(communities).forEach(([node, comm]) => {
-    if (!communityNodes[comm]) communityNodes[comm] = [];
-    communityNodes[comm].push(node);
-    if (graph.hasNode(node)) graph.setNodeAttribute(node, "community", comm);
-  });
+  const state = { selected: null, hovered: null };
 
-  // 커뮤니티 중심점 배치 (원형)
-  const numCommunities = Object.keys(communityNodes).length;
-  const COMMUNITY_RADIUS = 300;
-  const commCenters = {};
-  Object.keys(communityNodes).forEach((comm, i) => {
-    const angle = (i / numCommunities) * 2 * Math.PI;
-    commCenters[comm] = {
-      x: COMMUNITY_RADIUS * Math.cos(angle),
-      y: COMMUNITY_RADIUS * Math.sin(angle),
-    };
-  });
+  // 현재 활성 타입에 맞는 노드/엣지 부분집합
+  function visibleData() {
+    const visNodes = renderNodes.filter(n => activeTypes.has(n.type));
+    const visIds = new Set(visNodes.map(n => n.id));
+    const visEdges = data.edges.filter(e => visIds.has(e.source) && visIds.has(e.target));
+    return { nodes: visNodes, links: visEdges };
+  }
 
-  // 각 노드를 자기 커뮤니티 중심 주변에 배치
-  const catNodes = graph.nodes().filter(n => graph.getNodeAttribute(n, "nodeType") === "category");
+  let colors = themeColors(isDarkMode());
 
-  graph.forEachNode((node) => {
-    const comm = communities[node];
-    const center = commCenters[comm] || { x: 0, y: 0 };
-    const communitySize = communityNodes[comm]?.length || 1;
-    const jitterRadius = Math.min(150, 30 + Math.sqrt(communitySize) * 15);
+  // ── Cosmograph 인스턴스 ─────────────────────────────────────────────────────
+  const cosmograph = new Cosmograph(container, {
+    backgroundColor: colors.background,
+    nodeColor: n => n.color || "#888",
+    nodeSize: n => Math.max(2, (n.size || 8) * 0.45),
+    nodeSizeScale: 1,
+    nodeGreyoutOpacity: 0.08,
 
-    const angle = Math.random() * 2 * Math.PI;
-    const dist = Math.random() * jitterRadius;
+    renderLinks: true,
+    linkColor: () => colors.link,
+    linkWidth: 0.35,
+    linkWidthScale: 1,
+    linkGreyoutOpacity: 0,
+    curvedLinks: false,
 
-    graph.setNodeAttribute(node, "x", center.x + dist * Math.cos(angle));
-    graph.setNodeAttribute(node, "y", center.y + dist * Math.sin(angle));
-  });
+    showDynamicLabels: true,
+    showHoveredNodeLabel: true,
+    nodeLabelAccessor: n => n.label || n.id,
+    nodeLabelColor: colors.label,
+    hoveredNodeLabelColor: colors.label,
 
-  // category 노드는 커뮤니티 중심에 고정 (앵커)
-  catNodes.forEach((n) => {
-    const comm = communities[n];
-    if (comm !== undefined && commCenters[comm]) {
-      graph.setNodeAttribute(n, "x", commCenters[comm].x);
-      graph.setNodeAttribute(n, "y", commCenters[comm].y);
-    }
-  });
+    renderHoveredNodeRing: true,
+    hoveredNodeRingColor: colors.hoverRing,
+    focusedNodeRingColor: colors.hoverRing,
 
-  // ForceAtlas2 시뮬레이션
-  forceAtlas2.assign(graph, {
-    iterations: 300,
-    settings: {
-      gravity:                        0.05,
-      scalingRatio:                   10,
-      barnesHutOptimize:              true,
-      barnesHutTheta:                 0.5,
-      strongGravityMode:              true,
-      linLogMode:                     false,
-      outboundAttractionDistribution: true,
-      adjustSizes:                    false,
-      edgeWeightInfluence:            1,
-      slowDown:                       1,
+    // 시뮬레이션 (knowledge graph용 부드러운 분산)
+    simulationGravity: 0.25,
+    simulationCenter: 0.4,
+    simulationRepulsion: 1.0,
+    simulationLinkSpring: 1.0,
+    simulationLinkDistance: 8,
+    simulationFriction: 0.85,
+    simulationDecay: 1500,
+
+    fitViewOnInit: true,
+    fitViewDelay: 1200,
+    scaleNodesOnZoom: true,
+
+    onClick: node => {
+      if (node) openPanel(node);
+      else closePanel();
+    },
+    onLabelClick: node => {
+      if (node) openPanel(node);
+    },
+    onNodeMouseOver: (node, _i, _pos, ev) => {
+      state.hovered = node;
+      container.style.cursor = "pointer";
+      showTooltip(node, ev);
+    },
+    onNodeMouseOut: () => {
+      state.hovered = null;
+      container.style.cursor = "default";
+      hideTooltip();
     },
   });
-}
 
-// ── Sigma 렌더러 생성 ────────────────────────────────────────────────────────
+  const vis = visibleData();
+  cosmograph.setData(vis.nodes, vis.links);
+  _instance = cosmograph;
 
-function createRenderer(graph, container, colors, dark, graphState) {
-  const { NODE_COLORS, EDGE_COLORS, LABEL_COLOR, LABEL_BG, DEFAULT_EDGE } = colors;
-
-  return new Sigma(graph, container, {
-    renderEdgeLabels:           false,
-    enableEdgeClickEvents:      false,
-    enableEdgeWheelEvents:      false,
-    enableEdgeHoverEvents:      false,
-    defaultNodeColor:           NODE_COLORS.tag,
-    defaultEdgeColor:           DEFAULT_EDGE,
-    labelFont:                  "Pretendard, sans-serif",
-    labelSize:                  12,
-    labelWeight:                "600",
-    labelColor:                 { color: LABEL_COLOR },
-    labelBackgroundColor:       LABEL_BG,
-    labelRenderedSizeThreshold: 10,
-    minCameraRatio:             0.03,
-    maxCameraRatio:             8,
-    defaultEdgeType:            "line",
-    defaultArrowHeadLength:     10,
-
-    nodeReducer: (node, data) => {
-      const res = { ...data };
-      const isSelected = graphState.selectedNode === node;
-      const isHovered  = graphState.hoveredNode  === node;
-      const neighbors  = graphState.hoveredNode
-        ? new Set(graph.neighbors(graphState.hoveredNode))
-        : (graphState.selectedNode ? new Set(graph.neighbors(graphState.selectedNode)) : null);
-
-      const nodeType = data.nodeType;
-      if (nodeType === "post" || nodeType === "tag") {
-        res.borderColor = dark
-          ? (nodeType === "post" ? "rgba(244,114,182,0.6)" : "rgba(52,211,153,0.5)")
-          : (nodeType === "post" ? "rgba(220,38,38,0.5)"   : "rgba(13,148,136,0.45)");
-        res.borderSize = 1.5;
-      }
-
-      if (graphState.searchQuery && graphState.searchMatches.size > 0) {
-        if (!graphState.searchMatches.has(node)) {
-          res.color = dark ? "#1e293b" : "#cbd5e1";
-          res.label = "";
-          res.size  = data.size * 0.4;
-          res.borderSize = 0;
-          return res;
-        }
-        res.size = data.size * 1.3;
-        res.borderColor = dark ? "#fbbf24" : "#d97706";
-        res.borderSize  = 2.5;
-      }
-
-      if ((graphState.hoveredNode || graphState.selectedNode) && !isHovered && !isSelected) {
-        if (!neighbors || !neighbors.has(node)) {
-          if (data.hidden) return res;
-          res.color = dark ? "#374151" : "#b0bec5";
-          res.label = "";
-          res.size  = data.size * 0.7;
-          res.borderSize = 0;
-          return res;
-        }
-        res.size = data.size * 1.1;
-      }
-
-      if (isHovered) {
-        res.borderColor = dark ? "#f8fafc" : "#1e293b";
-        res.borderSize  = 2;
-      }
-
-      if (isSelected) {
-        res.size        = data.size * 1.6;
-        res.zIndex      = 10;
-        res.borderColor = dark ? "#fbbf24" : "#b45309";
-        res.borderSize  = 3;
-      }
-
-      return res;
-    },
-
-    edgeReducer: (edge, data) => {
-      const res = { ...data };
-      if (data.hidden) return res;
-
-      const [src, tgt] = graph.extremities(edge);
-      const active = graphState.hoveredNode || graphState.selectedNode;
-
-      if (active) {
-        if (src !== active && tgt !== active) {
-          res.color = dark ? "#1e293b" : "#d1d5db";
-          res.size  = 0.3;
-        } else {
-          res.size  = (data.size || 1) * 2.5;
-          res.color = EDGE_COLORS[data.edgeType] || DEFAULT_EDGE;
-        }
-      }
-
-      if (graphState.searchQuery && graphState.searchMatches.size > 0) {
-        if (!graphState.searchMatches.has(src) && !graphState.searchMatches.has(tgt)) {
-          res.color = dark ? "#1e293b" : "#d1d5db";
-          res.size  = 0.2;
-        }
-      }
-
-      return res;
-    },
-  });
-}
-
-// ── 툴팁 ─────────────────────────────────────────────────────────────────────
-
-function setupTooltip(graph, container, graphState) {
+  // ── 툴팁 ─────────────────────────────────────────────────────────────────
   const tooltip = document.getElementById("graph-tooltip");
 
-  function showTooltip(node, attrs, event) {
-    if (!tooltip) return;
-    const typeLabel = TYPE_LABELS[attrs.nodeType] || attrs.nodeType;
-    const deg = graph.degree(node);
-    let html = `<div class="gt-type gt-type--${attrs.nodeType}">${typeLabel}</div>`;
-    html += `<div class="gt-label">${attrs.label}</div>`;
-    if (attrs.date) html += `<div class="gt-meta">${attrs.date}</div>`;
-    html += `<div class="gt-meta">연결 ${deg}개</div>`;
-    html += `<div class="gt-hint">${attrs.nodeType === "post" ? "클릭하여 열기" : "클릭하여 상세 보기"}</div>`;
-
+  function showTooltip(node, ev) {
+    if (!tooltip || !node) return;
+    const typeLabel = TYPE_LABELS[node.type] || node.type;
+    let html = `<div class="gt-type gt-type--${node.type}">${escapeHtml(typeLabel)}</div>`;
+    html += `<div class="gt-label">${escapeHtml(node.label)}</div>`;
+    if (node.date) html += `<div class="gt-meta">${escapeHtml(node.date)}</div>`;
+    html += `<div class="gt-meta">연결 ${degreeOf(node.id)}개</div>`;
+    html += `<div class="gt-hint">${node.type === "post" ? "클릭하여 열기" : "클릭하여 상세 보기"}</div>`;
     tooltip.innerHTML = html;
     tooltip.classList.add("is-visible");
-    positionTooltip(event);
+    positionTooltip(ev);
   }
-
-  function hideTooltip() { tooltip?.classList.remove("is-visible"); }
-
-  function positionTooltip(e) {
-    if (!tooltip || !e) return;
+  function hideTooltip() {
+    tooltip?.classList.remove("is-visible");
+  }
+  function positionTooltip(ev) {
+    if (!tooltip || !ev) return;
     const rect = container.getBoundingClientRect();
-    const x  = (e.original?.clientX ?? e.clientX ?? 0) - rect.left;
-    const y  = (e.original?.clientY ?? e.clientY ?? 0) - rect.top;
-    const tw = tooltip.offsetWidth  || 200;
+    const cx = ev.clientX ?? ev.sourceEvent?.clientX ?? 0;
+    const cy = ev.clientY ?? ev.sourceEvent?.clientY ?? 0;
+    const x = cx - rect.left;
+    const y = cy - rect.top;
+    const tw = tooltip.offsetWidth || 200;
     const th = tooltip.offsetHeight || 80;
-    tooltip.style.left = (x + 16 + tw > rect.width  ? x - tw - 8 : x + 16) + "px";
-    tooltip.style.top  = (y + 16 + th > rect.height ? y - th - 8 : y + 12) + "px";
+    tooltip.style.left = (x + 16 + tw > rect.width ? x - tw - 8 : x + 16) + "px";
+    tooltip.style.top = (y + 16 + th > rect.height ? y - th - 8 : y + 12) + "px";
   }
-
   container.addEventListener("mousemove", e => {
-    if (graphState.hoveredNode && tooltip?.classList.contains("is-visible")) {
-      positionTooltip({ clientX: e.clientX, clientY: e.clientY });
+    if (state.hovered && tooltip?.classList.contains("is-visible")) {
+      positionTooltip(e);
     }
   });
 
-  return { showTooltip, hideTooltip };
-}
-
-// ── 정보 패널 ────────────────────────────────────────────────────────────────
-
-function setupPanel(graph, renderer, graphState, nodeContentMap, zoomToNode) {
-  const panel      = document.getElementById("graph-info-panel");
-  const panelBody  = document.getElementById("graph-panel-body");
+  // ── 정보 패널 ───────────────────────────────────────────────────────────────
+  const panel = document.getElementById("graph-info-panel");
+  const panelBody = document.getElementById("graph-panel-body");
   const panelClose = document.getElementById("graph-panel-close");
-  const base       = document.querySelector('meta[name="site-url"]')?.content || "/";
 
-  function openPanel(node, attrs) {
-    if (!panel || !panelBody) return;
-    graphState.selectedNode = node;
+  function openPanel(node) {
+    if (!panel || !panelBody || !node) return;
+    state.selected = node;
+    try {
+      cosmograph.focusNode(node);
+      cosmograph.zoomToNode(node);
+    } catch (e) {
+      /* noop */
+    }
 
-    const typeLabel = TYPE_LABELS[attrs.nodeType] || attrs.nodeType;
-    const neighbors = graph.neighbors(node);
+    const typeLabel = TYPE_LABELS[node.type] || node.type;
+    const neighborIds = adjacency.get(node.id) || [];
+    const neighbors = neighborIds.map(id => nodesById.get(id)).filter(Boolean);
 
     const posts = neighbors
-      .filter(n => graph.getNodeAttribute(n, "nodeType") === "post")
-      .map(n => ({
-        id:    n,
-        label: graph.getNodeAttribute(n, "label"),
-        url:   graph.getNodeAttribute(n, "url"),
-        date:  graph.getNodeAttribute(n, "date"),
-      }))
+      .filter(n => n.type === "post")
       .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
-
-    const otherNeighbors = neighbors
-      .filter(n => graph.getNodeAttribute(n, "nodeType") !== "post")
-      .map(n => ({
-        id:    n,
-        label: graph.getNodeAttribute(n, "label"),
-        type:  graph.getNodeAttribute(n, "nodeType"),
-      }));
-
-    const deg = graph.degree(node);
+    const others = neighbors.filter(n => n.type !== "post");
+    const deg = neighbors.length;
 
     // 헤더
-    let headerHtml = `<div class="gp-node-header gp-node-header--${attrs.nodeType}">`;
-    headerHtml += `<div class="gp-header-row">`;
-    headerHtml += `<div class="gp-type gp-type--${attrs.nodeType}">${typeLabel}</div>`;
+    let header = `<div class="gp-node-header gp-node-header--${node.type}">`;
+    header += `<div class="gp-header-row">`;
+    header += `<div class="gp-type gp-type--${node.type}">${escapeHtml(typeLabel)}</div>`;
     const stats = [`${deg} 연결`];
     if (posts.length) stats.push(`${posts.length} 포스트`);
-    if (otherNeighbors.length) stats.push(`${otherNeighbors.length} 노드`);
-    headerHtml += `<span class="gp-inline-stats">${stats.join(" · ")}</span>`;
-    headerHtml += `</div>`;
-    headerHtml += `<h2 class="gp-title">${attrs.label}</h2>`;
-    const metaParts = [];
-    if (attrs.series) metaParts.push(`<span class="gp-meta-series">${attrs.series}</span>`);
-    if (attrs.date) metaParts.push(`<span class="gp-meta-date">${attrs.date}</span>`);
-    if (attrs.difficulty) {
-      const diff = { beginner: "입문", intermediate: "중급", advanced: "고급" }[attrs.difficulty] || attrs.difficulty;
-      metaParts.push(`<span class="gp-meta-diff gp-meta-diff--${attrs.difficulty}">${diff}</span>`);
+    if (others.length) stats.push(`${others.length} 노드`);
+    header += `<span class="gp-inline-stats">${stats.join(" · ")}</span>`;
+    header += `</div>`;
+    header += `<h2 class="gp-title">${escapeHtml(node.label)}</h2>`;
+    const meta = [];
+    if (node.series) meta.push(`<span class="gp-meta-series">${escapeHtml(node.series)}</span>`);
+    if (node.date) meta.push(`<span class="gp-meta-date">${escapeHtml(node.date)}</span>`);
+    if (node.difficulty) {
+      const d = DIFFICULTY_LABELS[node.difficulty] || node.difficulty;
+      meta.push(`<span class="gp-meta-diff gp-meta-diff--${node.difficulty}">${escapeHtml(d)}</span>`);
     }
-    if (metaParts.length) headerHtml += `<div class="gp-meta-line">${metaParts.join("")}</div>`;
-    headerHtml += `</div>`;
+    if (meta.length) header += `<div class="gp-meta-line">${meta.join("")}</div>`;
+    header += `</div>`;
 
     // 본문
-    let bodyHtml = `<div class="gp-scroll-body">`;
-
-    if (attrs.nodeType === "post") {
-      const rawTeaser = (nodeContentMap[node] || "").trim();
-      if (rawTeaser) {
-        const teaser = rawTeaser.slice(0, 220);
-        bodyHtml += `<div class="gp-section gp-section--teaser">`;
-        bodyHtml += `<p class="gp-post-teaser">${teaser}${rawTeaser.length > 220 ? "..." : ""}</p>`;
-        bodyHtml += `</div>`;
-      }
-    }
+    let body = `<div class="gp-scroll-body">`;
 
     if (posts.length > 0) {
-      bodyHtml += `<div class="gp-section">`;
-      bodyHtml += `<div class="gp-section-title">연관 포스트<span class="gp-section-count">${posts.length}</span></div>`;
-      bodyHtml += `<ul class="gp-post-list">`;
+      body += `<div class="gp-section">`;
+      body += `<div class="gp-section-title">연관 포스트<span class="gp-section-count">${posts.length}</span></div>`;
+      body += `<ul class="gp-post-list">`;
       posts.forEach(p => {
-        const dateStr = p.date ? `<span class="gp-post-date">${p.date}</span>` : "";
-        bodyHtml += `<li class="gp-post-item">`;
-        bodyHtml += p.url
-          ? `<a href="${base}${p.url}" class="gp-post-link">${p.label}</a>${dateStr}`
-          : `<span class="gp-post-label">${p.label}</span>${dateStr}`;
-        bodyHtml += `</li>`;
+        const dateStr = p.date ? `<span class="gp-post-date">${escapeHtml(p.date)}</span>` : "";
+        body += `<li class="gp-post-item">`;
+        body += p.url
+          ? `<a href="${escapeHtml(p.url)}" class="gp-post-link">${escapeHtml(p.label)}</a>${dateStr}`
+          : `<span class="gp-post-label">${escapeHtml(p.label)}</span>${dateStr}`;
+        body += `</li>`;
       });
-      bodyHtml += `</ul></div>`;
+      body += `</ul></div>`;
     }
 
-    if (otherNeighbors.length > 0) {
-      const typeOrder = ["category", "subcategory", "series", "tag"];
+    if (others.length > 0) {
+      const order = ["category", "subcategory", "series", "tag"];
       const grouped = {};
-      otherNeighbors.forEach(n => {
-        if (!grouped[n.type]) grouped[n.type] = [];
-        grouped[n.type].push(n);
+      others.forEach(n => {
+        (grouped[n.type] = grouped[n.type] || []).push(n);
       });
-
-      bodyHtml += `<div class="gp-section">`;
-      bodyHtml += `<div class="gp-section-title">연결 노드<span class="gp-section-count">${otherNeighbors.length}</span></div>`;
-      typeOrder.forEach(t => {
-        if (!grouped[t] || grouped[t].length === 0) return;
-        bodyHtml += `<div class="gp-conn-group">`;
-        bodyHtml += `<span class="gp-conn-group-label gp-type--${t}">${TYPE_LABELS[t]}</span>`;
-        bodyHtml += `<div class="gp-tags">`;
+      body += `<div class="gp-section">`;
+      body += `<div class="gp-section-title">연결 노드<span class="gp-section-count">${others.length}</span></div>`;
+      order.forEach(t => {
+        if (!grouped[t] || !grouped[t].length) return;
+        body += `<div class="gp-conn-group">`;
+        body += `<span class="gp-conn-group-label gp-type--${t}">${escapeHtml(TYPE_LABELS[t])}</span>`;
+        body += `<div class="gp-tags">`;
         grouped[t].forEach(n => {
-          bodyHtml += `<span class="gp-tag gp-tag--${n.type}" data-node-id="${n.id}">${n.label}</span>`;
+          body += `<span class="gp-tag gp-tag--${n.type}" data-node-id="${escapeHtml(n.id)}">${escapeHtml(n.label)}</span>`;
         });
-        bodyHtml += `</div></div>`;
+        body += `</div></div>`;
       });
-      bodyHtml += `</div>`;
+      body += `</div>`;
+    }
+    body += `</div>`;
+
+    // 푸터 (포스트면 글 읽기 버튼)
+    let footer = "";
+    if (node.type === "post" && node.url) {
+      footer =
+        `<div class="gp-panel-footer"><a class="gp-open-btn" href="${escapeHtml(node.url)}">글 읽기` +
+        `<svg class="gp-open-btn-icon" viewBox="0 0 16 16" fill="none" width="13" height="13"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a></div>`;
     }
 
-    bodyHtml += `</div>`;
-
-    // 푸터
-    let footerHtml = "";
-    if (attrs.nodeType === "post" && attrs.url) {
-      footerHtml = `<div class="gp-panel-footer"><a class="gp-open-btn" href="${base}${attrs.url}">글 읽기<svg class="gp-open-btn-icon" viewBox="0 0 16 16" fill="none" width="13" height="13"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a></div>`;
-    }
-
-    panelBody.innerHTML = headerHtml + bodyHtml + footerHtml;
+    panelBody.innerHTML = header + body + footer;
     panel.classList.add("is-open");
 
+    // 연결 노드 칩 클릭 → 해당 노드로 이동
     panelBody.querySelectorAll(".gp-tag[data-node-id]").forEach(el => {
       el.addEventListener("click", () => {
-        const nid = el.dataset.nodeId;
-        if (graph.hasNode(nid)) {
-          zoomToNode(nid);
-          openPanel(nid, graph.getNodeAttributes(nid));
-        }
+        const target = nodesById.get(el.dataset.nodeId);
+        if (target) openPanel(target);
       });
     });
-
-    renderer.refresh();
   }
 
   function closePanel() {
+    state.selected = null;
     panel?.classList.remove("is-open");
-    graphState.selectedNode = null;
-    renderer.refresh();
+    try {
+      cosmograph.focusNode(undefined);
+    } catch (e) {
+      /* noop */
+    }
   }
-
   panelClose?.addEventListener("click", closePanel);
 
-  return { openPanel, closePanel };
-}
-
-// ── 필터 ─────────────────────────────────────────────────────────────────────
-
-function setupFilters(graph, renderer) {
-  const activeFilters = {
-    category: true, subcategory: true,
-    series: true, tag: true, post: false,
-  };
-
-  function applyFilters() {
-    graph.nodes().forEach(n => {
-      graph.setNodeAttribute(n, "hidden", !activeFilters[graph.getNodeAttribute(n, "nodeType")]);
-    });
-    graph.edges().forEach(e => {
-      const [src, tgt] = graph.extremities(e);
-      const hidden = graph.getNodeAttribute(src, "hidden") || graph.getNodeAttribute(tgt, "hidden");
-      graph.setEdgeAttribute(e, "hidden", hidden);
-    });
-    renderer.refresh();
-  }
-
+  // ── 필터 ─────────────────────────────────────────────────────────────────
   document.querySelectorAll(".graph-filter-cb").forEach(cb => {
-    const type = cb.dataset.type;
-    cb.checked = activeFilters[type] ?? false;
-    cb.addEventListener("change", e => {
-      activeFilters[type] = e.target.checked;
-      applyFilters();
+    cb.addEventListener("change", () => {
+      if (cb.checked) activeTypes.add(cb.dataset.type);
+      else activeTypes.delete(cb.dataset.type);
+      const v = visibleData();
+      cosmograph.setData(v.nodes, v.links);
     });
   });
 
-  applyFilters();
-}
-
-// ── 검색 (Orama BM25) ───────────────────────────────────────────────────────
-
-function setupSearch(graph, renderer, graphState, nodeContentMap) {
-  let oramaDb = null;
-  let oramaReady = false;
-
-  // 노드 → 연결된 태그 라벨 매핑
-  const nodeTagLabels = {};
-  graph.nodes().forEach(n => {
-    if (graph.getNodeAttribute(n, "nodeType") === "post") {
-      const tags = graph.neighbors(n)
-        .filter(nb => graph.getNodeAttribute(nb, "nodeType") === "tag")
-        .map(nb => graph.getNodeAttribute(nb, "label"));
-      nodeTagLabels[n] = tags.join(" ");
-    }
-  });
-
-  const siteBase = document.querySelector('meta[name="site-url"]')?.content || "/sonblog/";
-
-  function stripHtml(str) {
-    if (!str) return "";
-    return str.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
-  }
-
-  // 비동기 인덱스 구축
-  (async function buildOramaIndex() {
-    try {
-      let urlToText = {};
-      try {
-        const resp = await fetch(siteBase + "search/search_index.json");
-        const searchData = await resp.json();
-        searchData.docs.forEach(d => {
-          const loc = (d.location || "").split("#")[0];
-          if (!loc) return;
-          if (!urlToText[loc]) urlToText[loc] = "";
-          urlToText[loc] += " " + stripHtml(d.text || "");
-        });
-      } catch (e) {
-        console.warn("graph-viz: search_index.json 로드 실패, label만으로 인덱스 구축", e);
-      }
-
-      graph.nodes().forEach(n => {
-        const a = graph.getNodeAttributes(n);
-        if (a.nodeType === "post" && a.url) {
-          const cleanUrl = (a.url || "").replace(/^\//, "").replace(/^sonblog\//, "");
-          nodeContentMap[n] = (urlToText[cleanUrl] || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
-        }
-      });
-
-      oramaDb = create({
-        schema: {
-          nodeId: "string", label: "string", nodeType: "string",
-          content: "string", tags: "string", series: "string",
-        },
-      });
-
-      for (const n of graph.nodes()) {
-        const attrs = graph.getNodeAttributes(n);
-        let content = "";
-        if (attrs.nodeType === "post" && attrs.url) {
-          const cleanUrl = (attrs.url || "").replace(/^\//, "").replace(/^sonblog\//, "");
-          content = (urlToText[cleanUrl] || "").trim().slice(0, 2000);
-        }
-        insert(oramaDb, {
-          nodeId: n, label: attrs.label || "", nodeType: attrs.nodeType || "",
-          content, tags: nodeTagLabels[n] || "", series: attrs.series || "",
-        });
-      }
-
-      oramaReady = true;
-      console.log("graph-viz: Orama BM25 인덱스 준비 완료 (" + graph.order + " nodes)");
-    } catch (e) {
-      console.error("graph-viz: Orama 인덱스 구축 실패", e);
-    }
-  })();
-
-  // 검색 UI
+  // ── 검색 ─────────────────────────────────────────────────────────────────
   const searchInput = document.getElementById("graph-search");
   const searchClear = document.getElementById("graph-search-clear");
+  const searchWrap = searchInput?.closest(".graph-search-wrap");
+  let dropdown = null;
 
-  function doSearch(q) {
-    graphState.searchQuery = q;
-    graphState.searchMatches.clear();
-
-    if (q && oramaReady && oramaDb) {
-      const results = oramaSearch(oramaDb, {
-        term: q, limit: 20,
-        boost: { label: 3, tags: 2, series: 1.5, content: 1 },
-      });
-      results.hits.forEach(hit => {
-        const nodeId = hit.document.nodeId;
-        if (graph.hasNode(nodeId)) graphState.searchMatches.add(nodeId);
-      });
-      renderSearchDropdown(results.hits);
-    } else if (q && !oramaReady) {
-      const ql = q.toLowerCase();
-      graph.nodes().forEach(n => {
-        if ((graph.getNodeAttribute(n, "label") || "").toLowerCase().includes(ql)) {
-          graphState.searchMatches.add(n);
-        }
-      });
-      renderSearchDropdown(null);
-    } else {
-      hideSearchDropdown();
-    }
-
-    if (searchClear) searchClear.style.display = q ? "flex" : "none";
-    renderer.refresh();
-  }
-
-  function renderSearchDropdown(hits) {
-    let dropdown = document.getElementById("graph-search-dropdown");
-    if (!dropdown) {
+  function ensureDropdown() {
+    if (!dropdown && searchWrap) {
       dropdown = document.createElement("div");
-      dropdown.id = "graph-search-dropdown";
       dropdown.className = "graph-search-dropdown";
-      const wrap = document.querySelector(".graph-search-wrap");
-      if (wrap) wrap.appendChild(dropdown);
+      searchWrap.appendChild(dropdown);
     }
-
-    if (hits === null) {
-      const items = [...graphState.searchMatches].slice(0, 10);
-      if (items.length === 0) {
-        dropdown.innerHTML = '<div class="gsd-empty">결과 없음</div>';
-        dropdown.classList.add("is-visible");
-        return;
-      }
-      dropdown.innerHTML = items.map(nid => {
-        const attrs = graph.getNodeAttributes(nid);
-        return `<div class="gsd-item" data-node-id="${nid}">
-          <span class="gsd-type gsd-type--${attrs.nodeType}">${TYPE_LABELS_SHORT[attrs.nodeType] || attrs.nodeType}</span>
-          <span class="gsd-label">${attrs.label}</span>
-        </div>`;
-      }).join("");
-      dropdown.classList.add("is-visible");
-      bindDropdownClicks(dropdown);
-      return;
-    }
-
-    if (!hits || hits.length === 0) {
-      dropdown.innerHTML = '<div class="gsd-empty">결과 없음</div>';
-      dropdown.classList.add("is-visible");
-      return;
-    }
-
-    dropdown.innerHTML = hits.slice(0, 10).map(hit => {
-      const doc = hit.document;
-      const attrs = graph.hasNode(doc.nodeId) ? graph.getNodeAttributes(doc.nodeId) : {};
-      const deg = graph.hasNode(doc.nodeId) ? graph.degree(doc.nodeId) : 0;
-
-      let metaHtml = "";
-      if (doc.nodeType === "post") {
-        const parts = [];
-        if (attrs.date) parts.push(attrs.date);
-        if (attrs.series) parts.push(attrs.series);
-        if (parts.length) metaHtml += `<span class="gsd-meta">${parts.join(" · ")}</span>`;
-        if (doc.content) {
-          const teaser = doc.content.slice(0, 80).replace(/\s+/g, " ").trim();
-          metaHtml += `<span class="gsd-teaser">${teaser}${doc.content.length > 80 ? "..." : ""}</span>`;
-        }
-        if (doc.tags) {
-          const tagList = doc.tags.split(" ").filter(Boolean).slice(0, 5);
-          if (tagList.length) {
-            metaHtml += `<span class="gsd-tags">${tagList.map(t => `<span class="gsd-tag">${t}</span>`).join("")}</span>`;
-          }
-        }
-      } else {
-        metaHtml += `<span class="gsd-meta">${deg}개 연결</span>`;
-      }
-
-      return `<div class="gsd-item" data-node-id="${doc.nodeId}">
-        <div class="gsd-item-head">
-          <span class="gsd-type gsd-type--${doc.nodeType}">${TYPE_LABELS_SHORT[doc.nodeType] || doc.nodeType}</span>
-          <span class="gsd-label">${doc.label}</span>
-        </div>
-        ${metaHtml ? `<div class="gsd-item-body">${metaHtml}</div>` : ""}
-      </div>`;
-    }).join("");
-
-    dropdown.classList.add("is-visible");
-    bindDropdownClicks(dropdown);
+    return dropdown;
   }
 
-  function bindDropdownClicks(dropdown) {
-    dropdown.querySelectorAll(".gsd-item").forEach(el => {
-      el.addEventListener("click", () => {
-        const nid = el.dataset.nodeId;
-        if (graph.hasNode(nid)) {
-          graphState.zoomToNode(nid);
-          graphState.openPanel(nid, graph.getNodeAttributes(nid));
+  function runSearch(q) {
+    const query = q.trim().toLowerCase();
+    searchClear.style.display = query ? "flex" : "none";
+    const dd = ensureDropdown();
+    if (!dd) return;
+    if (!query) {
+      dd.classList.remove("is-visible");
+      dd.innerHTML = "";
+      return;
+    }
+    const matches = data.nodes
+      .filter(n => (n.label || "").toLowerCase().includes(query))
+      .sort((a, b) => degreeOf(b.id) - degreeOf(a.id))
+      .slice(0, 12);
+
+    if (!matches.length) {
+      dd.innerHTML = `<div class="gp-search-empty" style="padding:0.7rem 0.9rem;font-size:0.78rem;opacity:0.6">검색 결과 없음</div>`;
+      dd.classList.add("is-visible");
+      return;
+    }
+    dd.innerHTML = matches
+      .map(
+        n =>
+          `<div class="gp-search-item" data-node-id="${escapeHtml(n.id)}" style="display:flex;align-items:center;gap:0.5rem;padding:0.45rem 0.8rem;cursor:pointer;font-size:0.8rem;border-bottom:1px solid var(--md-default-fg-color--lightest)">` +
+          `<span class="gt-type gt-type--${n.type}" style="margin:0;flex-shrink:0">${escapeHtml(TYPE_LABELS[n.type] || n.type)}</span>` +
+          `<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(n.label)}</span></div>`
+      )
+      .join("");
+    dd.classList.add("is-visible");
+
+    dd.querySelectorAll(".gp-search-item").forEach(el => {
+      el.addEventListener("mousedown", e => {
+        e.preventDefault();
+        const node = nodesById.get(el.dataset.nodeId);
+        if (!node) return;
+        // 검색 대상 타입이 꺼져 있으면 켜고 데이터 갱신
+        if (!activeTypes.has(node.type)) {
+          activeTypes.add(node.type);
+          const cb = document.querySelector(`.graph-filter-cb[data-type="${node.type}"]`);
+          if (cb) cb.checked = true;
+          const v = visibleData();
+          cosmograph.setData(v.nodes, v.links);
         }
-        hideSearchDropdown();
+        dd.classList.remove("is-visible");
+        searchInput.value = node.label;
+        searchClear.style.display = "flex";
+        setTimeout(() => openPanel(node), 60);
       });
     });
   }
 
-  function hideSearchDropdown() {
-    const dd = document.getElementById("graph-search-dropdown");
-    if (dd) dd.classList.remove("is-visible");
-  }
-
-  let searchTimer = null;
-  searchInput?.addEventListener("input", e => {
-    clearTimeout(searchTimer);
-    const q = e.target.value.trim();
-    searchTimer = setTimeout(() => doSearch(q), 120);
+  searchInput?.addEventListener("input", e => runSearch(e.target.value));
+  searchInput?.addEventListener("focus", e => {
+    if (e.target.value) runSearch(e.target.value);
   });
-
-  if (searchClear) {
+  searchInput?.addEventListener("blur", () => {
+    setTimeout(() => dropdown?.classList.remove("is-visible"), 150);
+  });
+  searchClear?.addEventListener("click", () => {
+    searchInput.value = "";
     searchClear.style.display = "none";
-    searchClear.addEventListener("click", () => {
-      searchInput.value = "";
-      doSearch("");
-      hideSearchDropdown();
-    });
-  }
-
-  document.addEventListener("click", e => {
-    if (!e.target.closest(".graph-search-wrap")) hideSearchDropdown();
+    dropdown?.classList.remove("is-visible");
+    searchInput.focus();
   });
 
-  return { hideSearchDropdown };
-}
-
-// ── 초기화 (오케스트레이터) ──────────────────────────────────────────────────
-
-function init() {
-  const container = document.getElementById("sigma-container");
-  if (!container) return;
-
-  const rawData = window.__GRAPH_DATA__;
-  if (!rawData) { console.error("graph-viz: __GRAPH_DATA__ not found"); return; }
-
-  if (currentRenderer) {
-    try { currentRenderer.kill(); } catch (_) {}
-    currentRenderer = null;
-  }
-  stopStarfield(container);
-  container.innerHTML = "";
-
-  const dark   = isDarkMode();
-  const colors = getThemeColors(dark);
-
-  // 1. 그래프 구성
-  const graph = buildGraph(rawData, colors);
-
-  // 2. 레이아웃 계산
-  computeLayout(graph);
-
-  // 3. 별 파티클 (다크모드)
-  if (dark) startStarfield(container);
-
-  // 4. 공유 상태
-  const graphState = {
-    hoveredNode: null, selectedNode: null,
-    searchQuery: "", searchMatches: new Set(),
-    zoomToNode: null, openPanel: null,
-  };
-
-  // 5. Sigma 렌더러
-  const renderer = createRenderer(graph, container, colors, dark, graphState);
-
-  // 6. 줌 헬퍼
-  function zoomToNode(nodeId) {
-    if (!graph.hasNode(nodeId)) return;
-    const x = graph.getNodeAttribute(nodeId, "x");
-    const y = graph.getNodeAttribute(nodeId, "y");
-    if (x == null || y == null) return;
-    const { x: cx, y: cy } = renderer.graphToViewport({ x, y });
-    const cam = renderer.getCamera();
-    cam.animate(
-      renderer.viewportToFramedGraph({ x: cx, y: cy }),
-      { duration: 500 }
-    );
-  }
-
-  // 7. 각 기능 셋업
-  const nodeContentMap = {};
-  const { showTooltip, hideTooltip } = setupTooltip(graph, container, graphState);
-  const { openPanel, closePanel }    = setupPanel(graph, renderer, graphState, nodeContentMap, zoomToNode);
-
-  // graphState에 함수 참조 등록 (검색 드롭다운에서 사용)
-  graphState.zoomToNode = zoomToNode;
-  graphState.openPanel  = openPanel;
-
-  setupFilters(graph, renderer);
-  const { hideSearchDropdown } = setupSearch(graph, renderer, graphState, nodeContentMap);
-
-  // 8. 이벤트 바인딩
-  renderer.on("clickNode", ({ node }) => {
-    hideTooltip();
-    openPanel(node, graph.getNodeAttributes(node));
-  });
-
-  renderer.on("clickStage", () => { closePanel(); hideTooltip(); hideSearchDropdown(); });
-
-  renderer.on("enterNode", ({ node, event }) => {
-    graphState.hoveredNode = node;
-    container.style.cursor = "pointer";
-    showTooltip(node, graph.getNodeAttributes(node), event);
-    renderer.refresh();
-  });
-
-  renderer.on("leaveNode", () => {
-    graphState.hoveredNode = null;
-    container.style.cursor = "default";
-    hideTooltip();
-    renderer.refresh();
-  });
-
-  // 9. 리셋 / 통계
+  // ── 초기화 버튼 ───────────────────────────────────────────────────────────
   document.getElementById("graph-reset")?.addEventListener("click", () => {
-    renderer.getCamera().animatedReset();
+    closePanel();
+    if (searchInput) {
+      searchInput.value = "";
+      searchClear.style.display = "none";
+    }
+    dropdown?.classList.remove("is-visible");
+    try {
+      cosmograph.fitView(400);
+    } catch (e) {
+      /* noop */
+    }
   });
 
-  const statsEl = document.getElementById("graph-stats");
-  if (statsEl) {
-    const m = rawData.metadata || {};
-    statsEl.textContent = `${m.total_posts || 0} posts · ${m.total_tags || 0} tags · ${m.total_categories || 0} categories`;
-  }
+  // ── 테마 변경 동기화 ──────────────────────────────────────────────────────
+  syncMdScheme();
+  const themeObserver = new MutationObserver(() => {
+    syncMdScheme();
+    colors = themeColors(isDarkMode());
+    try {
+      cosmograph.setConfig({
+        backgroundColor: colors.background,
+        linkColor: () => colors.link,
+        nodeLabelColor: colors.label,
+        hoveredNodeLabelColor: colors.label,
+        hoveredNodeRingColor: colors.hoverRing,
+        focusedNodeRingColor: colors.hoverRing,
+      });
+    } catch (e) {
+      /* noop */
+    }
+  });
+  themeObserver.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["data-theme"],
+  });
+};
 
-  currentRenderer = renderer;
-  console.log(`graph-viz: ${graph.order} nodes, ${graph.size} edges [${dark ? "dark" : "light"}]`);
+// 기존 graph.astro CSS가 [data-md-color-scheme="slate"]에 의존하므로
+// Astro의 data-theme를 MkDocs 스킴 속성으로 미러링한다.
+function syncMdScheme() {
+  const dark = isDarkMode();
+  document.documentElement.setAttribute("data-md-color-scheme", dark ? "slate" : "default");
 }
-
-window.initGraphViz = init;

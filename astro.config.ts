@@ -5,6 +5,7 @@ import {
   svgoOptimizer,
 } from "astro/config";
 import tailwindcss from "@tailwindcss/vite";
+import { fileURLToPath } from "node:url";
 import mdx from "@astrojs/mdx";
 import sitemap from "@astrojs/sitemap";
 import { unified } from "@astrojs/markdown-remark";
@@ -60,6 +61,14 @@ export default defineConfig({
   },
   vite: {
     plugins: [tailwindcss()],
+    resolve: {
+      alias: {
+        // Cosmograph 내부 텔레메트리(Supabase 전송) 차단 + 번들 경량화
+        "@supabase/supabase-js": fileURLToPath(
+          new URL("./src/utils/supabase-stub.js", import.meta.url)
+        ),
+      },
+    },
   },
   fonts: [
     {

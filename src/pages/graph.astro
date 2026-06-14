@@ -6,7 +6,6 @@ const gm = graphData.metadata;
 ---
 
 <Layout title="Knowledge Graph | SON BLOG">
-<meta name="site-url" content="{{ config.site_url }}">
 
 <div class="graph-page">
 
@@ -92,6 +91,20 @@ const gm = graphData.metadata;
 </script>
 
 <style is:global>
+/* ── MkDocs(--md-*) 변수 → Astro 테마 토큰 브리지 ──────────────────────────────
+   기존 그래프 UI(패널/툴팁/툴바) CSS가 MkDocs 변수와
+   [data-md-color-scheme="slate"] 셀렉터에 의존한다.
+   graphViz.js가 data-theme를 data-md-color-scheme로 미러링하고,
+   여기서 --md-* 변수를 Linear 팔레트로 채워준다. */
+:root {
+  --md-default-bg-color: var(--background);
+  --md-default-fg-color: var(--foreground);
+  --md-default-fg-color--light: var(--muted-foreground);
+  --md-default-fg-color--lighter: color-mix(in srgb, var(--muted-foreground) 55%, transparent);
+  --md-default-fg-color--lightest: var(--border);
+  --md-primary-fg-color: var(--accent);
+  --md-text-font: var(--font-app, inherit);
+}
 .graph-bg-svg {
   width: 100%;
   height: 100%;
@@ -1093,5 +1106,30 @@ const gm = graphData.metadata;
 main:has(.graph-page) { max-width: 100% !important; }
 .graph-page { height: calc(100vh - 64px); width: 100%; }
 #sigma-container { width: 100%; height: 100%; }
+
+/* ── Cosmograph 노드 라벨 (Obsidian 스타일) ──────────────────────────────────
+   기본 라벨은 다크 테마 전용 박스(어두운 배경+어두운 글자)라 라이트에서 깨진다.
+   배경 박스를 제거하고 테마 배경색 헤일로로 가독성을 준다.
+   글자색은 graphViz.js의 nodeLabelColor가 테마별로 주입한다. */
+#sigma-container .css-label--label {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  font-family: var(--font-app, inherit) !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.01em !important;
+  padding: 0 1px !important;
+  text-shadow:
+    0 0 4px var(--background),
+    0 0 3px var(--background),
+    0 0 2px var(--background) !important;
+}
+/* Cosmograph 워터마크(출처 표기) — 은은하게 */
+#sigma-container [class*="watermark"] {
+  opacity: 0.5;
+  transition: opacity 0.2s;
+}
+#sigma-container [class*="watermark"]:hover { opacity: 0.9; }
 
 </style>
