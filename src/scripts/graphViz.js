@@ -1034,115 +1034,6 @@ window.initGraphViz = function initGraphViz() {
       });
     };
 
-    // 1순위: synaptic-memory 서버 검색(가용 시). 실패/부재 시 클라이언트 폴백.
-    let usedApi = false;
-    let apiMs = null;
-    if (await apiAvailable()) {
-      const api = await synapticSearch(q);
-      if (reqQuery !== currentQuery) return;
-      if (api && api.results.length) {
-        api.results.forEach(pushApiHit);
-        usedApi = true;
-        apiMs = api.ms;
-      }
-    }
-
-    if (usedApi) {
-      /* synaptic 서버 결과 사용 — 추가 검색 없음 */
-    } else if (mode === "text") {
-      // BM25 + 한국어 부분일치 폴백 (이때만 클라이언트 Orama 인덱스 로드)
-      try {
-        engine = await ensureSearch();
-      } catch (e) {
-        engine = null;
-      }
-      if (reqQuery !== currentQuery) return;
-      if (engine) {
-        try {
-          const res = await engine.search(engine.db, {
-            term: q,
-            properties: ["title", "description", "tags", "body"],
-            boost: { title: 4, tags: 3, description: 2, body: 1 },
-            tolerance: 1,
-            limit: 60,
-          });
-          res.hits.forEach(h => pushDoc(h.document));
-        } catch (e) {
-          /* noop */
-        }
-        engine.docs.forEach(doc => {
-          if (
-            doc.title.toLowerCase().includes(ql) ||
-            (doc.tags || []).some(t => t.toLowerCase().includes(ql)) ||
-            (doc.body || "").toLowerCase().includes(ql)
-          )
-            pushDoc(doc);
-        });
-      }
-    } else {
-      // 의미 / 하이브리드 → 문서벡터 + 브라우저 쿼리 임베딩(WebGPU)
-      try {
-        await ensureVectors();
-        const qvec = await embedQuery(q);
-        if (reqQuery !== currentQuery) {
-          setStatus("");
-          return;
-        }
-        setStatus("");
-        const sem = cosineRank(qvec, 80); // [{url, score(-1..1)}]
-        if (mode === "hybrid" && engine) {
-          const bm = new Map();
-          try {
-            const res = await engine.search(engine.db, {
-              term: q,
-              properties: ["title", "description", "tags", "body"],
-              boost: { title: 4, tags: 3, description: 2, body: 1 },
-              tolerance: 1,
-              limit: 80,
-            });
-            let max = 0;
-            res.hits.forEach(h => (max = Math.max(max, h.score)));
-            res.hits.forEach(h =>
-              bm.set((h.document.url || "").replace(/\/$/, ""), max ? h.score / max : 0)
-            );
-          } catch (e) {
-            /* noop */
-          }
-          const merged = new Map();
-          sem.forEach(r => merged.set(r.url, 0.6 * Math.max(0, r.score)));
-          bm.forEach((s, url) =>
-            merged.set(url, (merged.get(url) || 0) + 0.4 * s)
-          );
-          [...merged.entries()]
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 60)
-            .forEach(([url]) => pushDoc(engine.byUrl.get(url)));
-        } else {
-          sem
-            .filter(r => r.score > 0.72) // e5 임계값(약한 매칭 컷)
-            .forEach(r => pushDoc(engine?.byUrl.get(r.url)));
-          if (!postEntries.length)
-            sem.slice(0, 20).forEach(r => pushDoc(engine?.byUrl.get(r.url)));
-        }
-      } catch (e) {
-        setStatus("");
-        console.warn("[semantic] 실패 → 텍스트 폴백", e);
-        if (engine) {
-          try {
-            const res = await engine.search(engine.db, {
-              term: q,
-              properties: ["title", "description", "tags", "body"],
-              tolerance: 1,
-              limit: 60,
-            });
-            res.hits.forEach(h => pushDoc(h.document));
-          } catch (e2) {
-            /* noop */
-          }
-        }
-      }
-    }
-
     // 매칭되는 태그/주제 노드 (그래프 탐색용)
     const nodeEntries = data.nodes
       .filter(n => n.type !== "post" && (n.label || "").toLowerCase().includes(ql))
@@ -1154,30 +1045,70 @@ window.initGraphViz = function initGraphViz() {
         labelHtml: highlight(n.label, ql),
       }));
 
-    if (reqQuery !== currentQuery || seq !== renderSeq) return; // 노드 클릭 등으로 패널이 바뀌었으면 폐기
+    // 결과 확정 렌더 (BM25/synaptic 공통) — seq/쿼리 가드 후 그래프 강조 + 패널 렌더
+    const commit = (source, ms) => {
+      if (reqQuery !== currentQuery || seq !== renderSeq) return;
+      const maxScore = postEntries.reduce(
+        (m, e) => (typeof e.score === "number" ? Math.max(m, e.score) : m),
+        0
+      );
+      if (maxScore > 0)
+        postEntries.forEach(e => {
+          if (typeof e.score === "number") e.rel = Math.max(0.12, e.score / maxScore);
+        });
+      setSearchMeta(source, postEntries.length, ms);
+      state.searchNodes = [...postEntries, ...nodeEntries]
+        .map(e => nodesById.get(e.nodeId))
+        .filter(Boolean);
+      if (!state.selected) applyHighlight();
+      renderEntries([
+        { head: "글", entries: postEntries },
+        { head: "태그·주제", entries: nodeEntries },
+      ]);
+    };
 
-    // 관련도 바: 결과 집합 내에서 점수 정규화
-    const maxScore = postEntries.reduce(
-      (m, e) => (typeof e.score === "number" ? Math.max(m, e.score) : m),
-      0
-    );
-    if (maxScore > 0)
-      postEntries.forEach(e => {
-        if (typeof e.score === "number") e.rel = Math.max(0.12, e.score / maxScore);
+    // 1) 즉시: 클라이언트 BM25 — GPU/네트워크 무관하게 타이핑 순간 결과 표시
+    try {
+      engine = await ensureSearch();
+    } catch (e) {
+      engine = null;
+    }
+    if (reqQuery !== currentQuery || seq !== renderSeq) return;
+    if (engine) {
+      try {
+        const res = await engine.search(engine.db, {
+          term: q,
+          properties: ["title", "description", "tags", "body"],
+          boost: { title: 4, tags: 3, description: 2, body: 1 },
+          tolerance: 1,
+          limit: 60,
+        });
+        res.hits.forEach(h => pushDoc(h.document));
+      } catch (e) {
+        /* noop */
+      }
+      engine.docs.forEach(doc => {
+        if (
+          doc.title.toLowerCase().includes(ql) ||
+          (doc.tags || []).some(t => t.toLowerCase().includes(ql)) ||
+          (doc.body || "").toLowerCase().includes(ql)
+        )
+          pushDoc(doc);
       });
+    }
+    commit("local", null);
 
-    setSearchMeta(usedApi ? "server" : "local", postEntries.length, apiMs);
-
-    // 매칭 노드를 그래프에 강조 (검색 결과 = 그래프 시각화)
-    state.searchNodes = [...postEntries, ...nodeEntries]
-      .map(e => nodesById.get(e.nodeId))
-      .filter(Boolean);
-    if (!state.selected) applyHighlight();
-
-    renderEntries([
-      { head: "글", entries: postEntries },
-      { head: "태그·주제", entries: nodeEntries },
-    ]);
+    // 2) 업그레이드: synaptic 서버 결과가 오면 더 좋은 의미검색으로 교체
+    if (await apiAvailable()) {
+      const api = await synapticSearch(q);
+      if (reqQuery !== currentQuery || seq !== renderSeq) return;
+      if (api && api.results.length) {
+        seen.clear();
+        postEntries.length = 0;
+        api.results.forEach(pushApiHit);
+        commit("server", api.ms);
+      }
+    }
   }
 
   // ── 필터 ─────────────────────────────────────────────────────────────────
@@ -1197,6 +1128,7 @@ window.initGraphViz = function initGraphViz() {
     if (_preloaded) return;
     _preloaded = true;
     apiAvailable();
+    ensureSearch().catch(() => {}); // BM25 즉시 응답 위해 Orama 인덱스 미리 로드
   });
 
   // ── 검색 입력 (디바운스) ────────────────────────────────────────────────────
