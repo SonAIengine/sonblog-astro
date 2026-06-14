@@ -35,7 +35,8 @@ export const GET: APIRoute = async () => {
 
   const docs = posts.map((p, i) => {
     const url = getPostUrl(p.id, p.filePath);
-    const body = toPlainText((p as { body?: string }).body ?? "").slice(0, 4000);
+    const plain = toPlainText((p as { body?: string }).body ?? "");
+    const readMin = Math.max(1, Math.round(plain.length / 500)); // 한국어 ~500자/분
     const d = p.data.modDatetime ?? p.data.pubDatetime;
     return {
       i, // 안정적 정수 id (벡터 인덱스와 1:1 대응)
@@ -46,7 +47,8 @@ export const GET: APIRoute = async () => {
       category: categoryFromPath(p.filePath),
       series: p.data.series ?? "",
       date: d ? new Date(d).toISOString().slice(0, 10) : "",
-      body,
+      readMin,
+      body: plain.slice(0, 4000),
     };
   });
 

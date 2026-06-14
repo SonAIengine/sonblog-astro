@@ -1378,6 +1378,78 @@ body:has(.graph-page) {
   margin-left: 0.3rem;
 }
 
+/* ── 상세 정보 위계 정제 ─────────────────────────────────────────────────────── */
+.gp-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+  margin: 0 0 0.4rem;
+  padding: 0;
+  border: none;
+  font-size: 0.64rem;
+}
+.gp-bc {
+  color: var(--md-default-fg-color--light);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.gp-bc-link { cursor: pointer; }
+.gp-bc-link:hover { color: var(--md-primary-fg-color); text-decoration: underline; }
+.gp-bc-sep { color: var(--md-default-fg-color--lighter); }
+
+.gp-meta-line {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-top: 0.4rem;
+  font-size: 0.7rem;
+  color: var(--md-default-fg-color--light);
+}
+.gp-meta-dot { color: var(--md-default-fg-color--lighter); }
+
+.gp-lead {
+  font-size: 0.8rem;
+  line-height: 1.65;
+  color: var(--md-default-fg-color--light);
+  margin: 0.7rem 0 0;
+  padding: 0 0.85rem;
+}
+[data-md-color-scheme="slate"] .gp-lead { color: #94a3b8; }
+
+.gp-section--tags { padding-top: 0.65rem; }
+.gp-tag-search { cursor: pointer; }
+.gp-tag-search:hover { filter: brightness(0.96); text-decoration: underline; }
+
+.gp-series-nav { display: flex; flex-direction: column; gap: 0.4rem; }
+.gp-series-link {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 0.76rem;
+  line-height: 1.3;
+  color: var(--md-default-fg-color);
+  transition: border-color 0.14s, background 0.14s;
+}
+.gp-series-link:hover {
+  border-color: var(--md-primary-fg-color);
+  background: color-mix(in srgb, var(--md-primary-fg-color) 7%, transparent);
+}
+.gp-series-dir {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--md-primary-fg-color);
+  text-transform: uppercase;
+}
+[data-md-color-scheme="slate"] .gp-series-link { border-color: #1e293b; color: #c8d6e8; }
+
 /* 검색 모드 토글 (텍스트·의미·하이브리드) */
 .gs-modes {
   display: flex;

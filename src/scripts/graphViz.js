@@ -593,79 +593,129 @@ window.initGraphViz = function initGraphViz() {
   }
 
   // 노드 상세 HTML 빌더
+  // 로드된 검색 인덱스에서 글 메타(description/readMin/category) 조회
+  function docMetaFor(url) {
+    try {
+      return _orama?.byUrl?.get((url || "").replace(/\/$/, "")) || null;
+    } catch (e) {
+      return null;
+    }
+  }
+
   function buildDetailHTML(node) {
+    const neighbors = (adjacency.get(node.id) || [])
+      .map(id => nodesById.get(id))
+      .filter(Boolean);
+    return node.type === "post"
+      ? buildPostDetail(node, neighbors)
+      : buildTaxonomyDetail(node, neighbors);
+  }
+
+  // 포스트 상세 — 세련된 정보 위계
+  function buildPostDetail(node, neighbors) {
+    const doc = docMetaFor(node.url);
+    const subcat = neighbors.find(n => n.type === "subcategory");
+    const tags = neighbors.filter(n => n.type === "tag");
+    const catLabel = doc?.category ? CATEGORY_LABELS[doc.category] || doc.category : "";
+
+    // 헤더: 브레드크럼 → 제목 → 메타
+    let header = `<div class="gp-node-header gp-node-header--post">`;
+    const crumbs = [];
+    if (catLabel) crumbs.push(`<span class="gp-bc">${escapeHtml(catLabel)}</span>`);
+    if (subcat)
+      crumbs.push(
+        `<span class="gp-bc gp-bc-link" data-node-id="${escapeHtml(subcat.id)}">${escapeHtml(subcat.label)}</span>`
+      );
+    if (crumbs.length)
+      header += `<div class="gp-breadcrumb">${crumbs.join('<span class="gp-bc-sep">›</span>')}</div>`;
+    header += `<h2 class="gp-title">${escapeHtml(node.label)}</h2>`;
+    const meta = [];
+    if (node.date) meta.push(`<span>${escapeHtml(node.date)}</span>`);
+    if (doc?.readMin) meta.push(`<span>${doc.readMin}분 읽기</span>`);
+    if (node.difficulty)
+      meta.push(
+        `<span class="gp-meta-diff gp-meta-diff--${node.difficulty}">${escapeHtml(DIFFICULTY_LABELS[node.difficulty] || node.difficulty)}</span>`
+      );
+    if (meta.length)
+      header += `<div class="gp-meta-line">${meta.join('<span class="gp-meta-dot">·</span>')}</div>`;
+    header += `</div>`;
+
+    let body = `<div class="gp-scroll-body">`;
+    if (doc?.description)
+      body += `<p class="gp-lead">${escapeHtml(doc.description)}</p>`;
+
+    // 태그 (클릭 = 해당 태그 검색)
+    if (tags.length) {
+      body += `<div class="gp-section gp-section--tags"><div class="gp-tags">`;
+      tags.forEach(t => {
+        body += `<span class="gp-tag gp-tag--tag gp-tag-search" data-tag="${escapeHtml(t.label)}">#${escapeHtml(t.label)}</span>`;
+      });
+      body += `</div></div>`;
+    }
+
+    // 시리즈 이어읽기
+    if (node.series) {
+      const seriesNode = neighbors.find(n => n.type === "series");
+      if (seriesNode) {
+        const sp = (adjacency.get(seriesNode.id) || [])
+          .map(id => nodesById.get(id))
+          .filter(n => n && n.type === "post")
+          .sort((a, b) => (a.series_order || 0) - (b.series_order || 0));
+        const i = sp.findIndex(n => n.id === node.id);
+        const prev = sp[i - 1];
+        const next = sp[i + 1];
+        if (prev || next) {
+          body += `<div class="gp-section"><div class="gp-section-title">시리즈 · ${escapeHtml(node.series)}<span class="gp-section-count">${i + 1}/${sp.length}</span></div><div class="gp-series-nav">`;
+          if (prev)
+            body += `<span class="gp-series-link gs-nav" data-node-id="${escapeHtml(prev.id)}"><span class="gp-series-dir">← 이전</span>${escapeHtml(prev.label)}</span>`;
+          if (next)
+            body += `<span class="gp-series-link gs-nav" data-node-id="${escapeHtml(next.id)}"><span class="gp-series-dir">다음 →</span>${escapeHtml(next.label)}</span>`;
+          body += `</div></div>`;
+        }
+      }
+    }
+
+    // 관련 글 (서버 시맨틱으로 비동기 채움)
+    body += `<div class="gp-section"><div class="gp-section-title">관련 글</div><div id="gp-related-list" class="gp-related-loading">관련 글 찾는 중…</div></div>`;
+    body += `</div>`;
+
+    const footer = node.url
+      ? `<div class="gp-panel-footer"><a class="gp-open-btn" href="${escapeHtml(node.url)}">글 읽기<svg class="gp-open-btn-icon" viewBox="0 0 16 16" fill="none" width="13" height="13"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a></div>`
+      : "";
+    return header + body + footer;
+  }
+
+  // 분류 노드(태그/카테고리/서브/시리즈) 상세 — 연관 포스트 중심
+  function buildTaxonomyDetail(node, neighbors) {
     const typeLabel = TYPE_LABELS[node.type] || node.type;
-    const neighborIds = adjacency.get(node.id) || [];
-    const neighbors = neighborIds.map(id => nodesById.get(id)).filter(Boolean);
     const posts = neighbors
       .filter(n => n.type === "post")
       .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
     const others = neighbors.filter(n => n.type !== "post");
-    const deg = neighbors.length;
 
     let header = `<div class="gp-node-header gp-node-header--${node.type}">`;
-    header += `<div class="gp-header-row">`;
-    header += `<div class="gp-type gp-type--${node.type}">${escapeHtml(typeLabel)}</div>`;
-    const stats = [`${deg} 연결`];
-    if (posts.length) stats.push(`${posts.length} 포스트`);
-    if (others.length) stats.push(`${others.length} 노드`);
-    header += `<span class="gp-inline-stats">${stats.join(" · ")}</span></div>`;
-    header += `<h2 class="gp-title">${escapeHtml(node.label)}</h2>`;
-    const meta = [];
-    if (node.series) meta.push(`<span class="gp-meta-series">${escapeHtml(node.series)}</span>`);
-    if (node.date) meta.push(`<span class="gp-meta-date">${escapeHtml(node.date)}</span>`);
-    if (node.difficulty) {
-      const d = DIFFICULTY_LABELS[node.difficulty] || node.difficulty;
-      meta.push(`<span class="gp-meta-diff gp-meta-diff--${node.difficulty}">${escapeHtml(d)}</span>`);
-    }
-    if (meta.length) header += `<div class="gp-meta-line">${meta.join("")}</div>`;
-    header += `</div>`;
+    header += `<div class="gp-header-row"><div class="gp-type gp-type--${node.type}">${escapeHtml(typeLabel)}</div>`;
+    header += `<span class="gp-inline-stats">${posts.length}개 글</span></div>`;
+    header += `<h2 class="gp-title">${escapeHtml(node.label)}</h2></div>`;
 
     let body = `<div class="gp-scroll-body">`;
     if (posts.length > 0) {
-      body += `<div class="gp-section"><div class="gp-section-title">연관 포스트<span class="gp-section-count">${posts.length}</span></div><ul class="gp-post-list">`;
+      body += `<div class="gp-section"><div class="gp-section-title">이 ${escapeHtml(typeLabel)}의 글<span class="gp-section-count">${posts.length}</span></div><ul class="gp-post-list">`;
       posts.forEach(p => {
         const dateStr = p.date ? `<span class="gp-post-date">${escapeHtml(p.date)}</span>` : "";
-        body +=
-          `<li class="gp-post-item">` +
-          (p.url
-            ? `<a href="${escapeHtml(p.url)}" class="gp-post-link">${escapeHtml(p.label)}</a>${dateStr}`
-            : `<span class="gp-post-label">${escapeHtml(p.label)}</span>${dateStr}`) +
-          `</li>`;
+        body += `<li class="gp-post-item"><span class="gp-post-link gs-nav" data-node-id="${escapeHtml(p.id)}">${escapeHtml(p.label)}</span>${dateStr}</li>`;
       });
       body += `</ul></div>`;
     }
     if (others.length > 0) {
-      const order = ["category", "subcategory", "series", "tag"];
-      const grouped = {};
-      others.forEach(n => (grouped[n.type] = grouped[n.type] || []).push(n));
-      body += `<div class="gp-section"><div class="gp-section-title">연결 노드<span class="gp-section-count">${others.length}</span></div>`;
-      order.forEach(t => {
-        if (!grouped[t] || !grouped[t].length) return;
-        body += `<div class="gp-conn-group"><span class="gp-conn-group-label gp-type--${t}">${escapeHtml(TYPE_LABELS[t])}</span><div class="gp-tags">`;
-        grouped[t].forEach(n => {
-          body += `<span class="gp-tag gp-tag--${n.type}" data-node-id="${escapeHtml(n.id)}">${escapeHtml(n.label)}</span>`;
-        });
-        body += `</div></div>`;
+      body += `<div class="gp-section"><div class="gp-section-title">연결</div><div class="gp-tags">`;
+      others.forEach(n => {
+        body += `<span class="gp-tag gp-tag--${n.type}" data-node-id="${escapeHtml(n.id)}">${escapeHtml(n.label)}</span>`;
       });
-      body += `</div>`;
-    }
-
-    // 관련 글 (포스트 노드만) — 서버 시맨틱으로 비동기 채움(showNode → populateRelated)
-    if (node.type === "post") {
-      body +=
-        `<div class="gp-section"><div class="gp-section-title">관련 글</div>` +
-        `<div id="gp-related-list" class="gp-related-loading">관련 글 찾는 중…</div></div>`;
+      body += `</div></div>`;
     }
     body += `</div>`;
-
-    let footer = "";
-    if (node.type === "post" && node.url) {
-      footer =
-        `<div class="gp-panel-footer"><a class="gp-open-btn" href="${escapeHtml(node.url)}">글 읽기` +
-        `<svg class="gp-open-btn-icon" viewBox="0 0 16 16" fill="none" width="13" height="13"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a></div>`;
-    }
-    return header + body + footer;
+    return header + body;
   }
 
   // 클릭 노드가 속한 토픽 클러스터(같은 community = 서브카테고리 + 형제 글 + 허브)
@@ -711,13 +761,26 @@ window.initGraphViz = function initGraphViz() {
       renderList(currentQuery);
     });
     sideBody
-      .querySelectorAll(".gp-tag[data-node-id], .gs-nav[data-node-id]")
+      .querySelectorAll(
+        ".gp-tag[data-node-id], .gs-nav[data-node-id], .gp-bc-link[data-node-id]"
+      )
       .forEach(el => {
         el.addEventListener("click", () => {
           const t = nodesById.get(el.dataset.nodeId);
           if (t) showNode(t);
         });
       });
+    // 태그 칩 클릭 → 해당 태그로 검색(글 모음)
+    sideBody.querySelectorAll(".gp-tag-search[data-tag]").forEach(el => {
+      el.addEventListener("click", () => {
+        const tag = el.dataset.tag;
+        if (!tag) return;
+        clearNode();
+        if (searchInput) searchInput.value = tag;
+        renderList(tag);
+        searchInput?.focus();
+      });
+    });
     if (node.type === "post") populateRelated(node, renderSeq);
   }
 
