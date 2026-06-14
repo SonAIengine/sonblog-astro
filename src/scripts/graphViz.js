@@ -278,7 +278,8 @@ window.initGraphViz = function initGraphViz() {
   marker.className = "gp-marker";
   marker.hidden = true;
   container.appendChild(marker);
-  let _markerSpace = null; // 선택 노드의 시뮬레이션 좌표(정적)
+  let _markerSpace = null; // 마커가 가리키는 현재 노드의 시뮬레이션 좌표
+  let _selMarkerSpace = null; // 선택 노드 좌표 백업(호버 후 복원)
 
   const cosmograph = new Cosmograph(container, cfg);
 
@@ -305,12 +306,17 @@ window.initGraphViz = function initGraphViz() {
       marker.hidden = true;
     }
   }
-  function showMarker(node) {
+  // 노드의 시뮬레이션 좌표
+  function nodeSpace(id) {
     try {
-      _markerSpace = cosmograph.getNodePositionsMap()?.get(node.id) || null;
+      return cosmograph.getNodePositionsMap()?.get(id) || null;
     } catch (e) {
-      _markerSpace = null;
+      return null;
     }
+  }
+  function showMarker(node) {
+    _markerSpace = nodeSpace(node.id);
+    _selMarkerSpace = _markerSpace; // 선택 노드 좌표 백업(호버 후 복원용)
     positionMarker();
     // fitView 카메라 애니메이션(~500ms) 동안에도 따라오게 잠깐 추적
     let n = 0;
@@ -319,8 +325,21 @@ window.initGraphViz = function initGraphViz() {
       if (++n > 12) clearInterval(iv);
     }, 60);
   }
+  // 호버 노드로 마커를 임시 이동 / 복원
+  function markerToHover(node) {
+    const sp = nodeSpace(node.id);
+    if (sp) {
+      _markerSpace = sp;
+      positionMarker();
+    }
+  }
+  function markerRestore() {
+    _markerSpace = _selMarkerSpace;
+    positionMarker();
+  }
   function hideMarker() {
     _markerSpace = null;
+    _selMarkerSpace = null;
     marker.hidden = true;
   }
   window.addEventListener("resize", positionMarker);
@@ -392,6 +411,31 @@ window.initGraphViz = function initGraphViz() {
   const sideBody = document.getElementById("graph-panel-body");
   const searchInput = document.getElementById("graph-search");
   const searchClear = document.getElementById("graph-search-clear");
+
+  // 패널 항목(관련 글·태그·시리즈·결과 등) hover → 그래프 노드에 링 + 마커 임시 이동.
+  // 위임(delegation) 한 번으로 모든 [data-node-id] 항목에 적용.
+  sideBody.addEventListener("mouseover", e => {
+    const el = e.target.closest("[data-node-id]");
+    if (!el || !sideBody.contains(el)) return;
+    const node = nodesById.get(el.dataset.nodeId);
+    if (!node) return;
+    try {
+      cosmograph.focusNode(node);
+    } catch (err) {
+      /* noop */
+    }
+    if (state.selected) markerToHover(node); // 선택 상태일 때만 마커 이동
+  });
+  sideBody.addEventListener("mouseout", e => {
+    const el = e.target.closest("[data-node-id]");
+    if (!el) return;
+    try {
+      cosmograph.focusNode(state.selected || undefined);
+    } catch (err) {
+      /* noop */
+    }
+    if (state.selected) markerRestore();
+  });
 
   // 기본 브라우즈 목록 = 전체 글(최신순)
   const allPosts = data.nodes
