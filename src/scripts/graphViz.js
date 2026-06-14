@@ -268,12 +268,62 @@ window.initGraphViz = function initGraphViz() {
       hideTooltip();
       applyHighlight();
     },
+    // 줌·팬 시 선택 글 마커가 노드를 따라오게
+    onZoom: () => positionMarker(),
   };
+
+  // ── 선택된 글 마커 (그래프 노드 위 핀) — cosmograph 생성 전에 선언 ─────────────
+  // (생성 중 onZoom이 발동해도 marker가 TDZ에 걸리지 않도록)
+  const marker = document.createElement("div");
+  marker.className = "gp-marker";
+  marker.hidden = true;
+  container.appendChild(marker);
+  let _markerSpace = null; // 선택 노드의 시뮬레이션 좌표(정적)
+
   const cosmograph = new Cosmograph(container, cfg);
 
   const vis = visibleData();
   cosmograph.setData(vis.nodes, vis.links);
   _instance = cosmograph;
+
+  function positionMarker() {
+    if (!state.selected || !_markerSpace) {
+      marker.hidden = true;
+      return;
+    }
+    try {
+      const s = cosmograph.spaceToScreenPosition(_markerSpace);
+      const r = container.getBoundingClientRect();
+      if (!s || s[0] < 0 || s[1] < 0 || s[0] > r.width || s[1] > r.height) {
+        marker.hidden = true;
+        return;
+      }
+      marker.style.left = `${s[0]}px`;
+      marker.style.top = `${s[1]}px`;
+      marker.hidden = false;
+    } catch (e) {
+      marker.hidden = true;
+    }
+  }
+  function showMarker(node) {
+    try {
+      _markerSpace = cosmograph.getNodePositionsMap()?.get(node.id) || null;
+    } catch (e) {
+      _markerSpace = null;
+    }
+    positionMarker();
+    // fitView 카메라 애니메이션(~500ms) 동안에도 따라오게 잠깐 추적
+    let n = 0;
+    const iv = setInterval(() => {
+      positionMarker();
+      if (++n > 12) clearInterval(iv);
+    }, 60);
+  }
+  function hideMarker() {
+    _markerSpace = null;
+    marker.hidden = true;
+  }
+  window.addEventListener("resize", positionMarker);
 
   // 시뮬레이션 정지 관리 — 초기 배치가 끝나면 멈춰서 그래프를 정적으로 유지.
   // (계속 움직이면 클릭/줌이 불편하므로. 줌·팬은 카메라라 정지 후에도 동작)
@@ -766,6 +816,7 @@ window.initGraphViz = function initGraphViz() {
       /* noop */
     }
     setForcedLabels([node, ...hubLabels.slice(0, 10)]);
+    showMarker(node); // 그래프 노드 위 선택 핀
     sideBody.innerHTML =
       `<button type="button" class="gs-back" id="gs-back"><svg viewBox="0 0 16 16" width="12" height="12" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>검색으로</button>` +
       buildDetailHTML(node);
@@ -892,6 +943,7 @@ window.initGraphViz = function initGraphViz() {
   function clearNode() {
     state.selected = null;
     state.clusterNodes = [];
+    hideMarker();
     try {
       cosmograph.focusNode(undefined);
     } catch (e) {

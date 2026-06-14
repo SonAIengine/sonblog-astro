@@ -1158,6 +1158,48 @@ body:has(.graph-page) {
 }
 #sigma-container [class*="watermark"]:hover { opacity: 0.8; }
 
+/* ── 선택된 글 마커 (노드 위 핀) ─────────────────────────────────────────────── */
+.gp-marker {
+  position: absolute;
+  z-index: 4;
+  pointer-events: none;
+  width: 0;
+  height: 0;
+}
+.gp-marker[hidden] { display: none; }
+/* 안쪽 고정 링 */
+.gp-marker::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 22px;
+  height: 22px;
+  transform: translate(-50%, -50%);
+  border: 2.5px solid var(--md-primary-fg-color);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 2px var(--md-default-bg-color),
+    0 0 10px color-mix(in srgb, var(--md-primary-fg-color) 70%, transparent);
+}
+/* 바깥 펄스 헤일로 */
+.gp-marker::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--md-primary-fg-color);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: gpMarkerPulse 1.8s ease-out infinite;
+}
+@keyframes gpMarkerPulse {
+  0% { transform: translate(-50%, -50%) scale(1); opacity: 0.7; }
+  100% { transform: translate(-50%, -50%) scale(2.4); opacity: 0; }
+}
+
 /* ════════════════════════════════════════════════════════════════════════════
    좌 그래프 / 우 검색엔진 패널 레이아웃
    ════════════════════════════════════════════════════════════════════════════ */
