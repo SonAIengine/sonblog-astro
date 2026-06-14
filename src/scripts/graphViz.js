@@ -222,7 +222,7 @@ window.initGraphViz = function initGraphViz() {
     simulationLinkSpring: 0.28,
     simulationLinkDistance: 32,
     simulationFriction: 0.9,
-    simulationDecay: 4000,
+    simulationDecay: 1000, // 빨리 식어 정착(클수록 느리게 식음)
     useQuadtree: true,
     spaceSize: 8192,
 
@@ -265,11 +265,28 @@ window.initGraphViz = function initGraphViz() {
   cosmograph.setData(vis.nodes, vis.links);
   _instance = cosmograph;
 
+  // 시뮬레이션 정지 관리 — 초기 배치가 끝나면 멈춰서 그래프를 정적으로 유지.
+  // (계속 움직이면 클릭/줌이 불편하므로. 줌·팬은 카메라라 정지 후에도 동작)
+  let _pauseTimer = 0;
+  function pauseSim() {
+    try {
+      cosmograph.pause();
+    } catch (e) {
+      /* noop */
+    }
+  }
+  function schedulePause(ms) {
+    clearTimeout(_pauseTimer);
+    _pauseTimer = setTimeout(pauseSim, ms);
+  }
+  schedulePause(4500); // 첫 레이아웃 정착 후 정지
+
   // 선택 노드 + (보이는) 이웃의 이름표를 캔버스에 고정 → 뷰어에서도 설명이 보이게.
   // cosmos.setConfig는 부분 전달 시 나머지를 기본값으로 덮으므로 cfg 전체를 넘긴다.
   function setForcedLabels(nodes) {
     try {
       cosmograph.setConfig({ ...cfg, showLabelsFor: nodes });
+      pauseSim(); // setConfig가 시뮬레이션을 깨울 수 있으니 다시 정지
     } catch (e) {
       /* noop */
     }
@@ -966,6 +983,7 @@ window.initGraphViz = function initGraphViz() {
       else activeTypes.delete(cb.dataset.type);
       const v = visibleData();
       cosmograph.setData(v.nodes, v.links);
+      schedulePause(4500); // 새 데이터 재배치 후 정지
     });
   });
 
