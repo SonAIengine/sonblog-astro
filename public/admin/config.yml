@@ -62,8 +62,10 @@ collections:
           required: false,
           value_type: int,
         }
-      - { name: ogImage, label: OG 이미지(선택), widget: image, required: false }
-      - { name: body, label: 본문, widget: markdown }
+      - { name: ogImage, label: OG 이미지(선택), widget: string, required: false }
+      # raw 모드 — 복잡한 마크다운(코드블록·mermaid·HTML)에서 리치텍스트 렌더가
+      # 깨져 편집창이 비는 문제 회피. 순수 마크다운으로 안전하게 편집.
+      - { name: body, label: 본문, widget: markdown, modes: ["raw"] }
 
   - name: search-engine
     label: "검색엔진"
