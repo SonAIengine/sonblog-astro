@@ -10,32 +10,24 @@ backend:
 site_url: https://infoedu.co.kr
 display_url: https://infoedu.co.kr
 
-# 이미지 업로드 위치 (글에서 ../assets/images/... 로 참조)
+# 이미지 업로드 위치 (글에서 참조)
 media_folder: src/assets/images
 public_folder: /src/assets/images
 
-# 로컬 개발 시(pnpm dev + npx sveltia-cms-proxy-server) 로컬 백엔드 사용
-# local_backend: true
-
+# 카테고리별 컬렉션 — 사이드바가 블로그 카테고리 구조를 그대로 반영.
+# 각 컬렉션은 해당 폴더(+하위폴더)의 개별 .md를 재귀 나열(subfolders:false).
+# fields는 YAML 앵커(&postfields)로 공유.
 collections:
-  - name: posts
-    label: 글
-    label_singular: 글
-    description: src/content/posts 아래 카테고리 폴더에 마크다운으로 저장됩니다.
-    folder: src/content/posts
+  - name: ai
+    label: "AI/ML"
+    folder: src/content/posts/ai
     create: true
-    # 카테고리/서브카테고리 폴더 구조 유지 (예: devops/infra/글)
-    # subfolders:false → _index.md가 아니라 개별 .md 파일들을 하위폴더까지 재귀 나열
+    nested: { depth: 3, subfolders: false, summary: "{{title}}" }
     path: "{{dirname}}/{{slug}}"
-    nested:
-      depth: 4
-      subfolders: false
-      summary: "{{title}}"
     extension: md
     format: frontmatter
-    slug: "{{slug}}"
     sortable_fields: [pubDatetime, title]
-    fields:
+    fields: &postfields
       - { name: title, label: 제목, widget: string }
       - {
           name: pubDatetime,
@@ -69,10 +61,60 @@ collections:
           required: false,
           value_type: int,
         }
-      - {
-          name: ogImage,
-          label: OG 이미지(선택),
-          widget: image,
-          required: false,
-        }
+      - { name: ogImage, label: OG 이미지(선택), widget: image, required: false }
       - { name: body, label: 본문, widget: markdown }
+
+  - name: search-engine
+    label: "검색엔진"
+    folder: src/content/posts/search-engine
+    create: true
+    nested: { depth: 3, subfolders: false, summary: "{{title}}" }
+    path: "{{dirname}}/{{slug}}"
+    extension: md
+    format: frontmatter
+    sortable_fields: [pubDatetime, title]
+    fields: *postfields
+
+  - name: devops
+    label: "DevOps"
+    folder: src/content/posts/devops
+    create: true
+    nested: { depth: 3, subfolders: false, summary: "{{title}}" }
+    path: "{{dirname}}/{{slug}}"
+    extension: md
+    format: frontmatter
+    sortable_fields: [pubDatetime, title]
+    fields: *postfields
+
+  - name: full-stack
+    label: "Full Stack"
+    folder: src/content/posts/full-stack
+    create: true
+    nested: { depth: 3, subfolders: false, summary: "{{title}}" }
+    path: "{{dirname}}/{{slug}}"
+    extension: md
+    format: frontmatter
+    sortable_fields: [pubDatetime, title]
+    fields: *postfields
+
+  - name: notes
+    label: "Notes"
+    folder: src/content/posts/notes
+    create: true
+    nested: { depth: 3, subfolders: false, summary: "{{title}}" }
+    path: "{{dirname}}/{{slug}}"
+    extension: md
+    format: frontmatter
+    sortable_fields: [pubDatetime, title]
+    fields: *postfields
+
+  - name: portfolio
+    label: "Portfolio"
+    folder: src/content/posts/portfolio
+    create: true
+    nested: { depth: 3, subfolders: false, summary: "{{title}}" }
+    path: "{{dirname}}/{{slug}}"
+    extension: md
+    format: frontmatter
+    sortable_fields: [pubDatetime, title]
+    fields: *postfields
