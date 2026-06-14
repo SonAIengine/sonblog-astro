@@ -1,0 +1,75 @@
+# SON BLOG CMS 설정 (Sveltia/Decap)
+# 인증: 홈서버 OAuth 프록시(cms-auth.infoedu.co.kr) → GitHub
+backend:
+  name: github
+  repo: SonAIengine/sonblog-astro
+  branch: main
+  base_url: https://cms-auth.infoedu.co.kr
+  auth_endpoint: auth
+
+site_url: https://infoedu.co.kr
+display_url: https://infoedu.co.kr
+
+# 이미지 업로드 위치 (글에서 ../assets/images/... 로 참조)
+media_folder: src/assets/images
+public_folder: /src/assets/images
+
+# 로컬 개발 시(pnpm dev + npx sveltia-cms-proxy-server) 로컬 백엔드 사용
+# local_backend: true
+
+collections:
+  - name: posts
+    label: 글
+    label_singular: 글
+    description: src/content/posts 아래 카테고리 폴더에 마크다운으로 저장됩니다.
+    folder: src/content/posts
+    create: true
+    # 카테고리/서브카테고리 폴더 구조 유지 (예: devops/infra/글)
+    path: "{{dirname}}/{{slug}}"
+    nested:
+      depth: 4
+    extension: md
+    format: frontmatter
+    slug: "{{slug}}"
+    sortable_fields: [pubDatetime, title]
+    fields:
+      - { name: title, label: 제목, widget: string }
+      - {
+          name: pubDatetime,
+          label: 발행일시,
+          widget: datetime,
+          date_format: "YYYY-MM-DD",
+          time_format: "HH:mm",
+          format: "YYYY-MM-DD",
+        }
+      - { name: description, label: 설명(검색/SEO 노출), widget: text }
+      - { name: tags, label: 태그, widget: list, default: ["others"] }
+      - {
+          name: featured,
+          label: 추천(홈 상단 고정),
+          widget: boolean,
+          required: false,
+          default: false,
+        }
+      - {
+          name: draft,
+          label: 초안(비공개),
+          widget: boolean,
+          required: false,
+          default: false,
+        }
+      - { name: series, label: 시리즈명(선택), widget: string, required: false }
+      - {
+          name: seriesOrder,
+          label: 시리즈 순서(선택),
+          widget: number,
+          required: false,
+          value_type: int,
+        }
+      - {
+          name: ogImage,
+          label: OG 이미지(선택),
+          widget: image,
+          required: false,
+        }
+      - { name: body, label: 본문, widget: markdown }
