@@ -31,11 +31,12 @@ collections:
       - { name: title, label: 제목, widget: string }
       - {
           name: pubDatetime,
-          label: 발행일시,
+          label: 발행일,
           widget: datetime,
           date_format: "YYYY-MM-DD",
-          time_format: "HH:mm",
+          time_format: false,
           format: "YYYY-MM-DD",
+          picker_utc: false,
         }
       - { name: description, label: 설명(검색/SEO 노출), widget: text }
       - { name: tags, label: 태그, widget: list, default: ["others"] }
