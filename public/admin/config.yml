@@ -1,4 +1,4 @@
-# SON BLOG CMS 설정 (Sveltia/Decap)
+# SON BLOG CMS 설정 (Sveltia CMS)
 # 인증: 홈서버 OAuth 프록시(cms-auth.infoedu.co.kr) → GitHub
 backend:
   name: github
@@ -14,16 +14,14 @@ display_url: https://infoedu.co.kr
 media_folder: src/assets/images
 public_folder: /src/assets/images
 
-# 카테고리별 컬렉션 — 사이드바가 블로그 카테고리 구조를 그대로 반영.
-# 각 컬렉션은 해당 폴더(+하위폴더)의 개별 .md를 재귀 나열(subfolders:false).
+# 카테고리별 컬렉션. Sveltia는 nested 미지원 — 대신 folder 컬렉션이 하위폴더를
+# 재귀로 읽는다(글이 전부 category/subcategory/*.md 구조라도 다 나열·편집됨).
 # fields는 YAML 앵커(&postfields)로 공유.
 collections:
   - name: ai
     label: "AI/ML"
     folder: src/content/posts/ai
     create: true
-    nested: { depth: 3, subfolders: false, summary: "{{title}}" }
-    path: "{{dirname}}/{{slug}}"
     extension: md
     format: frontmatter
     sortable_fields: [pubDatetime, title]
@@ -64,15 +62,13 @@ collections:
         }
       - { name: ogImage, label: OG 이미지(선택), widget: string, required: false }
       # raw 모드 — 복잡한 마크다운(코드블록·mermaid·HTML)에서 리치텍스트 렌더가
-      # 깨져 편집창이 비는 문제 회피. 순수 마크다운으로 안전하게 편집.
+      # 깨지는 문제 회피. 순수 마크다운으로 안전하게 편집.
       - { name: body, label: 본문, widget: markdown, modes: ["raw"] }
 
   - name: search-engine
     label: "검색엔진"
     folder: src/content/posts/search-engine
     create: true
-    nested: { depth: 3, subfolders: false, summary: "{{title}}" }
-    path: "{{dirname}}/{{slug}}"
     extension: md
     format: frontmatter
     sortable_fields: [pubDatetime, title]
@@ -82,8 +78,6 @@ collections:
     label: "DevOps"
     folder: src/content/posts/devops
     create: true
-    nested: { depth: 3, subfolders: false, summary: "{{title}}" }
-    path: "{{dirname}}/{{slug}}"
     extension: md
     format: frontmatter
     sortable_fields: [pubDatetime, title]
@@ -93,8 +87,6 @@ collections:
     label: "Full Stack"
     folder: src/content/posts/full-stack
     create: true
-    nested: { depth: 3, subfolders: false, summary: "{{title}}" }
-    path: "{{dirname}}/{{slug}}"
     extension: md
     format: frontmatter
     sortable_fields: [pubDatetime, title]
@@ -104,8 +96,6 @@ collections:
     label: "Notes"
     folder: src/content/posts/notes
     create: true
-    nested: { depth: 3, subfolders: false, summary: "{{title}}" }
-    path: "{{dirname}}/{{slug}}"
     extension: md
     format: frontmatter
     sortable_fields: [pubDatetime, title]
@@ -115,8 +105,6 @@ collections:
     label: "Portfolio"
     folder: src/content/posts/portfolio
     create: true
-    nested: { depth: 3, subfolders: false, summary: "{{title}}" }
-    path: "{{dirname}}/{{slug}}"
     extension: md
     format: frontmatter
     sortable_fields: [pubDatetime, title]
