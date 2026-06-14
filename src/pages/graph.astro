@@ -20,51 +20,25 @@ const gm = graphData.metadata;
     <label class="graph-filter-chip graph-filter-chip--tag"><input type="checkbox" class="graph-filter-cb" data-type="tag" checked><span class="chip-dot"></span>태그</label>
     <label class="graph-filter-chip graph-filter-chip--post"><input type="checkbox" class="graph-filter-cb" data-type="post" checked><span class="chip-dot"></span>포스트</label>
     <div class="graph-toolbar-spacer"></div>
-    <div class="graph-search-wrap">
-      <svg class="graph-search-icon" viewBox="0 0 20 20" fill="none"><circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" stroke-width="1.5"/><path d="M13.5 13.5L17 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-      <input type="text" id="graph-search" placeholder="검색..." autocomplete="off">
-      <button id="graph-search-clear" class="graph-search-clear" aria-label="검색 초기화"><svg viewBox="0 0 16 16" fill="none"><path d="M4 4L12 12M12 4L4 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
-    </div>
     <button id="graph-reset" class="graph-btn"><svg viewBox="0 0 20 20" fill="none" width="12" height="12"><path d="M4 10a6 6 0 1 0 1.5-3.9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M4 5.5V10h4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>초기화</button>
   </div>
 
-  <!-- ── 메인 레이아웃: 그래프 + 패널 ── -->
+  <!-- ── 메인 레이아웃: 좌 그래프 / 우 검색엔진 패널 ── -->
   <div class="graph-layout">
 
     <!-- 그래프 캔버스 -->
     <div id="sigma-container"></div>
 
-    <!-- 우측 정보 패널 -->
-    <aside id="graph-info-panel" class="graph-info-panel">
-      <!-- 리사이즈 핸들 -->
-      <div id="graph-panel-resizer" class="gp-resizer" aria-hidden="true"></div>
-      <button id="graph-panel-close" class="gp-close" aria-label="패널 닫기">
-        <svg viewBox="0 0 16 16" fill="none" width="14" height="14">
-          <path d="M4 4L12 12M12 4L4 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        </svg>
-      </button>
-      <div id="graph-panel-body" class="gp-body">
-        <div class="gp-empty">
-          <svg viewBox="0 0 48 48" fill="none" width="48" height="48">
-            <circle cx="24" cy="24" r="8" stroke="currentColor" stroke-width="1.5" opacity="0.4"/>
-            <circle cx="8"  cy="12" r="4" stroke="currentColor" stroke-width="1.5" opacity="0.3"/>
-            <circle cx="40" cy="12" r="4" stroke="currentColor" stroke-width="1.5" opacity="0.3"/>
-            <circle cx="8"  cy="36" r="4" stroke="currentColor" stroke-width="1.5" opacity="0.3"/>
-            <circle cx="40" cy="36" r="4" stroke="currentColor" stroke-width="1.5" opacity="0.3"/>
-            <line x1="16" y1="20" x2="12" y2="14" stroke="currentColor" stroke-width="1" opacity="0.3"/>
-            <line x1="32" y1="20" x2="36" y2="14" stroke="currentColor" stroke-width="1" opacity="0.3"/>
-            <line x1="16" y1="28" x2="12" y2="34" stroke="currentColor" stroke-width="1" opacity="0.3"/>
-            <line x1="32" y1="28" x2="36" y2="34" stroke="currentColor" stroke-width="1" opacity="0.3"/>
-          </svg>
-          <p>노드를 클릭하면<br>연관 문서가 표시됩니다</p>
-          <ul class="gp-hint-list">
-            <li><span class="gp-hint-key">클릭</span> 노드 상세 보기</li>
-            <li><span class="gp-hint-key">스크롤</span> 줌 인/아웃</li>
-            <li><span class="gp-hint-key">드래그</span> 화면 이동</li>
-            <li><span class="gp-hint-key">검색</span> 노드 찾기</li>
-          </ul>
+    <!-- 우측 검색엔진 패널 (상시 노출) -->
+    <aside id="graph-side" class="graph-side">
+      <div class="gs-head">
+        <div class="graph-search-wrap">
+          <svg class="graph-search-icon" viewBox="0 0 20 20" fill="none"><circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" stroke-width="1.5"/><path d="M13.5 13.5L17 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <input type="text" id="graph-search" placeholder="글·태그·주제 검색..." autocomplete="off">
+          <button id="graph-search-clear" class="graph-search-clear" aria-label="검색 초기화"><svg viewBox="0 0 16 16" fill="none"><path d="M4 4L12 12M12 4L4 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
         </div>
       </div>
+      <div id="graph-panel-body" class="gp-body"></div>
     </aside>
 
   </div><!-- /.graph-layout -->
@@ -1150,5 +1124,163 @@ main:has(.graph-page) { max-width: 100% !important; }
   transition: opacity 0.2s;
 }
 #sigma-container [class*="watermark"]:hover { opacity: 0.8; }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   좌 그래프 / 우 검색엔진 패널 레이아웃
+   ════════════════════════════════════════════════════════════════════════════ */
+.graph-layout { display: flex; }
+#sigma-container {
+  flex: 1 1 0%;
+  min-width: 0;
+  width: auto;
+  height: 100%;
+}
+.graph-side {
+  flex: 0 0 380px;
+  width: 380px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--md-default-bg-color);
+  border-left: 1px solid var(--md-default-fg-color--lightest);
+}
+[data-md-color-scheme="slate"] .graph-side {
+  background: #0b0d10;
+  border-left-color: #1e293b;
+}
+.gs-head {
+  flex-shrink: 0;
+  padding: 0.6rem 0.7rem;
+  border-bottom: 1px solid var(--md-default-fg-color--lightest);
+}
+[data-md-color-scheme="slate"] .gs-head { border-bottom-color: #1e293b; }
+.graph-side .graph-search-wrap { width: 100%; }
+.graph-side .graph-search-wrap input,
+.graph-side .graph-search-wrap input:focus {
+  width: 100%;
+  font-size: 0.82rem;
+  padding: 0.5rem 1.9rem 0.5rem 2rem;
+}
+.graph-side .graph-search-icon { left: 0.7rem; }
+
+/* 패널 본문: 이 컨테이너가 스크롤 (상세의 내부 스크롤은 해제) */
+.graph-side .gp-body {
+  display: block;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0;
+  scrollbar-width: thin;
+}
+.graph-side .gp-scroll-body { overflow: visible; flex: none; }
+
+/* 결과 헤더 (sticky) */
+.gs-section-head {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.85rem 0.45rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--md-default-fg-color--light);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--md-default-bg-color);
+  border-bottom: 1px solid var(--md-default-fg-color--lightest);
+}
+[data-md-color-scheme="slate"] .gs-section-head {
+  background: #0b0d10;
+  border-bottom-color: #1e293b;
+  color: #64748b;
+}
+.gs-count {
+  background: var(--md-default-fg-color--lightest);
+  color: var(--md-default-fg-color--light);
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 0.05rem 0.42rem;
+  border-radius: 10px;
+  font-variant-numeric: tabular-nums;
+}
+[data-md-color-scheme="slate"] .gs-count { background: #1e293b; color: #94a3b8; }
+
+/* 결과 리스트 */
+.gs-list { list-style: none; margin: 0; padding: 0; }
+.gs-item {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem 0.85rem;
+  cursor: pointer;
+  border-bottom: 1px solid var(--md-default-fg-color--lightest);
+  transition: background 0.12s;
+}
+.gs-item:hover { background: var(--md-default-fg-color--lightest); }
+[data-md-color-scheme="slate"] .gs-item { border-bottom-color: #15171c; }
+[data-md-color-scheme="slate"] .gs-item:hover { background: #15171c; }
+.gs-item .gt-type { margin: 0; flex-shrink: 0; }
+.gs-item-label {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.8rem;
+  line-height: 1.3;
+  color: var(--md-default-fg-color);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+[data-md-color-scheme="slate"] .gs-item-label { color: #c8d6e8; }
+.gs-item-date {
+  flex-shrink: 0;
+  font-size: 0.62rem;
+  color: var(--md-default-fg-color--lighter);
+  font-variant-numeric: tabular-nums;
+}
+.gs-empty {
+  padding: 2rem 1rem;
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--md-default-fg-color--light);
+}
+
+/* 뒤로가기 (상세 → 목록) */
+.gs-back {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  width: 100%;
+  padding: 0.5rem 0.85rem;
+  border: none;
+  border-bottom: 1px solid var(--md-default-fg-color--lightest);
+  background: var(--md-default-bg-color);
+  cursor: pointer;
+  font-family: var(--md-text-font);
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--md-primary-fg-color);
+  position: sticky;
+  top: 0;
+  z-index: 6;
+}
+[data-md-color-scheme="slate"] .gs-back { background: #0b0d10; border-bottom-color: #1e293b; }
+.gs-back:hover { text-decoration: underline; }
+
+/* 모바일: 그래프 위 / 검색 아래로 쌓기 */
+@media (max-width: 720px) {
+  .graph-layout { flex-direction: column; }
+  #sigma-container { height: 55%; }
+  .graph-side {
+    flex: 0 0 45%;
+    width: 100%;
+    height: 45%;
+    border-left: none;
+    border-top: 1px solid var(--md-default-fg-color--lightest);
+  }
+}
 
 </style>

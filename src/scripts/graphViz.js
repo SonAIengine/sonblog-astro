@@ -211,11 +211,14 @@ window.initGraphViz = function initGraphViz() {
     scaleNodesOnZoom: true,
 
     onClick: node => {
-      if (node) openPanel(node);
-      else closePanel();
+      if (node) showNode(node);
+      else {
+        clearNode();
+        renderList(currentQuery);
+      }
     },
     onLabelClick: node => {
-      if (node) openPanel(node);
+      if (node) showNode(node);
     },
     onNodeMouseOver: (node, _i, _pos, ev) => {
       state.hovered = node;
@@ -282,41 +285,36 @@ window.initGraphViz = function initGraphViz() {
     }
   });
 
-  // ── 정보 패널 ───────────────────────────────────────────────────────────────
-  const panel = document.getElementById("graph-info-panel");
-  const panelBody = document.getElementById("graph-panel-body");
-  const panelClose = document.getElementById("graph-panel-close");
+  // ── 우측 검색엔진 패널 (좌 그래프 / 우 검색·결과·상세) ──────────────────────
+  const sideBody = document.getElementById("graph-panel-body");
+  const searchInput = document.getElementById("graph-search");
+  const searchClear = document.getElementById("graph-search-clear");
 
-  function openPanel(node) {
-    if (!panel || !panelBody || !node) return;
-    state.selected = node;
-    try {
-      cosmograph.selectNode(node, true); // 선택 노드 + 이웃 강조
-      cosmograph.focusNode(node);
-      cosmograph.zoomToNode(node);
-    } catch (e) {
-      /* noop */
-    }
+  // 기본 브라우즈 목록 = 전체 글(최신순)
+  const allPosts = data.nodes
+    .filter(n => n.type === "post" && n.url)
+    .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+  const TYPE_ORDER = { post: 0, tag: 1, subcategory: 2, category: 3, series: 4 };
+  let currentQuery = "";
 
+  // 노드 상세 HTML 빌더
+  function buildDetailHTML(node) {
     const typeLabel = TYPE_LABELS[node.type] || node.type;
     const neighborIds = adjacency.get(node.id) || [];
     const neighbors = neighborIds.map(id => nodesById.get(id)).filter(Boolean);
-
     const posts = neighbors
       .filter(n => n.type === "post")
       .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
     const others = neighbors.filter(n => n.type !== "post");
     const deg = neighbors.length;
 
-    // 헤더
     let header = `<div class="gp-node-header gp-node-header--${node.type}">`;
     header += `<div class="gp-header-row">`;
     header += `<div class="gp-type gp-type--${node.type}">${escapeHtml(typeLabel)}</div>`;
     const stats = [`${deg} 연결`];
     if (posts.length) stats.push(`${posts.length} 포스트`);
     if (others.length) stats.push(`${others.length} 노드`);
-    header += `<span class="gp-inline-stats">${stats.join(" · ")}</span>`;
-    header += `</div>`;
+    header += `<span class="gp-inline-stats">${stats.join(" · ")}</span></div>`;
     header += `<h2 class="gp-title">${escapeHtml(node.label)}</h2>`;
     const meta = [];
     if (node.series) meta.push(`<span class="gp-meta-series">${escapeHtml(node.series)}</span>`);
@@ -328,37 +326,28 @@ window.initGraphViz = function initGraphViz() {
     if (meta.length) header += `<div class="gp-meta-line">${meta.join("")}</div>`;
     header += `</div>`;
 
-    // 본문
     let body = `<div class="gp-scroll-body">`;
-
     if (posts.length > 0) {
-      body += `<div class="gp-section">`;
-      body += `<div class="gp-section-title">연관 포스트<span class="gp-section-count">${posts.length}</span></div>`;
-      body += `<ul class="gp-post-list">`;
+      body += `<div class="gp-section"><div class="gp-section-title">연관 포스트<span class="gp-section-count">${posts.length}</span></div><ul class="gp-post-list">`;
       posts.forEach(p => {
         const dateStr = p.date ? `<span class="gp-post-date">${escapeHtml(p.date)}</span>` : "";
-        body += `<li class="gp-post-item">`;
-        body += p.url
-          ? `<a href="${escapeHtml(p.url)}" class="gp-post-link">${escapeHtml(p.label)}</a>${dateStr}`
-          : `<span class="gp-post-label">${escapeHtml(p.label)}</span>${dateStr}`;
-        body += `</li>`;
+        body +=
+          `<li class="gp-post-item">` +
+          (p.url
+            ? `<a href="${escapeHtml(p.url)}" class="gp-post-link">${escapeHtml(p.label)}</a>${dateStr}`
+            : `<span class="gp-post-label">${escapeHtml(p.label)}</span>${dateStr}`) +
+          `</li>`;
       });
       body += `</ul></div>`;
     }
-
     if (others.length > 0) {
       const order = ["category", "subcategory", "series", "tag"];
       const grouped = {};
-      others.forEach(n => {
-        (grouped[n.type] = grouped[n.type] || []).push(n);
-      });
-      body += `<div class="gp-section">`;
-      body += `<div class="gp-section-title">연결 노드<span class="gp-section-count">${others.length}</span></div>`;
+      others.forEach(n => (grouped[n.type] = grouped[n.type] || []).push(n));
+      body += `<div class="gp-section"><div class="gp-section-title">연결 노드<span class="gp-section-count">${others.length}</span></div>`;
       order.forEach(t => {
         if (!grouped[t] || !grouped[t].length) return;
-        body += `<div class="gp-conn-group">`;
-        body += `<span class="gp-conn-group-label gp-type--${t}">${escapeHtml(TYPE_LABELS[t])}</span>`;
-        body += `<div class="gp-tags">`;
+        body += `<div class="gp-conn-group"><span class="gp-conn-group-label gp-type--${t}">${escapeHtml(TYPE_LABELS[t])}</span><div class="gp-tags">`;
         grouped[t].forEach(n => {
           body += `<span class="gp-tag gp-tag--${n.type}" data-node-id="${escapeHtml(n.id)}">${escapeHtml(n.label)}</span>`;
         });
@@ -368,37 +357,111 @@ window.initGraphViz = function initGraphViz() {
     }
     body += `</div>`;
 
-    // 푸터 (포스트면 글 읽기 버튼)
     let footer = "";
     if (node.type === "post" && node.url) {
       footer =
         `<div class="gp-panel-footer"><a class="gp-open-btn" href="${escapeHtml(node.url)}">글 읽기` +
         `<svg class="gp-open-btn-icon" viewBox="0 0 16 16" fill="none" width="13" height="13"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a></div>`;
     }
+    return header + body + footer;
+  }
 
-    panelBody.innerHTML = header + body + footer;
-    panel.classList.add("is-open");
-
-    // 연결 노드 칩 클릭 → 해당 노드로 이동
-    panelBody.querySelectorAll(".gp-tag[data-node-id]").forEach(el => {
+  // 노드 상세 보기 (그래프 포커스 + 우측 패널 상세 + '검색으로' 뒤로가기)
+  function showNode(node) {
+    if (!node || !sideBody) return;
+    state.selected = node;
+    try {
+      cosmograph.selectNode(node, true);
+      cosmograph.focusNode(node);
+      cosmograph.zoomToNode(node);
+    } catch (e) {
+      /* noop */
+    }
+    sideBody.innerHTML =
+      `<button type="button" class="gs-back" id="gs-back"><svg viewBox="0 0 16 16" width="12" height="12" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>검색으로</button>` +
+      buildDetailHTML(node);
+    sideBody.scrollTop = 0;
+    document.getElementById("gs-back")?.addEventListener("click", () => {
+      clearNode();
+      renderList(currentQuery);
+    });
+    sideBody.querySelectorAll(".gp-tag[data-node-id]").forEach(el => {
       el.addEventListener("click", () => {
-        const target = nodesById.get(el.dataset.nodeId);
-        if (target) openPanel(target);
+        const t = nodesById.get(el.dataset.nodeId);
+        if (t) showNode(t);
       });
     });
   }
 
-  function closePanel() {
+  // 그래프 선택 해제 (전체 노드 복원)
+  function clearNode() {
     state.selected = null;
-    panel?.classList.remove("is-open");
     try {
-      cosmograph.unselectNodes(); // 선택 그레이아웃 해제 (초기 상태로 복원)
-      cosmograph.focusNode(undefined); // 포커스 링 제거
+      cosmograph.unselectNodes();
+      cosmograph.focusNode(undefined);
     } catch (e) {
       /* noop */
     }
   }
-  panelClose?.addEventListener("click", closePanel);
+
+  // 검색/브라우즈 결과 목록 렌더
+  function renderList(query) {
+    if (!sideBody) return;
+    currentQuery = query || "";
+    const q = currentQuery.trim().toLowerCase();
+    if (searchClear) searchClear.style.display = q ? "flex" : "none";
+
+    let items, headLabel;
+    if (!q) {
+      items = allPosts;
+      headLabel = "전체 글";
+    } else {
+      items = data.nodes
+        .filter(n => (n.label || "").toLowerCase().includes(q))
+        .sort((a, b) => {
+          const d = (TYPE_ORDER[a.type] ?? 9) - (TYPE_ORDER[b.type] ?? 9);
+          if (d) return d;
+          return (
+            (b.date || "").localeCompare(a.date || "") ||
+            degreeOf(b.id) - degreeOf(a.id)
+          );
+        })
+        .slice(0, 80);
+      headLabel = "검색결과";
+    }
+
+    let html = `<div class="gs-section-head">${headLabel}<span class="gs-count">${items.length}</span></div>`;
+    if (!items.length) {
+      sideBody.innerHTML = html + `<div class="gs-empty">결과가 없습니다</div>`;
+      return;
+    }
+    html += `<ul class="gs-list">`;
+    items.forEach(n => {
+      const date = n.date ? `<span class="gs-item-date">${escapeHtml(n.date)}</span>` : "";
+      html +=
+        `<li class="gs-item" data-node-id="${escapeHtml(n.id)}">` +
+        `<span class="gt-type gt-type--${n.type}">${escapeHtml(TYPE_LABELS[n.type] || n.type)}</span>` +
+        `<span class="gs-item-label">${escapeHtml(n.label)}</span>${date}</li>`;
+    });
+    html += `</ul>`;
+    sideBody.innerHTML = html;
+    sideBody.scrollTop = 0;
+    sideBody.querySelectorAll(".gs-item").forEach(el => {
+      el.addEventListener("click", () => {
+        const node = nodesById.get(el.dataset.nodeId);
+        if (!node) return;
+        // 해당 타입이 꺼져 있으면 켜서 그래프에 보이게
+        if (!activeTypes.has(node.type)) {
+          activeTypes.add(node.type);
+          const cb = document.querySelector(`.graph-filter-cb[data-type="${node.type}"]`);
+          if (cb) cb.checked = true;
+          const v = visibleData();
+          cosmograph.setData(v.nodes, v.links, false);
+        }
+        showNode(node);
+      });
+    });
+  }
 
   // ── 필터 ─────────────────────────────────────────────────────────────────
   document.querySelectorAll(".graph-filter-cb").forEach(cb => {
@@ -410,100 +473,28 @@ window.initGraphViz = function initGraphViz() {
     });
   });
 
-  // ── 검색 ─────────────────────────────────────────────────────────────────
-  const searchInput = document.getElementById("graph-search");
-  const searchClear = document.getElementById("graph-search-clear");
-  const searchWrap = searchInput?.closest(".graph-search-wrap");
-  let dropdown = null;
-
-  function ensureDropdown() {
-    if (!dropdown && searchWrap) {
-      dropdown = document.createElement("div");
-      dropdown.className = "graph-search-dropdown";
-      searchWrap.appendChild(dropdown);
-    }
-    return dropdown;
-  }
-
-  function runSearch(q) {
-    const query = q.trim().toLowerCase();
-    searchClear.style.display = query ? "flex" : "none";
-    const dd = ensureDropdown();
-    if (!dd) return;
-    if (!query) {
-      dd.classList.remove("is-visible");
-      dd.innerHTML = "";
-      return;
-    }
-    const matches = data.nodes
-      .filter(n => (n.label || "").toLowerCase().includes(query))
-      .sort((a, b) => degreeOf(b.id) - degreeOf(a.id))
-      .slice(0, 12);
-
-    if (!matches.length) {
-      dd.innerHTML = `<div class="gp-search-empty" style="padding:0.7rem 0.9rem;font-size:0.78rem;opacity:0.6">검색 결과 없음</div>`;
-      dd.classList.add("is-visible");
-      return;
-    }
-    dd.innerHTML = matches
-      .map(
-        n =>
-          `<div class="gp-search-item" data-node-id="${escapeHtml(n.id)}" style="display:flex;align-items:center;gap:0.5rem;padding:0.45rem 0.8rem;cursor:pointer;font-size:0.8rem;border-bottom:1px solid var(--md-default-fg-color--lightest)">` +
-          `<span class="gt-type gt-type--${n.type}" style="margin:0;flex-shrink:0">${escapeHtml(TYPE_LABELS[n.type] || n.type)}</span>` +
-          `<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(n.label)}</span></div>`
-      )
-      .join("");
-    dd.classList.add("is-visible");
-
-    dd.querySelectorAll(".gp-search-item").forEach(el => {
-      el.addEventListener("mousedown", e => {
-        e.preventDefault();
-        const node = nodesById.get(el.dataset.nodeId);
-        if (!node) return;
-        // 검색 대상 타입이 꺼져 있으면 켜고 데이터 갱신
-        if (!activeTypes.has(node.type)) {
-          activeTypes.add(node.type);
-          const cb = document.querySelector(`.graph-filter-cb[data-type="${node.type}"]`);
-          if (cb) cb.checked = true;
-          const v = visibleData();
-          cosmograph.setData(v.nodes, v.links);
-        }
-        dd.classList.remove("is-visible");
-        searchInput.value = node.label;
-        searchClear.style.display = "flex";
-        setTimeout(() => openPanel(node), 60);
-      });
-    });
-  }
-
-  searchInput?.addEventListener("input", e => runSearch(e.target.value));
-  searchInput?.addEventListener("focus", e => {
-    if (e.target.value) runSearch(e.target.value);
-  });
-  searchInput?.addEventListener("blur", () => {
-    setTimeout(() => dropdown?.classList.remove("is-visible"), 150);
-  });
+  // ── 검색 입력 ──────────────────────────────────────────────────────────────
+  searchInput?.addEventListener("input", e => renderList(e.target.value));
   searchClear?.addEventListener("click", () => {
-    searchInput.value = "";
-    searchClear.style.display = "none";
-    dropdown?.classList.remove("is-visible");
-    searchInput.focus();
+    if (searchInput) searchInput.value = "";
+    renderList("");
+    searchInput?.focus();
   });
 
   // ── 초기화 버튼 ───────────────────────────────────────────────────────────
   document.getElementById("graph-reset")?.addEventListener("click", () => {
-    closePanel();
-    if (searchInput) {
-      searchInput.value = "";
-      searchClear.style.display = "none";
-    }
-    dropdown?.classList.remove("is-visible");
+    clearNode();
+    if (searchInput) searchInput.value = "";
+    renderList("");
     try {
       cosmograph.fitView(400);
     } catch (e) {
       /* noop */
     }
   });
+
+  // 기본 화면: 우측 패널에 전체 글 목록
+  renderList("");
 
   // 사이트 테마(data-theme)를 MkDocs 스킴으로 미러링 → 패널/툴바가 테마 따라감.
   function syncScheme() {
