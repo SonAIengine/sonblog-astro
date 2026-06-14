@@ -29,6 +29,8 @@ INDEX_JSON = os.environ.get(
     os.path.join(os.path.dirname(__file__), "..", "dist", "search-index.json"),
 )
 GRAPH_DB = os.environ.get("GRAPH_DB", os.path.join(os.path.dirname(__file__), "blog_graph.db"))
+# 리랭커 점수 노이즈 컷 — 이 값 미만은 무관한 글로 보고 제외(최소 1건은 보장)
+SCORE_FLOOR = float(os.environ.get("SCORE_FLOOR", "0.4"))
 
 state: dict = {"graph": None}
 
@@ -68,6 +70,12 @@ async def lifespan(app: FastAPI):
     )
     state["graph"] = graph
     print(f"[blog-search] ready: {len(chunks)} docs indexed")
+    # 리랭커/임베더/연결 워밍업 — 첫 사용자 쿼리의 콜드 스타트(수십 초) 제거
+    try:
+        await graph.search("워밍업 테스트 검색", limit=3, engine="evidence", rerank=True)
+        print("[blog-search] warmup done")
+    except Exception as e:
+        print(f"[blog-search] warmup skipped: {e}")
     yield
     await graph.close()
 
@@ -104,6 +112,9 @@ async def search(
         url = n.source or (n.properties or {}).get("url")
         if not url or url in seen:
             continue
+        # 점수 내림차순 — FLOOR 미만이 나오면 (최소 1건 확보 후) 이하 전부 노이즈로 컷
+        if float(an.activation) < SCORE_FLOOR and results:
+            break
         seen.add(url)
         results.append(
             {
