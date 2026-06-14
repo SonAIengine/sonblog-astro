@@ -1004,20 +1004,29 @@ window.initGraphViz = function initGraphViz() {
       if (!sec.entries.length) return;
       html += `<div class="gs-section-head">${sec.head}<span class="gs-count">${sec.count ?? sec.entries.length}</span></div><ul class="gs-list">`;
       sec.entries.forEach(e => {
-        const date = e.date ? `<span class="gs-item-date">${escapeHtml(e.date)}</span>` : "";
-        const snip = e.snippetHtml ? `<div class="gs-item-snippet">${e.snippetHtml}</div>` : "";
-        const cat =
-          e.category && CATEGORY_LABELS[e.category]
-            ? `<span class="gs-cat">${escapeHtml(CATEGORY_LABELS[e.category])}</span>`
-            : "";
-        const rel =
-          typeof e.rel === "number"
-            ? `<div class="gs-rel"><span style="width:${Math.round(e.rel * 100)}%"></span></div>`
-            : "";
-        html +=
-          `<li class="gs-item" data-node-id="${escapeHtml(e.nodeId)}">` +
-          `<div class="gs-item-main"><span class="gt-type gt-type--${e.type}">${escapeHtml(TYPE_LABELS[e.type] || e.type)}</span>` +
-          `<span class="gs-item-label">${e.labelHtml || escapeHtml(e.label)}</span>${cat}${date}</div>${snip}${rel}</li>`;
+        const label = e.labelHtml || escapeHtml(e.label);
+        if (e.type === "post") {
+          const dateStr = e.date ? `<span class="gs-item-date">${escapeHtml(e.date)}</span>` : "";
+          const cat =
+            e.category && CATEGORY_LABELS[e.category]
+              ? `<span class="gs-cat">${escapeHtml(CATEGORY_LABELS[e.category])}</span>`
+              : "";
+          const meta = cat || dateStr ? `<div class="gs-item-meta">${cat}${dateStr}</div>` : "";
+          const snip = e.snippetHtml ? `<div class="gs-item-snippet">${e.snippetHtml}</div>` : "";
+          const rel =
+            typeof e.rel === "number"
+              ? `<div class="gs-rel"><span style="width:${Math.round(e.rel * 100)}%"></span></div>`
+              : "";
+          html +=
+            `<li class="gs-item gs-item--post" data-node-id="${escapeHtml(e.nodeId)}">` +
+            `<div class="gs-item-label">${label}</div>${meta}${snip}${rel}</li>`;
+        } else {
+          // 태그·주제 등 비포스트 노드는 컴팩트 행(타입 칩 + 라벨)
+          html +=
+            `<li class="gs-item gs-item--node" data-node-id="${escapeHtml(e.nodeId)}">` +
+            `<span class="gt-type gt-type--${e.type}">${escapeHtml(TYPE_LABELS[e.type] || e.type)}</span>` +
+            `<span class="gs-item-label gs-item-label--node">${label}</span></li>`;
+        }
       });
       html += `</ul>`;
     });
