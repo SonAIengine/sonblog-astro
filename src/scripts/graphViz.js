@@ -301,7 +301,7 @@ window.initGraphViz = function initGraphViz() {
     .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
   const TYPE_ORDER = { post: 0, tag: 1, subcategory: 2, category: 3, series: 4 };
   let currentQuery = "";
-  let searchMode = "text"; // text | semantic | hybrid
+  const searchMode = "hybrid"; // 단일 검색 로직: BM25 키워드 + e5 의미 벡터 결합 (실패 시 텍스트 폴백)
 
   // ── 검색 엔진 (Phase 1: 텍스트 BM25) ───────────────────────────────────────
   const BASE = import.meta.env.BASE_URL.replace(/\/$/, ""); // "/sonblog-astro"
@@ -832,21 +832,13 @@ window.initGraphViz = function initGraphViz() {
     });
   });
 
-  // ── 검색 모드 토글 (텍스트·의미·하이브리드) ─────────────────────────────────
-  document.querySelectorAll(".gs-mode").forEach(btn => {
-    btn.addEventListener("click", () => {
-      if (btn.classList.contains("is-active")) return;
-      document
-        .querySelectorAll(".gs-mode")
-        .forEach(b => b.classList.toggle("is-active", b === btn));
-      searchMode = btn.dataset.mode;
-      // 의미/하이브리드 첫 선택 시 모델·벡터 미리 로드
-      if (searchMode !== "text") {
-        ensureVectors().catch(() => {});
-        ensureEmbedder().catch(() => {});
-      }
-      if (currentQuery.trim()) renderList(currentQuery);
-    });
+  // ── 하이브리드 단일 검색: 첫 포커스 시 벡터·임베더 미리 로드 ─────────────────
+  let _preloaded = false;
+  searchInput?.addEventListener("focus", () => {
+    if (_preloaded) return;
+    _preloaded = true;
+    ensureVectors().catch(() => {});
+    ensureEmbedder().catch(() => {});
   });
 
   // ── 검색 입력 (디바운스) ────────────────────────────────────────────────────
