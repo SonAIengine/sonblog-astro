@@ -18,40 +18,30 @@ function isDarkMode() {
   return document.documentElement.getAttribute("data-theme") === "dark";
 }
 
-// 라이트/다크 양쪽에서 세련되게 읽히는 큐레이팅 팔레트 (Tailwind jewel tones).
-// 타입별 색은 통일하되, 데이터의 원색(빨강 등) 대신 절제된 보석 톤을 쓴다.
-const PALETTE = {
-  light: {
-    category: "#e11d48", // rose
-    subcategory: "#d97706", // amber
-    series: "#0284c7", // sky
-    tag: "#0d9488", // teal (사이트 accent 계열)
-    post: "#6366f1", // indigo
-  },
-  dark: {
-    category: "#fb7185",
-    subcategory: "#fbbf24",
-    series: "#38bdf8",
-    tag: "#2dd4bf",
-    post: "#a5b4fc",
-  },
-};
+// 노드 색은 community(토픽 클러스터) 기준으로 칠한다 — Cosmograph 데모처럼
+// 클러스터마다 다른 색이 들어가 구조가 한눈에 보인다.
+// golden-angle(137.5°)로 균등 분포 hue 생성, 테마별 채도/명도만 조정.
+const GOLDEN_ANGLE = 137.508;
+function communityColor(community, comm) {
+  const h = ((community || 0) * GOLDEN_ANGLE) % 360;
+  return `hsl(${h.toFixed(1)}, ${comm.s}%, ${comm.l}%)`;
+}
 
 // 테마별 캔버스/링크/라벨 색
 function vizColors(dark) {
   return dark
     ? {
-        palette: PALETTE.dark,
+        comm: { s: 70, l: 63 }, // 다크: 밝고 선명
         link: "rgba(148, 163, 184, 0.15)",
         label: "#e2e8f0",
-        ring: "#2dd4bf",
+        ring: "#e2e8f0",
         fallback: "#94a3b8",
       }
     : {
-        palette: PALETTE.light,
+        comm: { s: 58, l: 48 }, // 라이트: 채도 있고 약간 어둡게(흰 배경 가독)
         link: "rgba(15, 23, 42, 0.08)",
         label: "#334155",
-        ring: "#0d9488",
+        ring: "#0f172a",
         fallback: "#64748b",
       };
 }
@@ -119,11 +109,26 @@ window.initGraphViz = function initGraphViz() {
 
   const state = { selected: null, hovered: null };
 
+  // 레이아웃/렌더에는 구조적(트리) 엣지만 사용한다.
+  // tagCooccurs/related/dependsOn은 태그를 한 덩어리로 엉키게 하므로 제외.
+  // (단 패널의 '연결 노드'는 위 adjacency = 전체 엣지를 그대로 사용)
+  const RENDER_EDGE_TYPES = new Set([
+    "hasTag",
+    "inCategory",
+    "inSubcategory",
+    "inSeries",
+  ]);
+
   // 현재 활성 타입에 맞는 노드/엣지 부분집합
   function visibleData() {
     const visNodes = renderNodes.filter(n => activeTypes.has(n.type));
     const visIds = new Set(visNodes.map(n => n.id));
-    const visEdges = data.edges.filter(e => visIds.has(e.source) && visIds.has(e.target));
+    const visEdges = data.edges.filter(
+      e =>
+        RENDER_EDGE_TYPES.has(e.type) &&
+        visIds.has(e.source) &&
+        visIds.has(e.target)
+    );
     return { nodes: visNodes, links: visEdges };
   }
 
@@ -133,15 +138,17 @@ window.initGraphViz = function initGraphViz() {
   const cosmograph = new Cosmograph(container, {
     // 투명 배경 → CSS가 테마별 배경(라이트 클린 / 다크 차분) 담당
     backgroundColor: "rgba(0, 0, 0, 0)",
-    nodeColor: n => V.palette[n.type] || V.fallback,
-    nodeSize: n => Math.max(2.5, (n.size || 8) * 0.48),
+    nodeColor: n => communityColor(n.community, V.comm),
+    nodeSize: n => Math.max(3, (n.size || 8) * 0.55),
     nodeSizeScale: 1,
-    nodeGreyoutOpacity: 0.1,
+    // 호버/선택 시 비이웃 노드는 흐리게
+    nodeGreyoutOpacity: 0.07,
 
     renderLinks: true,
     linkColor: () => V.link,
     linkWidth: 0.3,
     linkWidthScale: 1,
+    // 호버/선택 시 비관련 엣지는 숨김 → 해당 노드 연결만 또렷
     linkGreyoutOpacity: 0,
     // 우아한 얇은 곡선 엣지
     curvedLinks: true,
@@ -162,21 +169,21 @@ window.initGraphViz = function initGraphViz() {
     hoveredNodeRingColor: V.ring,
     focusedNodeRingColor: V.ring,
 
-    // 시뮬레이션 — 한 덩어리로 뭉치지 않게 척력↑ / 중력·구심력↓ / 링크거리↑
-    simulationGravity: 0.05,
+    // 시뮬레이션 — 강한 척력 + 느슨한 링크로 클러스터가 벌어지게
+    simulationGravity: 0.02,
     simulationCenter: 0,
-    simulationRepulsion: 1.8,
-    simulationRepulsionTheta: 1.3,
-    simulationLinkSpring: 0.5,
-    simulationLinkDistance: 16,
-    simulationFriction: 0.88,
-    simulationDecay: 3000,
-    // 넓은 공간 + Barnes-Hut 척력으로 클러스터가 분리돼 보이게
+    simulationRepulsion: 2.0,
+    simulationRepulsionTheta: 1.15,
+    simulationLinkSpring: 0.28,
+    simulationLinkDistance: 22,
+    simulationFriction: 0.9,
+    simulationDecay: 5000,
+    // 넓은 공간 + Barnes-Hut 척력으로 클러스터 분리
     useQuadtree: true,
     spaceSize: 8192,
 
     fitViewOnInit: true,
-    fitViewDelay: 2600,
+    fitViewDelay: 3500,
     scaleNodesOnZoom: true,
 
     onClick: node => {
@@ -190,11 +197,24 @@ window.initGraphViz = function initGraphViz() {
       state.hovered = node;
       container.style.cursor = "pointer";
       showTooltip(node, ev);
+      // 호버한 노드 + 이웃만 강조, 나머지는 흐려짐 (Obsidian 방식)
+      try {
+        cosmograph.selectNode(node, true);
+      } catch (e) {
+        /* noop */
+      }
     },
     onNodeMouseOut: () => {
       state.hovered = null;
       container.style.cursor = "default";
       hideTooltip();
+      try {
+        // 클릭 선택된 노드가 있으면 그 포커스를 유지, 없으면 전체 복원
+        if (state.selected) cosmograph.selectNode(state.selected, true);
+        else cosmograph.unselectNodes();
+      } catch (e) {
+        /* noop */
+      }
     },
   });
 
@@ -475,7 +495,7 @@ window.initGraphViz = function initGraphViz() {
     try {
       cosmograph.setConfig({
         linkColor: () => V.link,
-        nodeColor: n => V.palette[n.type] || V.fallback,
+        nodeColor: n => communityColor(n.community, V.comm),
         nodeLabelColor: V.label,
         hoveredNodeLabelColor: V.label,
         hoveredNodeRingColor: V.ring,
