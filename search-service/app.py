@@ -72,7 +72,7 @@ async def lifespan(app: FastAPI):
     print(f"[blog-search] ready: {len(chunks)} docs indexed")
     # 리랭커/임베더/연결 워밍업 — 첫 사용자 쿼리의 콜드 스타트(수십 초) 제거
     try:
-        await graph.search("워밍업 테스트 검색", limit=3, engine="evidence", rerank=True)
+        await graph.search("워밍업 테스트 검색", limit=3, engine="evidence", rerank=False)
         print("[blog-search] warmup done")
     except Exception as e:
         print(f"[blog-search] warmup skipped: {e}")
@@ -98,7 +98,10 @@ async def health():
 async def search(
     q: str = Query(..., min_length=1),
     limit: int = Query(12, ge=1, le=40),
-    rerank: bool = True,
+    # 리랭커(bge-reranker, GPU)는 이 코퍼스에서 품질 향상이 미미한데 GPU 경합 시
+    # 지연 스파이크(수 초)를 유발 → 기본 끔. dense(bge-m3)+BM25+PPR로 충분.
+    # 필요 시 ?rerank=true 로 켤 수 있음.
+    rerank: bool = False,
 ):
     graph = state["graph"]
     if graph is None:
