@@ -113,7 +113,18 @@ window.initGraphViz = function initGraphViz() {
     ["category", "subcategory", "series", "tag"].forEach(t => activeTypes.add(t));
   }
 
-  const state = { selected: null, hovered: null };
+  const state = { selected: null, hovered: null, searchNodes: [] };
+
+  // post 노드 → 연결된 태그 id 집합 (비슷한 글 계산용)
+  const postTagSet = new Map();
+  data.nodes.forEach(n => {
+    if (n.type === "post") {
+      const tags = (adjacency.get(n.id) || []).filter(
+        id => nodesById.get(id)?.type === "tag"
+      );
+      postTagSet.set(n.id, new Set(tags));
+    }
+  });
 
   // 레이아웃/렌더에는 구조적(트리) 엣지만 사용한다.
   // tagCooccurs/related/dependsOn은 태그를 한 덩어리로 엉키게 하므로 제외.
@@ -235,13 +246,7 @@ window.initGraphViz = function initGraphViz() {
       state.hovered = null;
       container.style.cursor = "default";
       hideTooltip();
-      try {
-        // 클릭 선택된 노드가 있으면 그 포커스를 유지, 없으면 전체 복원
-        if (state.selected) cosmograph.selectNode(state.selected, true);
-        else cosmograph.unselectNodes();
-      } catch (e) {
-        /* noop */
-      }
+      applyHighlight();
     },
   });
 
@@ -357,6 +362,28 @@ window.initGraphViz = function initGraphViz() {
     );
   }
 
+  // 비슷한 글: 공통 태그 Jaccard + 같은 커뮤니티 보너스
+  function similarPosts(node, limit) {
+    const myTags = postTagSet.get(node.id);
+    if (!myTags || !myTags.size) return [];
+    const scored = [];
+    postTagSet.forEach((tags, pid) => {
+      if (pid === node.id) return;
+      let shared = 0;
+      tags.forEach(t => {
+        if (myTags.has(t)) shared++;
+      });
+      if (!shared) return;
+      const other = nodesById.get(pid);
+      if (!other) return;
+      const jaccard = shared / (myTags.size + tags.size - shared);
+      const commBonus = other.community === node.community ? 0.12 : 0;
+      scored.push({ node: other, score: jaccard + commBonus, shared });
+    });
+    scored.sort((a, b) => b.score - a.score || b.shared - a.shared);
+    return scored.slice(0, limit || 5);
+  }
+
   // 노드 상세 HTML 빌더
   function buildDetailHTML(node) {
     const typeLabel = TYPE_LABELS[node.type] || node.type;
@@ -415,6 +442,19 @@ window.initGraphViz = function initGraphViz() {
       });
       body += `</div>`;
     }
+
+    // 비슷한 글 (포스트 노드만)
+    if (node.type === "post") {
+      const sim = similarPosts(node, 5);
+      if (sim.length) {
+        body += `<div class="gp-section"><div class="gp-section-title">비슷한 글<span class="gp-section-count">${sim.length}</span></div><ul class="gp-post-list">`;
+        sim.forEach(s => {
+          const dateStr = s.node.date ? `<span class="gp-post-date">${escapeHtml(s.node.date)}</span>` : "";
+          body += `<li class="gp-post-item"><span class="gp-post-link gs-nav" data-node-id="${escapeHtml(s.node.id)}">${escapeHtml(s.node.label)}</span>${dateStr}</li>`;
+        });
+        body += `</ul></div>`;
+      }
+    }
     body += `</div>`;
 
     let footer = "";
@@ -445,23 +485,36 @@ window.initGraphViz = function initGraphViz() {
       clearNode();
       renderList(currentQuery);
     });
-    sideBody.querySelectorAll(".gp-tag[data-node-id]").forEach(el => {
-      el.addEventListener("click", () => {
-        const t = nodesById.get(el.dataset.nodeId);
-        if (t) showNode(t);
+    sideBody
+      .querySelectorAll(".gp-tag[data-node-id], .gs-nav[data-node-id]")
+      .forEach(el => {
+        el.addEventListener("click", () => {
+          const t = nodesById.get(el.dataset.nodeId);
+          if (t) showNode(t);
+        });
       });
-    });
   }
 
   // 그래프 선택 해제 (전체 노드 복원)
+  // 현재 상태(선택 노드 > 검색결과 > 없음)에 맞춰 그래프 강조 적용
+  function applyHighlight() {
+    try {
+      if (state.selected) cosmograph.selectNode(state.selected, true);
+      else if (state.searchNodes.length) cosmograph.selectNodes(state.searchNodes);
+      else cosmograph.unselectNodes();
+    } catch (e) {
+      /* noop */
+    }
+  }
+
   function clearNode() {
     state.selected = null;
     try {
-      cosmograph.unselectNodes();
       cosmograph.focusNode(undefined);
     } catch (e) {
       /* noop */
     }
+    applyHighlight();
   }
 
   // 결과 항목 렌더 (entries: {nodeId,label,type,date,snippetHtml,labelHtml})
@@ -506,8 +559,10 @@ window.initGraphViz = function initGraphViz() {
     const q = currentQuery.trim();
     if (searchClear) searchClear.style.display = q ? "flex" : "none";
 
-    // 빈 쿼리 → 전체 글 브라우즈
+    // 빈 쿼리 → 전체 글 브라우즈 + 그래프 강조 해제
     if (!q) {
+      state.searchNodes = [];
+      if (!state.selected) applyHighlight();
       renderEntries([
         {
           head: "전체 글",
@@ -590,6 +645,12 @@ window.initGraphViz = function initGraphViz() {
       }));
 
     if (reqQuery !== currentQuery) return;
+    // 매칭 노드를 그래프에 강조 (검색 결과 = 그래프 시각화)
+    state.searchNodes = [...postEntries, ...nodeEntries]
+      .map(e => nodesById.get(e.nodeId))
+      .filter(Boolean);
+    if (!state.selected) applyHighlight();
+
     renderEntries([
       { head: "글", entries: postEntries },
       { head: "태그·주제", entries: nodeEntries },
