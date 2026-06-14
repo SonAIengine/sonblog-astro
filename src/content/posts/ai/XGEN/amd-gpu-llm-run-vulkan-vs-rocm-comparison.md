@@ -1,18 +1,18 @@
 ---
-title: 'AMD GPU에서 LLM 돌리기: Vulkan vs ROCm 비교'
-description: XGEN 모델 서버에서 AMD GPU로 LLM을 서빙할 때 Vulkan과 ROCm 백엔드를 선택하는 기준, mlock 설정,
-  GPU 감지 fallback chain 구현까지 실전 비교
+title: "AMD GPU에서 LLM 돌리기: Vulkan vs ROCm 비교"
 pubDatetime: 2026-01-31
+description: XGEN 모델 서버에서 AMD GPU로 LLM을 서빙할 때 Vulkan과 ROCm 백엔드를 선택하는 기준, mlock
+  설정, GPU 감지 fallback chain 구현까지 실전 비교
 tags:
-- LLM
-- AMD GPU
-- Vulkan
-- ROCm
-- llama.cpp
-- GGUF
-- XGEN
-- 모델서빙
-- AI
+  - LLM
+  - AMD GPU
+  - Vulkan
+  - ROCm
+  - llama.cpp
+  - GGUF
+  - XGEN
+  - 모델서빙
+  - AI
 ---
 
 
@@ -335,7 +335,7 @@ ModelLoadRequest(
 
 ROCm 백엔드는 `binary_path="llama-server-rocm"`으로만 바꾸면 된다. 나머지 설정은 동일하게 유지한다.
 
-## 회고
+## 회고록
 
 AMD GPU로 LLM을 서빙하는 건 2026년 초 기준으로도 아직 조심스러운 영역이다. NVIDIA에 비해 생태계가 좁고, 특히 GGUF 모델의 경우 Vulkan이 ROCm보다 훨씬 범용적이고 안정적이었다.
 
