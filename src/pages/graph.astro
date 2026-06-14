@@ -499,4 +499,11 @@ const gm = graphData.metadata;
   }
 .graph-filter-hint { display: none; }
 }
+
+/* AstroPaper 레이아웃 — graph 풀스크린 (mkdocs .md-content 의존 대체) */
+#main-content:has(.graph-page) { max-width: 100% !important; padding: 0 !important; }
+main:has(.graph-page) { max-width: 100% !important; }
+.graph-page { height: calc(100vh - 64px); width: 100%; }
+#sigma-container { width: 100%; height: 100%; }
+
 </style>
