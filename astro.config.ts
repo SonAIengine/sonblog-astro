@@ -22,8 +22,8 @@ import { transformerFileName } from "./src/utils/transformers/fileName";
 import config from "./astro-paper.config";
 
 export default defineConfig({
-  site: "https://sonaiengine.github.io",
-  base: "/sonblog-astro",
+  site: "https://infoedu.co.kr",
+  base: "/",
   integrations: [
     mdx(),
     sitemap({
