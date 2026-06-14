@@ -6,14 +6,13 @@ import IconArrowRight from "@/assets/icons/IconArrowRight.svg";
 import Layout from "@/layouts/Layout.astro";
 import Header from "@/components/Header.astro";
 import Footer from "@/components/Footer.astro";
-import Socials from "@/components/Socials.astro";
 import Card from "@/components/Card.astro";
 import LinkButton from "@/components/LinkButton.astro";
 import { getSortedPosts } from "@/utils/getSortedPosts";
 import { useTranslations } from "@/i18n";
 import config from "@/config";
 
-const { socials, posts: postsConfig } = config;
+const { posts: postsConfig } = config;
 
 const locale = Astro.currentLocale ?? config.site.lang;
 const t = useTranslations(locale);
@@ -33,57 +32,78 @@ const homePath = getRelativeLocaleUrl(locale, "");
     data-home-path={homePath}
     class="app-layout"
   >
-    <section id="hero" class="border-border border-b pt-8 pb-6">
-      <h1 class="my-4 inline-block text-4xl font-bold sm:my-8 sm:text-5xl">
-        AI Engineer 손성준
-      </h1>
-      <a
-        target="_blank"
-        href={`${import.meta.env.BASE_URL.replace(/\/?$/, "/")}rss.xml`}
-        class="inline-block"
-        aria-label="RSS Feed"
-        title="RSS Feed"
+    <section id="hero" class="border-border border-b pt-8 pb-8">
+      <p
+        class="font-app text-accent text-xs font-semibold tracking-[0.2em] uppercase"
       >
-        <IconRss
-          width={20}
-          height={20}
-          class="stroke-accent scale-125 stroke-3 rtl:-rotate-90"
-        />
-        <span class="sr-only">RSS Feed</span>
-      </a>
+        AI Engineer
+      </p>
+      <h1 class="mt-2 mb-2 inline-block text-4xl font-bold sm:text-5xl">
+        손성준
+      </h1>
+      <p class="font-app text-muted-foreground text-sm sm:text-base">
+        LLM Serving · AI Search · MCP Agents · DevOps
+      </p>
 
-      <p>
+      <p class="mt-5 max-w-2xl">
         LLM 서빙, AI 검색엔진, RAG, MCP 에이전트, Kubernetes 인프라를 다루는 기술 블로그입니다.
         커머스 검색엔진에서 출발해 AI 에이전트 플랫폼(XGEN)까지, 실전에서 직접 만들고 운영한
         경험을 기록합니다.
       </p>
-      <p class="mt-2">
-        전체 글은
-        <LinkButton
-          class="hover:text-accent underline decoration-dashed underline-offset-4"
-          href={`${import.meta.env.BASE_URL.replace(/\/?$/, "/")}posts`}
+
+      <div
+        class="font-app mt-5 flex flex-wrap items-baseline gap-x-6 gap-y-1 text-sm"
+      >
+        <span>
+          <strong class="text-accent text-base">{posts.length}+</strong>
+          <span class="text-muted-foreground">기술 글</span>
+        </span>
+        <span>
+          <strong class="text-accent text-base">4</strong>
+          <span class="text-muted-foreground">전문 영역</span>
+        </span>
+        <span>
+          <strong class="text-accent text-base">11</strong>
+          <span class="text-muted-foreground">오픈소스</span>
+        </span>
+      </div>
+
+      <div class="mt-6 flex flex-wrap items-center gap-3">
+        <a
+          href={getRelativeLocaleUrl(locale, "portfolio")}
+          class="bg-accent text-accent-foreground rounded-md px-4 py-2 text-sm font-medium transition hover:opacity-90"
+        >
+          Portfolio
+        </a>
+        <a
+          href={getRelativeLocaleUrl(locale, "posts")}
+          class="border-border hover:border-accent hover:text-accent rounded-md border px-4 py-2 text-sm font-medium transition"
         >
           Posts
-        </LinkButton>
-        에서, 코드는
-        <LinkButton
-          class="hover:text-accent underline decoration-dashed underline-offset-4"
+        </a>
+        <a
           href="https://github.com/SonAIengine"
+          target="_blank"
+          rel="noopener"
+          class="border-border hover:border-accent hover:text-accent rounded-md border px-4 py-2 text-sm font-medium transition"
         >
           GitHub
-        </LinkButton>
-        에서 볼 수 있습니다.
-      </p>
-      {
-        socials.length > 0 && (
-          <div class="mt-4 flex max-sm:flex-col sm:items-center">
-            <div class="me-2 mb-1 whitespace-nowrap sm:mb-0">
-              {t.home.socialLinks}:
-            </div>
-            <Socials />
-          </div>
-        )
-      }
+        </a>
+        <a
+          target="_blank"
+          href={`${import.meta.env.BASE_URL.replace(/\/?$/, "/")}rss.xml`}
+          class="hover:text-accent ms-1 inline-block"
+          aria-label="RSS Feed"
+          title="RSS Feed"
+        >
+          <IconRss
+            width={18}
+            height={18}
+            class="stroke-accent inline-block stroke-[2.5] rtl:-rotate-90"
+          />
+          <span class="sr-only">RSS Feed</span>
+        </a>
+      </div>
     </section>
 
     {
