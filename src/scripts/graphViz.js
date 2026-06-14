@@ -291,6 +291,7 @@ window.initGraphViz = function initGraphViz() {
     if (!panel || !panelBody || !node) return;
     state.selected = node;
     try {
+      cosmograph.selectNode(node, true); // 선택 노드 + 이웃 강조
       cosmograph.focusNode(node);
       cosmograph.zoomToNode(node);
     } catch (e) {
@@ -391,7 +392,8 @@ window.initGraphViz = function initGraphViz() {
     state.selected = null;
     panel?.classList.remove("is-open");
     try {
-      cosmograph.focusNode(undefined);
+      cosmograph.unselectNodes(); // 선택 그레이아웃 해제 (초기 상태로 복원)
+      cosmograph.focusNode(undefined); // 포커스 링 제거
     } catch (e) {
       /* noop */
     }
