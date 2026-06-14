@@ -301,6 +301,7 @@ window.initGraphViz = function initGraphViz() {
     .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
   const TYPE_ORDER = { post: 0, tag: 1, subcategory: 2, category: 3, series: 4 };
   let currentQuery = "";
+  let searchMode = "text"; // text | semantic | hybrid
 
   // ── 검색 엔진 (Phase 1: 텍스트 BM25) ───────────────────────────────────────
   const BASE = import.meta.env.BASE_URL.replace(/\/$/, ""); // "/sonblog-astro"
@@ -331,7 +332,9 @@ window.initGraphViz = function initGraphViz() {
         components: { tokenizer: { stemming: false } },
       });
       await orama.insertMultiple(db, docs);
-      _orama = { db, search: orama.search, docs };
+      const byUrl = new Map();
+      docs.forEach(d => byUrl.set((d.url || "").replace(/\/$/, ""), d));
+      _orama = { db, search: orama.search, docs, byUrl };
       return _orama;
     })();
     return _oramaPromise;
@@ -348,6 +351,104 @@ window.initGraphViz = function initGraphViz() {
     const desc = doc.description || doc.body || "";
     return desc ? desc.slice(0, 130) + (desc.length > 130 ? "…" : "") : "";
   }
+  // ── 시멘틱 검색 (Phase 3: 빌드 임베딩 + 브라우저 WebGPU 쿼리 임베딩) ─────────
+  const SEM_MODEL = "Xenova/multilingual-e5-small";
+  const statusEl = document.getElementById("gs-status");
+  function setStatus(msg) {
+    if (!statusEl) return;
+    if (msg) {
+      statusEl.textContent = msg;
+      statusEl.hidden = false;
+    } else {
+      statusEl.hidden = true;
+    }
+  }
+
+  // 사전 계산된 문서 벡터 (int8 → Float32 정규화)
+  let _vectors = null;
+  let _vectorsPromise = null;
+  function ensureVectors() {
+    if (_vectors) return Promise.resolve(_vectors);
+    if (_vectorsPromise) return _vectorsPromise;
+    _vectorsPromise = (async () => {
+      const data = await fetch(`${BASE}/search-vectors.json`).then(r => r.json());
+      const map = new Map();
+      for (const url in data.vectors) {
+        const i8 = Int8Array.from(atob(data.vectors[url]), c => c.charCodeAt(0));
+        const f = new Float32Array(i8.length);
+        for (let i = 0; i < i8.length; i++) f[i] = i8[i] / 127;
+        map.set(url.replace(/\/$/, ""), f);
+      }
+      _vectors = { dim: data.dim, map };
+      return _vectors;
+    })();
+    return _vectorsPromise;
+  }
+
+  // 브라우저 쿼리 임베더 (WebGPU → 없으면 WASM 폴백). CDN ESM 동적 import.
+  let _embedder = null;
+  let _embedderPromise = null;
+  let _embedBackend = "";
+  function ensureEmbedder() {
+    if (_embedder) return Promise.resolve(_embedder);
+    if (_embedderPromise) return _embedderPromise;
+    _embedderPromise = (async () => {
+      setStatus("AI 모델 로딩…");
+      const CDN = "https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.2.0";
+      const T = await import(/* @vite-ignore */ CDN);
+      // WASM 폴백 안정화: 단일 스레드(COEP 불필요), proxy 끔
+      try {
+        T.env.backends.onnx.wasm.numThreads = 1;
+        T.env.backends.onnx.wasm.proxy = false;
+      } catch (e) {
+        /* noop */
+      }
+      // WebGPU 실제 가용성 확인 → 있으면 GPU(3080), 없으면 WASM
+      let device = "wasm";
+      try {
+        if (navigator.gpu && (await navigator.gpu.requestAdapter())) {
+          device = "webgpu";
+        }
+      } catch (e) {
+        /* webgpu 미지원 → wasm */
+      }
+      const onProgress = p => {
+        if (p.status === "progress" && /\.onnx/.test(p.file || "")) {
+          setStatus(`AI 모델 다운로드 ${Math.round(p.progress || 0)}%`);
+        }
+      };
+      const ex = await T.pipeline("feature-extraction", SEM_MODEL, {
+        dtype: "q8",
+        device,
+        progress_callback: onProgress,
+      });
+      _embedder = ex;
+      _embedBackend = device;
+      console.log(`[semantic] backend: ${device}`);
+      return ex;
+    })();
+    return _embedderPromise;
+  }
+
+  async function embedQuery(q) {
+    const ex = await ensureEmbedder();
+    const out = await ex(`query: ${q}`, { pooling: "mean", normalize: true });
+    return out.data; // Float32Array(dim), 정규화됨
+  }
+
+  // 코사인(정규화 벡터 → 내적) 랭킹 → [{url, score}]
+  function cosineRank(qvec, limit) {
+    const res = [];
+    _vectors.map.forEach((vec, url) => {
+      let s = 0;
+      const n = Math.min(qvec.length, vec.length);
+      for (let i = 0; i < n; i++) s += qvec[i] * vec[i];
+      res.push({ url, score: s });
+    });
+    res.sort((a, b) => b.score - a.score);
+    return res.slice(0, limit || 60);
+  }
+
   // 첫 매치 1곳만 <mark> 강조 (안전하게 escape)
   function highlight(text, q) {
     if (!q) return escapeHtml(text);
@@ -584,17 +685,19 @@ window.initGraphViz = function initGraphViz() {
 
     const ql = q.toLowerCase();
     const reqQuery = currentQuery; // 경쟁 조건 가드
+    const mode = searchMode;
     let engine;
     try {
-      engine = await ensureSearch();
+      engine = await ensureSearch(); // 제목·스니펫용으로 항상 필요
     } catch (e) {
       engine = null;
     }
-    if (reqQuery !== currentQuery) return; // 그 사이 쿼리 바뀜 → 폐기
+    if (reqQuery !== currentQuery) return;
 
     const seen = new Set();
     const postEntries = [];
     const pushDoc = doc => {
+      if (!doc || postEntries.length >= 80) return;
       const node = urlToNode.get((doc.url || "").replace(/\/$/, ""));
       if (!node || seen.has(node.id)) return;
       seen.add(node.id);
@@ -607,30 +710,92 @@ window.initGraphViz = function initGraphViz() {
       });
     };
 
-    if (engine) {
-      // BM25 텍스트 검색 (제목>태그>설명>본문 가중)
-      try {
-        const res = await engine.search(engine.db, {
-          term: q,
-          properties: ["title", "description", "tags", "body"],
-          boost: { title: 4, tags: 3, description: 2, body: 1 },
-          tolerance: 1,
-          limit: 60,
+    if (mode === "text") {
+      // BM25 + 한국어 부분일치 폴백
+      if (engine) {
+        try {
+          const res = await engine.search(engine.db, {
+            term: q,
+            properties: ["title", "description", "tags", "body"],
+            boost: { title: 4, tags: 3, description: 2, body: 1 },
+            tolerance: 1,
+            limit: 60,
+          });
+          res.hits.forEach(h => pushDoc(h.document));
+        } catch (e) {
+          /* noop */
+        }
+        engine.docs.forEach(doc => {
+          if (
+            doc.title.toLowerCase().includes(ql) ||
+            (doc.tags || []).some(t => t.toLowerCase().includes(ql)) ||
+            (doc.body || "").toLowerCase().includes(ql)
+          )
+            pushDoc(doc);
         });
-        res.hits.forEach(h => pushDoc(h.document));
-      } catch (e) {
-        /* noop */
       }
-      // 부분일치 폴백 (한국어 토큰 부분검색 보완)
-      engine.docs.forEach(doc => {
-        if (postEntries.length >= 80) return;
-        if (
-          doc.title.toLowerCase().includes(ql) ||
-          (doc.tags || []).some(t => t.toLowerCase().includes(ql)) ||
-          (doc.body || "").toLowerCase().includes(ql)
-        )
-          pushDoc(doc);
-      });
+    } else {
+      // 의미 / 하이브리드 → 문서벡터 + 브라우저 쿼리 임베딩(WebGPU)
+      try {
+        await ensureVectors();
+        const qvec = await embedQuery(q);
+        if (reqQuery !== currentQuery) {
+          setStatus("");
+          return;
+        }
+        setStatus("");
+        const sem = cosineRank(qvec, 80); // [{url, score(-1..1)}]
+        if (mode === "hybrid" && engine) {
+          const bm = new Map();
+          try {
+            const res = await engine.search(engine.db, {
+              term: q,
+              properties: ["title", "description", "tags", "body"],
+              boost: { title: 4, tags: 3, description: 2, body: 1 },
+              tolerance: 1,
+              limit: 80,
+            });
+            let max = 0;
+            res.hits.forEach(h => (max = Math.max(max, h.score)));
+            res.hits.forEach(h =>
+              bm.set((h.document.url || "").replace(/\/$/, ""), max ? h.score / max : 0)
+            );
+          } catch (e) {
+            /* noop */
+          }
+          const merged = new Map();
+          sem.forEach(r => merged.set(r.url, 0.6 * Math.max(0, r.score)));
+          bm.forEach((s, url) =>
+            merged.set(url, (merged.get(url) || 0) + 0.4 * s)
+          );
+          [...merged.entries()]
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 60)
+            .forEach(([url]) => pushDoc(engine.byUrl.get(url)));
+        } else {
+          sem
+            .filter(r => r.score > 0.72) // e5 임계값(약한 매칭 컷)
+            .forEach(r => pushDoc(engine?.byUrl.get(r.url)));
+          if (!postEntries.length)
+            sem.slice(0, 20).forEach(r => pushDoc(engine?.byUrl.get(r.url)));
+        }
+      } catch (e) {
+        setStatus("");
+        console.warn("[semantic] 실패 → 텍스트 폴백", e);
+        if (engine) {
+          try {
+            const res = await engine.search(engine.db, {
+              term: q,
+              properties: ["title", "description", "tags", "body"],
+              tolerance: 1,
+              limit: 60,
+            });
+            res.hits.forEach(h => pushDoc(h.document));
+          } catch (e2) {
+            /* noop */
+          }
+        }
+      }
     }
 
     // 매칭되는 태그/주제 노드 (그래프 탐색용)
@@ -664,6 +829,23 @@ window.initGraphViz = function initGraphViz() {
       else activeTypes.delete(cb.dataset.type);
       const v = visibleData();
       cosmograph.setData(v.nodes, v.links);
+    });
+  });
+
+  // ── 검색 모드 토글 (텍스트·의미·하이브리드) ─────────────────────────────────
+  document.querySelectorAll(".gs-mode").forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (btn.classList.contains("is-active")) return;
+      document
+        .querySelectorAll(".gs-mode")
+        .forEach(b => b.classList.toggle("is-active", b === btn));
+      searchMode = btn.dataset.mode;
+      // 의미/하이브리드 첫 선택 시 모델·벡터 미리 로드
+      if (searchMode !== "text") {
+        ensureVectors().catch(() => {});
+        ensureEmbedder().catch(() => {});
+      }
+      if (currentQuery.trim()) renderList(currentQuery);
     });
   });
 

@@ -1,5 +1,6 @@
 ---
 import Layout from "@/layouts/Layout.astro";
+import Header from "@/components/Header.astro";
 import fs from "node:fs";
 const graphData = JSON.parse(fs.readFileSync("public/assets/graph/graph-data.json", "utf-8"));
 const gm = graphData.metadata;
@@ -7,6 +8,8 @@ const gm = graphData.metadata;
 
 <Layout title="Knowledge Graph | SON BLOG">
 
+<Header />
+<main id="main-content" class="graph-main">
 <div class="graph-page">
 
   <!-- ── 상단 툴바 (한 줄) ── -->
@@ -37,6 +40,12 @@ const gm = graphData.metadata;
           <input type="text" id="graph-search" placeholder="글·태그·주제 검색..." autocomplete="off">
           <button id="graph-search-clear" class="graph-search-clear" aria-label="검색 초기화"><svg viewBox="0 0 16 16" fill="none"><path d="M4 4L12 12M12 4L4 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
         </div>
+        <div class="gs-modes" role="tablist">
+          <button type="button" class="gs-mode is-active" data-mode="text">텍스트</button>
+          <button type="button" class="gs-mode" data-mode="semantic">의미</button>
+          <button type="button" class="gs-mode" data-mode="hybrid">하이브리드</button>
+        </div>
+        <div id="gs-status" class="gs-status" hidden></div>
       </div>
       <div id="graph-panel-body" class="gp-body"></div>
     </aside>
@@ -47,6 +56,7 @@ const gm = graphData.metadata;
 
 <!-- 툴팁 -->
 <div id="graph-tooltip" class="graph-tooltip"></div>
+</main>
 
 <!-- 그래프 데이터 인라인 삽입 -->
 
@@ -1079,10 +1089,18 @@ const gm = graphData.metadata;
   }
 }
 
-/* AstroPaper 레이아웃 — graph 풀스크린 */
-#main-content:has(.graph-page) { max-width: 100% !important; padding: 0 !important; }
-main:has(.graph-page) { max-width: 100% !important; }
-.graph-page { height: calc(100vh - 64px); width: 100%; }
+/* AstroPaper 레이아웃 — 블로그 헤더 유지 + 그래프는 남은 높이 꽉 채움 */
+#main-content.graph-main {
+  max-width: 100% !important;
+  width: 100%;
+  padding: 0 !important;
+  margin: 0 !important;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.graph-page { height: 100%; width: 100%; min-height: 0; }
 
 /* ── 캔버스 배경 (테마 연동, 절제된 톤) ───────────────────────────────────────
    라이트: 깨끗한 오프화이트 + 중심으로 아주 옅은 비네팅.
@@ -1293,6 +1311,55 @@ main:has(.graph-page) { max-width: 100% !important; }
 [data-md-color-scheme="slate"] .gs-back { background: #0b0d10; border-bottom-color: #1e293b; }
 .gs-back:hover { text-decoration: underline; }
 .gs-nav { cursor: pointer; }
+
+/* 검색 모드 토글 (텍스트·의미·하이브리드) */
+.gs-modes {
+  display: flex;
+  gap: 0.2rem;
+  margin-top: 0.45rem;
+  padding: 0.15rem;
+  background: var(--md-default-fg-color--lightest);
+  border-radius: 7px;
+}
+[data-md-color-scheme="slate"] .gs-modes { background: #15171c; }
+.gs-mode {
+  flex: 1;
+  padding: 0.32rem 0.3rem;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  cursor: pointer;
+  font-family: var(--md-text-font);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--md-default-fg-color--light);
+  transition: background 0.14s, color 0.14s;
+}
+.gs-mode:hover { color: var(--md-default-fg-color); }
+.gs-mode.is-active {
+  background: var(--md-default-bg-color);
+  color: var(--md-primary-fg-color);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+[data-md-color-scheme="slate"] .gs-mode.is-active { background: #0b0d10; }
+.gs-status {
+  margin-top: 0.4rem;
+  font-size: 0.68rem;
+  color: var(--md-primary-fg-color);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.gs-status::before {
+  content: "";
+  width: 9px;
+  height: 9px;
+  border: 1.5px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: gsspin 0.7s linear infinite;
+}
+@keyframes gsspin { to { transform: rotate(360deg); } }
 
 /* 모바일: 그래프 위 / 검색 아래로 쌓기 */
 @media (max-width: 720px) {

@@ -15,7 +15,8 @@
     "format": "prettier --write .",
     "lint": "eslint .",
     "lint:mermaid": "node scripts/lint-mermaid.mjs",
-    "check:mermaid": "node scripts/check-mermaid.mjs"
+    "check:mermaid": "node scripts/check-mermaid.mjs",
+    "search:embed": "node scripts/embed-search.mjs"
   },
   "dependencies": {
     "@astrojs/mdx": "^6.0.1",
@@ -40,6 +41,7 @@
   "devDependencies": {
     "@astrojs/check": "^0.9.9",
     "@astrojs/markdown-remark": "^7.2.0",
+    "@huggingface/transformers": "^4.2.0",
     "@pagefind/default-ui": "^1.5.2",
     "@shikijs/transformers": "^4.1.0",
     "@tailwindcss/typography": "^0.5.19",
@@ -54,5 +56,11 @@
     "puppeteer-core": "^25.1.0",
     "typescript": "^6.0.3"
   },
-  "packageManager": "pnpm@10.29.1"
+  "packageManager": "pnpm@10.29.1",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "sharp",
+      "esbuild"
+    ]
+  }
 }
