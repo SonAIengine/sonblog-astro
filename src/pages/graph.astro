@@ -1239,8 +1239,8 @@ body:has(.graph-page) {
   height: 100%;
 }
 .graph-side {
-  flex: 0 0 380px;
-  width: 380px;
+  flex: 0 0 clamp(420px, 30vw, 520px);
+  width: clamp(420px, 30vw, 520px);
   height: 100%;
   display: flex;
   flex-direction: column;
