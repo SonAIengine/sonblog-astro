@@ -114,6 +114,11 @@ for (const rel of walkDirs(DOCS)) {
 const SPECIAL = { "/portfolio/en/": "/portfolio-en/" };
 for (const [o, n] of Object.entries(SPECIAL)) redirects[o] = n;
 
+// 실제 Astro 페이지가 있는 경로는 리다이렉트에서 제외 — 그 페이지를 가리지 않게.
+// (예: 옛 mkdocs /portfolio/ 섹션이 새 portfolio.astro 쇼케이스를 덮어쓰던 버그 방지)
+const REAL_PAGES = ["/", "/portfolio/", "/portfolio-en/", "/graph/", "/posts/", "/tags/", "/archives/", "/search/"];
+for (const p of REAL_PAGES) delete redirects[p];
+
 fs.writeFileSync(OUT, JSON.stringify(redirects));
 console.log(
   `redirects: ${Object.keys(redirects).length} (글 title매칭 ${matched}, 경로폴백 ${fallback}, 미매칭 ${missed})`
