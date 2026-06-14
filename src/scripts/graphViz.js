@@ -157,12 +157,13 @@ window.initGraphViz = function initGraphViz() {
     n => n.type === "category" || n.type === "subcategory"
   );
 
-  // 노드 크기: 연결 많은 허브일수록 크게(degree 기반 size) + 분류 허브 가중
+  // 노드 크기: 클릭 쉽게 키움(scaleNodesOnZoom=false라 화면 px 고정).
+  // 연결 많은 허브일수록 크게 + 분류 허브 가중.
   function nodeSizeFor(n) {
-    const base = Math.max(3, (n.size || 8) * 0.55);
-    if (n.type === "category") return base * 1.7;
-    if (n.type === "subcategory") return base * 1.35;
-    if (n.type === "series") return base * 1.2;
+    const base = Math.max(5, (n.size || 8) * 0.8);
+    if (n.type === "category") return base * 1.9;
+    if (n.type === "subcategory") return base * 1.45;
+    if (n.type === "series") return base * 1.25;
     return base;
   }
 
@@ -219,7 +220,8 @@ window.initGraphViz = function initGraphViz() {
 
     fitViewOnInit: true,
     fitViewDelay: 3000,
-    scaleNodesOnZoom: true,
+    // false → 확대해도 노드는 같은 px, 레이아웃만 벌어짐 → 간격 생겨 클릭 쉬움
+    scaleNodesOnZoom: false,
 
     onClick: node => {
       if (node) showNode(node);
