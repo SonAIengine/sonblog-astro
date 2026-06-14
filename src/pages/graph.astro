@@ -798,12 +798,24 @@ const gm = graphData.metadata;
 }
 .gp-post-item {
   display: flex;
-  align-items: baseline;
-  gap: 0.4rem;
-  padding: 0.3rem 0.35rem;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.4rem 0.4rem;
   border-radius: 5px;
   transition: background 0.12s;
 }
+/* 제목 아래 메타 줄 (날짜 · 공통 태그) */
+.gp-post-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.62rem;
+  color: var(--md-default-fg-color--lighter);
+  line-height: 1.3;
+}
+.gp-post-meta .gp-post-date { font-size: 0.62rem; }
+.gp-post-meta .gp-related-why { margin: 0; }
 .gp-post-item:hover { background: var(--md-default-fg-color--lightest); }
 [data-md-color-scheme="slate"] .gp-post-item:hover { background: #1e293b; }
 .gp-post-link {

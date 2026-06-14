@@ -714,8 +714,10 @@ window.initGraphViz = function initGraphViz() {
     if (posts.length > 0) {
       body += `<div class="gp-section"><div class="gp-section-title">이 ${escapeHtml(typeLabel)}의 글<span class="gp-section-count">${posts.length}</span></div><ul class="gp-post-list">`;
       posts.forEach(p => {
-        const dateStr = p.date ? `<span class="gp-post-date">${escapeHtml(p.date)}</span>` : "";
-        body += `<li class="gp-post-item"><span class="gp-post-link gs-nav" data-node-id="${escapeHtml(p.id)}">${escapeHtml(p.label)}</span>${dateStr}</li>`;
+        const metaHtml = p.date
+          ? `<div class="gp-post-meta"><span class="gp-post-date">${escapeHtml(p.date)}</span></div>`
+          : "";
+        body += `<li class="gp-post-item"><span class="gp-post-link gs-nav" data-node-id="${escapeHtml(p.id)}">${escapeHtml(p.label)}</span>${metaHtml}</li>`;
       });
       body += `</ul></div>`;
     }
@@ -822,9 +824,12 @@ window.initGraphViz = function initGraphViz() {
     }
     let html = `<ul class="gp-post-list">`;
     items.forEach(it => {
-      const dateStr = it.node.date ? `<span class="gp-post-date">${escapeHtml(it.node.date)}</span>` : "";
-      const why = it.why && it.why.length ? `<span class="gp-related-why">공통: ${escapeHtml(it.why.join(", "))}</span>` : "";
-      html += `<li class="gp-post-item"><span class="gp-post-link gs-nav" data-node-id="${escapeHtml(it.node.id)}">${escapeHtml(it.node.label)}</span>${dateStr}${why}</li>`;
+      const meta = [];
+      if (it.node.date) meta.push(`<span class="gp-post-date">${escapeHtml(it.node.date)}</span>`);
+      if (it.why && it.why.length)
+        meta.push(`<span class="gp-related-why">공통 ${escapeHtml(it.why.join(", "))}</span>`);
+      const metaHtml = meta.length ? `<div class="gp-post-meta">${meta.join("")}</div>` : "";
+      html += `<li class="gp-post-item"><span class="gp-post-link gs-nav" data-node-id="${escapeHtml(it.node.id)}">${escapeHtml(it.node.label)}</span>${metaHtml}</li>`;
     });
     html += `</ul>`;
     target.classList.remove("gp-related-loading");
