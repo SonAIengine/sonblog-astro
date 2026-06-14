@@ -25,9 +25,12 @@ collections:
     folder: src/content/posts
     create: true
     # 카테고리/서브카테고리 폴더 구조 유지 (예: devops/infra/글)
+    # subfolders:false → _index.md가 아니라 개별 .md 파일들을 하위폴더까지 재귀 나열
     path: "{{dirname}}/{{slug}}"
     nested:
       depth: 4
+      subfolders: false
+      summary: "{{title}}"
     extension: md
     format: frontmatter
     slug: "{{slug}}"
