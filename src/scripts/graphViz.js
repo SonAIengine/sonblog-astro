@@ -14,21 +14,47 @@ const TYPE_LABELS = {
 
 const DIFFICULTY_LABELS = { beginner: "입문", intermediate: "중급", advanced: "고급" };
 
-// 지식그래프는 사이트 라이트/다크와 무관하게 항상 몰입형 다크(네온) 비주얼.
-// 큐레이팅된 네온 팔레트 — 데이터의 원색(빨강 등) 대신 타입별로 통일한다.
-const NODE_PALETTE = {
-  category: "#b794ff", // electric violet
-  subcategory: "#3df5c8", // neon mint
-  series: "#ffb020", // amber accent
-  tag: "#26d6ff", // neon cyan
-  post: "#ff39db", // neon magenta
+function isDarkMode() {
+  return document.documentElement.getAttribute("data-theme") === "dark";
+}
+
+// 라이트/다크 양쪽에서 세련되게 읽히는 큐레이팅 팔레트 (Tailwind jewel tones).
+// 타입별 색은 통일하되, 데이터의 원색(빨강 등) 대신 절제된 보석 톤을 쓴다.
+const PALETTE = {
+  light: {
+    category: "#e11d48", // rose
+    subcategory: "#d97706", // amber
+    series: "#0284c7", // sky
+    tag: "#0d9488", // teal (사이트 accent 계열)
+    post: "#6366f1", // indigo
+  },
+  dark: {
+    category: "#fb7185",
+    subcategory: "#fbbf24",
+    series: "#38bdf8",
+    tag: "#2dd4bf",
+    post: "#a5b4fc",
+  },
 };
-const NEON = {
-  link: "rgba(90, 175, 255, 0.14)",
-  label: "#e8f0ff",
-  hoverRing: "#67e8f9",
-  fallback: "#9fb3d0",
-};
+
+// 테마별 캔버스/링크/라벨 색
+function vizColors(dark) {
+  return dark
+    ? {
+        palette: PALETTE.dark,
+        link: "rgba(148, 163, 184, 0.15)",
+        label: "#e2e8f0",
+        ring: "#2dd4bf",
+        fallback: "#94a3b8",
+      }
+    : {
+        palette: PALETTE.light,
+        link: "rgba(15, 23, 42, 0.08)",
+        label: "#334155",
+        ring: "#0d9488",
+        fallback: "#64748b",
+      };
+}
 
 function escapeHtml(s) {
   return String(s == null ? "" : s)
@@ -101,41 +127,40 @@ window.initGraphViz = function initGraphViz() {
     return { nodes: visNodes, links: visEdges };
   }
 
-  // 몰입형 우주 배경 (네뷸라 + 별)
-  startStarfield(container);
+  let V = vizColors(isDarkMode());
 
   // ── Cosmograph 인스턴스 ─────────────────────────────────────────────────────
   const cosmograph = new Cosmograph(container, {
-    // 투명 배경 → CSS 네뷸라 그라데이션 + 별이 비쳐 보인다
+    // 투명 배경 → CSS가 테마별 배경(라이트 클린 / 다크 차분) 담당
     backgroundColor: "rgba(0, 0, 0, 0)",
-    nodeColor: n => NODE_PALETTE[n.type] || NEON.fallback,
-    nodeSize: n => Math.max(2.5, (n.size || 8) * 0.5),
-    nodeSizeScale: 1.15,
-    nodeGreyoutOpacity: 0.06,
+    nodeColor: n => V.palette[n.type] || V.fallback,
+    nodeSize: n => Math.max(2.5, (n.size || 8) * 0.48),
+    nodeSizeScale: 1,
+    nodeGreyoutOpacity: 0.1,
 
     renderLinks: true,
-    linkColor: () => NEON.link,
-    linkWidth: 0.32,
+    linkColor: () => V.link,
+    linkWidth: 0.3,
     linkWidthScale: 1,
     linkGreyoutOpacity: 0,
-    // 네온 곡선 엣지
+    // 우아한 얇은 곡선 엣지
     curvedLinks: true,
     curvedLinkSegments: 16,
-    curvedLinkWeight: 0.7,
-    curvedLinkControlPointDistance: 0.4,
+    curvedLinkWeight: 0.6,
+    curvedLinkControlPointDistance: 0.35,
 
-    // 허브 노드만 라벨 + 호버 시 라벨 → 깔끔한 몰입감
+    // 허브 노드만 라벨 + 호버 → 여백 있는 깔끔한 구성
     showDynamicLabels: false,
     showTopLabels: true,
-    showTopLabelsLimit: 24,
+    showTopLabelsLimit: 22,
     showHoveredNodeLabel: true,
     nodeLabelAccessor: n => n.label || n.id,
-    nodeLabelColor: NEON.label,
-    hoveredNodeLabelColor: NEON.label,
+    nodeLabelColor: V.label,
+    hoveredNodeLabelColor: V.label,
 
     renderHoveredNodeRing: true,
-    hoveredNodeRingColor: NEON.hoverRing,
-    focusedNodeRingColor: NEON.hoverRing,
+    hoveredNodeRingColor: V.ring,
+    focusedNodeRingColor: V.ring,
 
     // 시뮬레이션 (유기적 클러스터링)
     simulationGravity: 0.22,
@@ -430,62 +455,36 @@ window.initGraphViz = function initGraphViz() {
     }
   });
 
-  // 그래프는 항상 몰입형 다크 → 사이트 테마와 무관하게 slate 스킴 강제.
-  // (graph.astro의 [data-md-color-scheme="slate"] 다크 패널/툴바 CSS 활성화)
-  document.documentElement.setAttribute("data-md-color-scheme", "slate");
-};
-
-// 별이 흐르는 우주 배경 (네뷸라 그라데이션은 CSS, 별은 캔버스)
-function startStarfield(container) {
-  let cv = container.querySelector(".gv-starfield");
-  if (!cv) {
-    cv = document.createElement("canvas");
-    cv.className = "gv-starfield";
-    container.insertBefore(cv, container.firstChild);
+  // 사이트 테마(data-theme)를 MkDocs 스킴으로 미러링 → 패널/툴바가 테마 따라감.
+  function syncScheme() {
+    document.documentElement.setAttribute(
+      "data-md-color-scheme",
+      isDarkMode() ? "slate" : "default"
+    );
   }
-  const ctx = cv.getContext("2d");
-  let stars = [];
-  let raf = 0;
-  let t = 0;
+  syncScheme();
 
-  function resize() {
-    const r = container.getBoundingClientRect();
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    cv.width = Math.max(1, Math.floor(r.width * dpr));
-    cv.height = Math.max(1, Math.floor(r.height * dpr));
-    cv.style.width = r.width + "px";
-    cv.style.height = r.height + "px";
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const count = Math.min(220, Math.round((r.width * r.height) / 7000));
-    stars = Array.from({ length: count }, () => ({
-      x: Math.random() * r.width,
-      y: Math.random() * r.height,
-      r: Math.random() * 1.1 + 0.25,
-      a: Math.random() * 0.45 + 0.15,
-      tw: Math.random() * 0.018 + 0.004,
-      ph: Math.random() * 6.283,
-      hue: Math.random() < 0.18 ? "190, 220, 255" : "220, 225, 245",
-    }));
-  }
-
-  function draw() {
-    t += 1;
-    const r = container.getBoundingClientRect();
-    ctx.clearRect(0, 0, r.width, r.height);
-    for (const s of stars) {
-      const alpha = Math.max(0, s.a + Math.sin(t * s.tw + s.ph) * 0.18);
-      ctx.beginPath();
-      ctx.arc(s.x, s.y, s.r, 0, 6.283);
-      ctx.fillStyle = `rgba(${s.hue}, ${alpha})`;
-      ctx.fill();
+  // 테마 토글 시 그래프 색도 갱신 (위치는 유지, 색만 재계산)
+  const themeObserver = new MutationObserver(() => {
+    syncScheme();
+    V = vizColors(isDarkMode());
+    try {
+      cosmograph.setConfig({
+        linkColor: () => V.link,
+        nodeColor: n => V.palette[n.type] || V.fallback,
+        nodeLabelColor: V.label,
+        hoveredNodeLabelColor: V.label,
+        hoveredNodeRingColor: V.ring,
+        focusedNodeRingColor: V.ring,
+      });
+      const v = visibleData();
+      cosmograph.setData(v.nodes, v.links, false); // 위치 유지하며 재색칠
+    } catch (e) {
+      /* noop */
     }
-    raf = requestAnimationFrame(draw);
-  }
-
-  // 이전 루프 정리
-  if (container.__starfieldRaf) cancelAnimationFrame(container.__starfieldRaf);
-  resize();
-  window.addEventListener("resize", resize);
-  draw();
-  container.__starfieldRaf = raf;
-}
+  });
+  themeObserver.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["data-theme"],
+  });
+};
