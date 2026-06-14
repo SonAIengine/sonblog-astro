@@ -63,12 +63,12 @@ export default defineConfig({
   },
   fonts: [
     {
-      name: "Geist Mono",
-      cssVariable: "--font-geist-mono",
+      name: "Google Sans Code",
+      cssVariable: "--font-google-sans-code",
       provider: fontProviders.google(),
       fallbacks: ["monospace"],
-      weights: [400, 500, 600],
-      styles: ["normal"],
+      weights: [300, 400, 500, 600, 700],
+      styles: ["normal", "italic"],
       formats: ["woff", "ttf"],
     },
   ],

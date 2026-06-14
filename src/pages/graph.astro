@@ -1,0 +1,502 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import fs from "node:fs";
+const graphData = JSON.parse(fs.readFileSync("public/assets/graph/graph-data.json", "utf-8"));
+const gm = graphData.metadata;
+---
+
+<Layout title="Knowledge Graph | SON BLOG">
+<meta name="site-url" content="{{ config.site_url }}">
+
+<div class="graph-page">
+
+  <!-- ── 상단 툴바 (한 줄) ── -->
+  <div class="graph-toolbar">
+    <span class="graph-toolbar-title">Knowledge Graph</span>
+    <span class="graph-toolbar-stats" id="graph-stats">{gm.total_posts} posts · {gm.total_tags} tags · {gm.total_categories} categories</span>
+    <span class="graph-toolbar-sep"></span>
+    <label class="graph-filter-chip graph-filter-chip--category"><input type="checkbox" class="graph-filter-cb" data-type="category" checked><span class="chip-dot"></span>카테고리</label>
+    <label class="graph-filter-chip graph-filter-chip--subcategory"><input type="checkbox" class="graph-filter-cb" data-type="subcategory" checked><span class="chip-dot"></span>서브카테고리</label>
+    <label class="graph-filter-chip graph-filter-chip--series"><input type="checkbox" class="graph-filter-cb" data-type="series" checked><span class="chip-dot"></span>시리즈</label>
+    <label class="graph-filter-chip graph-filter-chip--tag"><input type="checkbox" class="graph-filter-cb" data-type="tag" checked><span class="chip-dot"></span>태그</label>
+    <label class="graph-filter-chip graph-filter-chip--post"><input type="checkbox" class="graph-filter-cb" data-type="post"><span class="chip-dot"></span>포스트</label>
+    <div class="graph-toolbar-spacer"></div>
+    <div class="graph-search-wrap">
+      <svg class="graph-search-icon" viewBox="0 0 20 20" fill="none"><circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" stroke-width="1.5"/><path d="M13.5 13.5L17 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <input type="text" id="graph-search" placeholder="검색..." autocomplete="off">
+      <button id="graph-search-clear" class="graph-search-clear" aria-label="검색 초기화"><svg viewBox="0 0 16 16" fill="none"><path d="M4 4L12 12M12 4L4 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+    </div>
+    <button id="graph-reset" class="graph-btn"><svg viewBox="0 0 20 20" fill="none" width="12" height="12"><path d="M4 10a6 6 0 1 0 1.5-3.9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M4 5.5V10h4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>초기화</button>
+  </div>
+
+  <!-- ── 메인 레이아웃: 그래프 + 패널 ── -->
+  <div class="graph-layout">
+
+    <!-- 그래프 캔버스 -->
+    <div id="sigma-container"></div>
+
+    <!-- 우측 정보 패널 -->
+    <aside id="graph-info-panel" class="graph-info-panel">
+      <!-- 리사이즈 핸들 -->
+      <div id="graph-panel-resizer" class="gp-resizer" aria-hidden="true"></div>
+      <button id="graph-panel-close" class="gp-close" aria-label="패널 닫기">
+        <svg viewBox="0 0 16 16" fill="none" width="14" height="14">
+          <path d="M4 4L12 12M12 4L4 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <div id="graph-panel-body" class="gp-body">
+        <div class="gp-empty">
+          <svg viewBox="0 0 48 48" fill="none" width="48" height="48">
+            <circle cx="24" cy="24" r="8" stroke="currentColor" stroke-width="1.5" opacity="0.4"/>
+            <circle cx="8"  cy="12" r="4" stroke="currentColor" stroke-width="1.5" opacity="0.3"/>
+            <circle cx="40" cy="12" r="4" stroke="currentColor" stroke-width="1.5" opacity="0.3"/>
+            <circle cx="8"  cy="36" r="4" stroke="currentColor" stroke-width="1.5" opacity="0.3"/>
+            <circle cx="40" cy="36" r="4" stroke="currentColor" stroke-width="1.5" opacity="0.3"/>
+            <line x1="16" y1="20" x2="12" y2="14" stroke="currentColor" stroke-width="1" opacity="0.3"/>
+            <line x1="32" y1="20" x2="36" y2="14" stroke="currentColor" stroke-width="1" opacity="0.3"/>
+            <line x1="16" y1="28" x2="12" y2="34" stroke="currentColor" stroke-width="1" opacity="0.3"/>
+            <line x1="32" y1="28" x2="36" y2="34" stroke="currentColor" stroke-width="1" opacity="0.3"/>
+          </svg>
+          <p>노드를 클릭하면<br>연관 문서가 표시됩니다</p>
+          <ul class="gp-hint-list">
+            <li><span class="gp-hint-key">클릭</span> 노드 상세 보기</li>
+            <li><span class="gp-hint-key">스크롤</span> 줌 인/아웃</li>
+            <li><span class="gp-hint-key">드래그</span> 화면 이동</li>
+            <li><span class="gp-hint-key">검색</span> 노드 찾기</li>
+          </ul>
+        </div>
+      </div>
+    </aside>
+
+  </div><!-- /.graph-layout -->
+
+</div><!-- /.graph-page -->
+
+<!-- 툴팁 -->
+<div id="graph-tooltip" class="graph-tooltip"></div>
+
+<!-- 그래프 데이터 인라인 삽입 -->
+
+
+<!-- 패널 리사이즈 -->
+</Layout>
+
+<script is:inline set:html={`window.__GRAPH_DATA__ = ${JSON.stringify(graphData)};`} />
+<script>
+  import "@/scripts/graphViz.js";
+  function run() {
+    if ((window as any).initGraphViz) (window as any).initGraphViz();
+  }
+  document.addEventListener("astro:page-load", run);
+  if (document.readyState !== "loading") run();
+</script>
+
+<style is:global>
+.graph-bg-svg {
+  width: 100%;
+  height: 100%;
+  opacity: 0.55;
+}
+.graph-pulse-outer {
+  animation: graphPulse 3s ease-in-out infinite;
+}
+/* ── 페이지 레이아웃 ────────────────────────────────────────────────────────── */
+
+/* MkDocs content 영역 padding / width / margin 완전 제거 */
+/* .md-main__inner는 .md-grid 클래스도 겸하므로 max-width:61rem 제거 필요 */
+.md-content:has(.graph-page) .md-content__inner,
+.md-content:has(.graph-page),
+.md-main__inner:has(.graph-page),
+.md-grid:has(.graph-page),
+.md-main:has(.graph-page) .md-main__inner,
+.md-main:has(.graph-page) .md-grid {
+  padding: 0 !important;
+  margin: 0 !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  flex: 1 1 auto;
+}
+.graph-page {
+  display: flex;
+  flex-direction: column;
+  /* 탭(48px) + 헤더(56px) = 104px */
+  height: calc(100dvh - 104px);
+  min-height: 600px;
+  padding: 0.5rem 0.75rem 0.35rem;
+  box-sizing: border-box;
+  /* light 기본: 기존 테마 배경 */
+  background: var(--md-default-bg-color);
+  color: var(--md-default-fg-color);
+}
+/* ── dark 모드: 우주 테마 배경 ──────────────────────────────────────────────── */
+[data-md-color-scheme="slate"] .md-content:has(.graph-page) .md-content__inner,
+[data-md-color-scheme="slate"] .md-content:has(.graph-page),
+[data-md-color-scheme="slate"] .md-main:has(.graph-page),
+[data-md-color-scheme="slate"] .md-main__inner:has(.graph-page) {
+  background: #070b18 !important;
+}
+[data-md-color-scheme="slate"] .graph-page {
+  background: #070b18;
+  color: #c8d6e8;
+}
+/* ── 헤더 ──────────────────────────────────────────────────────────────────── */
+
+/* ── 통합 툴바 (한 줄) ── */
+.graph-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+  flex-shrink: 0;
+}
+.graph-toolbar-title {
+  margin: 0;
+  padding: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--md-default-fg-color);
+  white-space: nowrap;
+  line-height: 1.2;
+}
+.graph-toolbar-stats {
+  font-size: 0.68rem;
+  color: var(--md-default-fg-color--lighter);
+  white-space: nowrap;
+}
+.graph-toolbar-sep {
+  width: 1px;
+  height: 16px;
+  background: var(--md-default-fg-color--lightest);
+  flex-shrink: 0;
+}
+.graph-toolbar-spacer {
+  flex: 1;
+  min-width: 0.5rem;
+}
+[data-md-color-scheme="slate"] .graph-toolbar-title { color: #e2e8f0; }
+[data-md-color-scheme="slate"] .graph-toolbar-stats { color: #64748b; }
+[data-md-color-scheme="slate"] .graph-toolbar-sep { background: #1e293b; }
+/* ── 검색 ──────────────────────────────────────────────────────────────────── */
+
+.graph-search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.graph-search-icon {
+  position: absolute;
+  left: 0.6rem;
+  width: 15px;
+  height: 15px;
+  min-width: 15px;
+  min-height: 15px;
+  color: var(--md-default-fg-color--light);
+  pointer-events: none;
+  display: block;
+}
+.graph-search-wrap input {
+  padding: 0.28rem 1.8rem 0.28rem 1.8rem;
+  border: 1px solid var(--md-default-fg-color--lighter);
+  border-radius: 5px;
+  background: var(--md-default-bg-color);
+  color: var(--md-default-fg-color);
+  font-size: 0.75rem;
+  width: 120px;
+  outline: none;
+  transition: border-color 0.15s, width 0.2s;
+  font-family: var(--md-text-font);
+}
+.graph-search-wrap input:focus {
+  border-color: var(--md-primary-fg-color);
+  width: 160px;
+}
+.graph-search-clear {
+  position: absolute;
+  right: 0.4rem;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--md-default-fg-color--light);
+  border-radius: 50%;
+  padding: 0;
+  transition: background 0.15s;
+}
+.graph-search-clear:hover {
+  background: var(--md-default-fg-color--lightest);
+  color: var(--md-default-fg-color);
+}
+/* dark */
+[data-md-color-scheme="slate"] .graph-search-icon { color: #64748b; }
+[data-md-color-scheme="slate"] .graph-search-wrap input {
+  border-color: #1e293b; background: #0f172a; color: #c8d6e8;
+}
+[data-md-color-scheme="slate"] .graph-search-wrap input::placeholder { color: #475569; }
+[data-md-color-scheme="slate"] .graph-search-wrap input:focus { border-color: #a78bfa; }
+[data-md-color-scheme="slate"] .graph-search-clear { color: #64748b; }
+[data-md-color-scheme="slate"] .graph-search-clear:hover { background: #1e293b; color: #c8d6e8; }
+.graph-search-clear svg {
+  width: 12px;
+  height: 12px;
+}
+/* ── 검색 드롭다운 (Orama BM25) ──────────────────────────────────────────── */
+
+.graph-search-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: max(360px, 40vw);
+  max-width: 480px;
+  margin-top: 4px;
+  background: var(--md-default-bg-color);
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  max-height: 420px;
+  overflow-y: auto;
+  z-index: 100;
+  display: none;
+  scrollbar-width: thin;
+}
+.graph-search-dropdown.is-visible { display: block; }
+[data-md-color-scheme="slate"] .graph-search-dropdown {
+  background: #0f172a;
+  border-color: #1e293b;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+/* ── 버튼 ──────────────────────────────────────────────────────────────────── */
+
+.graph-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.28rem 0.55rem;
+  border: 1px solid var(--md-default-fg-color--lighter);
+  border-radius: 5px;
+  background: var(--md-default-bg-color);
+  color: var(--md-default-fg-color);
+  font-size: 0.72rem;
+  cursor: pointer;
+  font-family: var(--md-text-font);
+  transition: border-color 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+.graph-btn:hover {
+  border-color: var(--md-primary-fg-color);
+  color: var(--md-primary-fg-color);
+}
+[data-md-color-scheme="slate"] .graph-btn {
+  border-color: #1e293b; background: #0f172a; color: #94a3b8;
+}
+[data-md-color-scheme="slate"] .graph-btn:hover { border-color: #a78bfa; color: #c4b5fd; }
+/* ── 필터 바 ────────────────────────────────────────────────────────────────── */
+
+.graph-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: #f3f4f6;
+  font-size: 0.68rem;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s;
+  color: #374151;
+  white-space: nowrap;
+}
+[data-md-color-scheme="slate"] .graph-filter-chip {
+  border-color: #1e293b; background: #0f172a; color: #94a3b8;
+}
+.graph-filter-chip input[type="checkbox"] {
+  display: none;
+}
+.graph-filter-chip:has(input:checked) .chip-dot { opacity: 1; }
+.graph-filter-chip:has(input:checked) { border-color: transparent; opacity: 1; }
+.graph-filter-chip:not(:has(input:checked)) { opacity: 0.5; }
+[data-md-color-scheme="slate"] .graph-filter-chip:has(input:checked) { border-color: #334155; color: #e2e8f0; }
+[data-md-color-scheme="slate"] .graph-filter-chip:not(:has(input:checked)) { opacity: 0.45; }
+.graph-filter-chip--category    .chip-dot { background: #7C3AED; }
+.graph-filter-chip--subcategory .chip-dot { background: #2563EB; }
+.graph-filter-chip--series      .chip-dot { background: #EA580C; }
+.graph-filter-chip--tag         .chip-dot { background: #0D9488; }
+.graph-filter-chip--post        .chip-dot { background: #DC2626; }
+.graph-filter-chip:hover { opacity: 1; }
+.graph-filter-hint {
+  display: none;
+}
+/* ── 메인 레이아웃 ──────────────────────────────────────────────────────────── */
+
+.graph-layout {
+  display: flex;
+  gap: 0;
+  flex: 1;
+  overflow: hidden;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 8px;
+  min-height: 0;
+  position: relative;
+}
+[data-md-color-scheme="slate"] .graph-layout {
+  border-color: #0f172a;
+  background: #070b18;
+  border-radius: 6px;
+}
+/* ── sigma 컨테이너 ─────────────────────────────────────────────────────────── */
+
+#sigma-container {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  background: var(--md-default-bg-color);
+  will-change: width;
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+[data-md-color-scheme="slate"] #sigma-container {
+  background: #070b18;
+  background-image: radial-gradient(ellipse at 30% 40%, #0d1b3a 0%, #070b18 65%),
+                    radial-gradient(ellipse at 75% 65%, #0a1628 0%, transparent 50%);
+}
+/* ── 툴팁 ───────────────────────────────────────────────────────────────────── */
+
+.graph-tooltip {
+  position: absolute;
+  pointer-events: none;
+  z-index: 1000;
+  background: var(--md-default-bg-color);
+  color: var(--md-default-fg-color);
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 8px;
+  padding: 0.55rem 0.8rem;
+  font-size: 0.78rem;
+  font-family: var(--md-text-font);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  max-width: 220px;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.12s, transform 0.12s;
+  line-height: 1.4;
+}
+[data-md-color-scheme="slate"] .graph-tooltip {
+  background: #1a1a2e;
+  color: #e8eaf6;
+  border-color: #1e293b;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+}
+.graph-tooltip.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+/* ── 우측 정보 패널 ─────────────────────────────────────────────────────────── */
+
+.graph-info-panel {
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  width: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--md-default-bg-color);
+  border-left: 1px solid transparent;
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 0.25s;
+  z-index: 20;
+}
+.graph-info-panel.is-open {
+  width: 440px;
+  border-left-color: var(--md-default-fg-color--lightest);
+}
+.graph-info-panel.is-open .gp-resizer:hover,
+.graph-info-panel.is-open .gp-resizer:active {
+  background: var(--md-primary-fg-color);
+  opacity: 0.35;
+}
+[data-md-color-scheme="slate"] .graph-info-panel.is-open .gp-resizer:hover,
+[data-md-color-scheme="slate"] .graph-info-panel.is-open .gp-resizer:active {
+  background: #a78bfa;
+  opacity: 0.45;
+}
+/* dark 패널 */
+[data-md-color-scheme="slate"] .graph-info-panel { background: #0b1120; }
+[data-md-color-scheme="slate"] .graph-info-panel.is-open { border-left-color: #1e293b; }
+/* ============================================
+   글 상세 — Linear article (좁은 중앙 컬럼)
+   home/portfolio/graph/posts 커스텀 페이지는 마커로 제외
+   ============================================ */
+.md-content__inner:not(:has(.home-cards)):not(:has(.pf-hero)):not(:has(.graph-page)):not(:has(.posts-page)) {
+  max-width: 768px;
+  margin-left: auto;
+  margin-right: auto;
+}
+/* 본문 타이포 살짝 키워 읽기 편하게 */
+.md-content__inner:not(:has(.home-cards)):not(:has(.pf-hero)):not(:has(.graph-page)):not(:has(.posts-page)) > .md-typeset {
+  font-size: 0.85rem;
+}
+@media (max-width: 768px) {
+.graph-page {
+    padding: 0.5rem 0.5rem 0;
+    height: calc(100dvh - 120px);
+    min-height: 400px;
+  }
+/* 툴바: 줄바꿈 허용, 컴팩트 간격 */
+  .graph-toolbar {
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin-bottom: 0.25rem;
+  }
+.graph-toolbar-title {
+    font-size: 0.78rem;
+  }
+.graph-toolbar-stats {
+    display: none;
+  }
+.graph-toolbar-sep {
+    display: none;
+  }
+.graph-toolbar-spacer {
+    display: none;
+  }
+/* 순서 재배치: 타이틀 + 검색/초기화 → (줄바꿈) → 필터 칩 */
+  .graph-toolbar-title { order: 0; }
+.graph-search-wrap { order: 1; margin-left: auto; }
+.graph-btn { order: 2; }
+.graph-toolbar::after {
+    content: '';
+    order: 5;
+    flex-basis: 100%;
+    height: 0;
+  }
+.graph-filter-chip { order: 10; }
+.graph-filter-chip {
+    font-size: 0.62rem;
+    padding: 0.12rem 0.35rem;
+  }
+.graph-search-wrap input {
+    width: 80px;
+    font-size: 0.72rem;
+  }
+.graph-search-wrap input:focus {
+    width: 120px;
+  }
+.graph-btn {
+    font-size: 0.65rem;
+    padding: 0.2rem 0.4rem;
+  }
+/* sigma 컨테이너: 모바일에서도 flex 레이아웃 유지 */
+  #sigma-container {
+    transition: none;
+  }
+/* 패널: 모바일에서도 우측 사이드 패널 유지 */
+  .graph-info-panel.is-open {
+    width: 280px;
+  }
+.graph-filter-hint { display: none; }
+}
+</style>
