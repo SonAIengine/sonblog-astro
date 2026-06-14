@@ -14,26 +14,21 @@ const TYPE_LABELS = {
 
 const DIFFICULTY_LABELS = { beginner: "입문", intermediate: "중급", advanced: "고급" };
 
-function isDarkMode() {
-  return document.documentElement.getAttribute("data-theme") === "dark";
-}
-
-// 다크/라이트에 따른 캔버스 색상
-function themeColors(dark) {
-  return dark
-    ? {
-        background: "#070b18",
-        link: "rgba(150, 170, 210, 0.16)",
-        label: "#c8d6e8",
-        hoverRing: "#a78bfa",
-      }
-    : {
-        background: "#ffffff",
-        link: "rgba(20, 30, 60, 0.10)",
-        label: "#1f2937",
-        hoverRing: "#0f766e",
-      };
-}
+// 지식그래프는 사이트 라이트/다크와 무관하게 항상 몰입형 다크(네온) 비주얼.
+// 큐레이팅된 네온 팔레트 — 데이터의 원색(빨강 등) 대신 타입별로 통일한다.
+const NODE_PALETTE = {
+  category: "#b794ff", // electric violet
+  subcategory: "#3df5c8", // neon mint
+  series: "#ffb020", // amber accent
+  tag: "#26d6ff", // neon cyan
+  post: "#ff39db", // neon magenta
+};
+const NEON = {
+  link: "rgba(90, 175, 255, 0.14)",
+  label: "#e8f0ff",
+  hoverRing: "#67e8f9",
+  fallback: "#9fb3d0",
+};
 
 function escapeHtml(s) {
   return String(s == null ? "" : s)
@@ -106,44 +101,53 @@ window.initGraphViz = function initGraphViz() {
     return { nodes: visNodes, links: visEdges };
   }
 
-  let colors = themeColors(isDarkMode());
+  // 몰입형 우주 배경 (네뷸라 + 별)
+  startStarfield(container);
 
   // ── Cosmograph 인스턴스 ─────────────────────────────────────────────────────
   const cosmograph = new Cosmograph(container, {
-    backgroundColor: colors.background,
-    nodeColor: n => n.color || "#888",
-    nodeSize: n => Math.max(2, (n.size || 8) * 0.45),
-    nodeSizeScale: 1,
-    nodeGreyoutOpacity: 0.08,
+    // 투명 배경 → CSS 네뷸라 그라데이션 + 별이 비쳐 보인다
+    backgroundColor: "rgba(0, 0, 0, 0)",
+    nodeColor: n => NODE_PALETTE[n.type] || NEON.fallback,
+    nodeSize: n => Math.max(2.5, (n.size || 8) * 0.5),
+    nodeSizeScale: 1.15,
+    nodeGreyoutOpacity: 0.06,
 
     renderLinks: true,
-    linkColor: () => colors.link,
-    linkWidth: 0.35,
+    linkColor: () => NEON.link,
+    linkWidth: 0.32,
     linkWidthScale: 1,
     linkGreyoutOpacity: 0,
-    curvedLinks: false,
+    // 네온 곡선 엣지
+    curvedLinks: true,
+    curvedLinkSegments: 16,
+    curvedLinkWeight: 0.7,
+    curvedLinkControlPointDistance: 0.4,
 
-    showDynamicLabels: true,
+    // 허브 노드만 라벨 + 호버 시 라벨 → 깔끔한 몰입감
+    showDynamicLabels: false,
+    showTopLabels: true,
+    showTopLabelsLimit: 24,
     showHoveredNodeLabel: true,
     nodeLabelAccessor: n => n.label || n.id,
-    nodeLabelColor: colors.label,
-    hoveredNodeLabelColor: colors.label,
+    nodeLabelColor: NEON.label,
+    hoveredNodeLabelColor: NEON.label,
 
     renderHoveredNodeRing: true,
-    hoveredNodeRingColor: colors.hoverRing,
-    focusedNodeRingColor: colors.hoverRing,
+    hoveredNodeRingColor: NEON.hoverRing,
+    focusedNodeRingColor: NEON.hoverRing,
 
-    // 시뮬레이션 (knowledge graph용 부드러운 분산)
-    simulationGravity: 0.25,
-    simulationCenter: 0.4,
-    simulationRepulsion: 1.0,
-    simulationLinkSpring: 1.0,
-    simulationLinkDistance: 8,
-    simulationFriction: 0.85,
-    simulationDecay: 1500,
+    // 시뮬레이션 (유기적 클러스터링)
+    simulationGravity: 0.22,
+    simulationCenter: 0.35,
+    simulationRepulsion: 1.2,
+    simulationLinkSpring: 1.1,
+    simulationLinkDistance: 9,
+    simulationFriction: 0.86,
+    simulationDecay: 2000,
 
     fitViewOnInit: true,
-    fitViewDelay: 1200,
+    fitViewDelay: 1400,
     scaleNodesOnZoom: true,
 
     onClick: node => {
@@ -426,33 +430,62 @@ window.initGraphViz = function initGraphViz() {
     }
   });
 
-  // ── 테마 변경 동기화 ──────────────────────────────────────────────────────
-  syncMdScheme();
-  const themeObserver = new MutationObserver(() => {
-    syncMdScheme();
-    colors = themeColors(isDarkMode());
-    try {
-      cosmograph.setConfig({
-        backgroundColor: colors.background,
-        linkColor: () => colors.link,
-        nodeLabelColor: colors.label,
-        hoveredNodeLabelColor: colors.label,
-        hoveredNodeRingColor: colors.hoverRing,
-        focusedNodeRingColor: colors.hoverRing,
-      });
-    } catch (e) {
-      /* noop */
-    }
-  });
-  themeObserver.observe(document.documentElement, {
-    attributes: true,
-    attributeFilter: ["data-theme"],
-  });
+  // 그래프는 항상 몰입형 다크 → 사이트 테마와 무관하게 slate 스킴 강제.
+  // (graph.astro의 [data-md-color-scheme="slate"] 다크 패널/툴바 CSS 활성화)
+  document.documentElement.setAttribute("data-md-color-scheme", "slate");
 };
 
-// 기존 graph.astro CSS가 [data-md-color-scheme="slate"]에 의존하므로
-// Astro의 data-theme를 MkDocs 스킴 속성으로 미러링한다.
-function syncMdScheme() {
-  const dark = isDarkMode();
-  document.documentElement.setAttribute("data-md-color-scheme", dark ? "slate" : "default");
+// 별이 흐르는 우주 배경 (네뷸라 그라데이션은 CSS, 별은 캔버스)
+function startStarfield(container) {
+  let cv = container.querySelector(".gv-starfield");
+  if (!cv) {
+    cv = document.createElement("canvas");
+    cv.className = "gv-starfield";
+    container.insertBefore(cv, container.firstChild);
+  }
+  const ctx = cv.getContext("2d");
+  let stars = [];
+  let raf = 0;
+  let t = 0;
+
+  function resize() {
+    const r = container.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    cv.width = Math.max(1, Math.floor(r.width * dpr));
+    cv.height = Math.max(1, Math.floor(r.height * dpr));
+    cv.style.width = r.width + "px";
+    cv.style.height = r.height + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const count = Math.min(220, Math.round((r.width * r.height) / 7000));
+    stars = Array.from({ length: count }, () => ({
+      x: Math.random() * r.width,
+      y: Math.random() * r.height,
+      r: Math.random() * 1.1 + 0.25,
+      a: Math.random() * 0.45 + 0.15,
+      tw: Math.random() * 0.018 + 0.004,
+      ph: Math.random() * 6.283,
+      hue: Math.random() < 0.18 ? "190, 220, 255" : "220, 225, 245",
+    }));
+  }
+
+  function draw() {
+    t += 1;
+    const r = container.getBoundingClientRect();
+    ctx.clearRect(0, 0, r.width, r.height);
+    for (const s of stars) {
+      const alpha = Math.max(0, s.a + Math.sin(t * s.tw + s.ph) * 0.18);
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, 6.283);
+      ctx.fillStyle = `rgba(${s.hue}, ${alpha})`;
+      ctx.fill();
+    }
+    raf = requestAnimationFrame(draw);
+  }
+
+  // 이전 루프 정리
+  if (container.__starfieldRaf) cancelAnimationFrame(container.__starfieldRaf);
+  resize();
+  window.addEventListener("resize", resize);
+  draw();
+  container.__starfieldRaf = raf;
 }

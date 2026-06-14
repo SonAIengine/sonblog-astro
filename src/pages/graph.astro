@@ -96,13 +96,14 @@ const gm = graphData.metadata;
    [data-md-color-scheme="slate"] 셀렉터에 의존한다.
    graphViz.js가 data-theme를 data-md-color-scheme로 미러링하고,
    여기서 --md-* 변수를 Linear 팔레트로 채워준다. */
+/* 그래프는 항상 몰입형 다크 → --md 변수도 고정 다크값(slate 강제와 일치) */
 :root {
-  --md-default-bg-color: var(--background);
-  --md-default-fg-color: var(--foreground);
-  --md-default-fg-color--light: var(--muted-foreground);
-  --md-default-fg-color--lighter: color-mix(in srgb, var(--muted-foreground) 55%, transparent);
-  --md-default-fg-color--lightest: var(--border);
-  --md-primary-fg-color: var(--accent);
+  --md-default-bg-color: #0b1120;
+  --md-default-fg-color: #e2e8f0;
+  --md-default-fg-color--light: #94a3b8;
+  --md-default-fg-color--lighter: #64748b;
+  --md-default-fg-color--lightest: #1e293b;
+  --md-primary-fg-color: #38e0f0;
   --md-text-font: var(--font-app, inherit);
 }
 .graph-bg-svg {
@@ -371,9 +372,12 @@ const gm = graphData.metadata;
   transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 [data-md-color-scheme="slate"] #sigma-container {
-  background: #070b18;
-  background-image: radial-gradient(ellipse at 30% 40%, #0d1b3a 0%, #070b18 65%),
-                    radial-gradient(ellipse at 75% 65%, #0a1628 0%, transparent 50%);
+  background-color: #05070f;
+  background-image:
+    radial-gradient(ellipse 60% 55% at 28% 32%, rgba(56, 189, 248, 0.10), transparent 60%),
+    radial-gradient(ellipse 55% 50% at 74% 64%, rgba(168, 85, 247, 0.10), transparent 60%),
+    radial-gradient(ellipse 45% 40% at 60% 28%, rgba(236, 72, 153, 0.07), transparent 60%),
+    radial-gradient(ellipse 80% 80% at 50% 50%, #070b18 0%, #05070f 70%);
 }
 /* ── 툴팁 ───────────────────────────────────────────────────────────────────── */
 
@@ -1105,12 +1109,45 @@ const gm = graphData.metadata;
 #main-content:has(.graph-page) { max-width: 100% !important; padding: 0 !important; }
 main:has(.graph-page) { max-width: 100% !important; }
 .graph-page { height: calc(100vh - 64px); width: 100%; }
-#sigma-container { width: 100%; height: 100%; }
 
-/* ── Cosmograph 노드 라벨 (Obsidian 스타일) ──────────────────────────────────
-   기본 라벨은 다크 테마 전용 박스(어두운 배경+어두운 글자)라 라이트에서 깨진다.
-   배경 박스를 제거하고 테마 배경색 헤일로로 가독성을 준다.
-   글자색은 graphViz.js의 nodeLabelColor가 테마별로 주입한다. */
+/* ── 몰입형 우주 배경 (항상 다크) ─────────────────────────────────────────────
+   심우주 near-black + 청록/보라/마젠타 네뷸라 글로우.
+   투명 캔버스의 Cosmograph가 이 위에 네온 노드를 얹는다. */
+#sigma-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background-color: #05070f;
+  background-image:
+    radial-gradient(ellipse 60% 55% at 28% 32%, rgba(56, 189, 248, 0.10), transparent 60%),
+    radial-gradient(ellipse 55% 50% at 74% 64%, rgba(168, 85, 247, 0.10), transparent 60%),
+    radial-gradient(ellipse 45% 40% at 60% 28%, rgba(236, 72, 153, 0.07), transparent 60%),
+    radial-gradient(ellipse 80% 80% at 50% 50%, #070b18 0%, #05070f 70%);
+}
+/* 별 레이어(맨 뒤) < Cosmograph 캔버스(앞) */
+#sigma-container .gv-starfield {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+#sigma-container > canvas:not(.gv-starfield) {
+  position: relative;
+  z-index: 1;
+}
+/* 화면 가장자리 비네팅으로 몰입감 강화 */
+#sigma-container::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  box-shadow: inset 0 0 160px 40px rgba(2, 4, 10, 0.85);
+}
+
+/* ── Cosmograph 노드 라벨 (네온 톤) ──────────────────────────────────────────
+   기본 라벨은 다크 박스라 제거하고, 심우주 배경색 헤일로로 가독성 확보.
+   글자색은 graphViz.js의 nodeLabelColor(네온 화이트)가 주입한다. */
 #sigma-container .css-label--label {
   background: transparent !important;
   border: none !important;
@@ -1121,15 +1158,16 @@ main:has(.graph-page) { max-width: 100% !important; }
   letter-spacing: -0.01em !important;
   padding: 0 1px !important;
   text-shadow:
-    0 0 4px var(--background),
-    0 0 3px var(--background),
-    0 0 2px var(--background) !important;
+    0 0 6px rgba(4, 8, 18, 0.95),
+    0 0 4px rgba(4, 8, 18, 0.95),
+    0 0 2px rgba(4, 8, 18, 0.95) !important;
 }
 /* Cosmograph 워터마크(출처 표기) — 은은하게 */
 #sigma-container [class*="watermark"] {
-  opacity: 0.5;
+  opacity: 0.45;
+  z-index: 3;
   transition: opacity 0.2s;
 }
-#sigma-container [class*="watermark"]:hover { opacity: 0.9; }
+#sigma-container [class*="watermark"]:hover { opacity: 0.85; }
 
 </style>
