@@ -1,4 +1,4 @@
-# SON BLOG CMS 설정 (Sveltia CMS)
+# SON BLOG CMS 설정 (Decap CMS)
 # 인증: 홈서버 OAuth 프록시(cms-auth.infoedu.co.kr) → GitHub
 backend:
   name: github
@@ -14,18 +14,23 @@ display_url: https://infoedu.co.kr
 media_folder: src/assets/images
 public_folder: /src/assets/images
 
-# 카테고리별 컬렉션. Sveltia는 nested 미지원 — 대신 folder 컬렉션이 하위폴더를
-# 재귀로 읽는다(글이 전부 category/subcategory/*.md 구조라도 다 나열·편집됨).
-# fields는 YAML 앵커(&postfields)로 공유.
+# 모든 글이 category/subcategory/*.md 구조(파일별 글).
+# nested + subfolders:false → 하위폴더의 개별 .md를 폴더 트리로 재귀 나열·편집.
 collections:
-  - name: ai
-    label: "AI/ML"
-    folder: src/content/posts/ai
+  - name: posts
+    label: 글
+    label_singular: 글
+    folder: src/content/posts
     create: true
+    nested:
+      depth: 4
+      subfolders: false
+      summary: "{{title}}"
+    path: "{{dirname}}/{{slug}}"
     extension: md
     format: frontmatter
     sortable_fields: [pubDatetime, title]
-    fields: &postfields
+    fields:
       - { name: title, label: 제목, widget: string }
       - {
           name: pubDatetime,
@@ -61,51 +66,5 @@ collections:
           value_type: int,
         }
       - { name: ogImage, label: OG 이미지(선택), widget: string, required: false }
-      # raw 모드 — 복잡한 마크다운(코드블록·mermaid·HTML)에서 리치텍스트 렌더가
-      # 깨지는 문제 회피. 순수 마크다운으로 안전하게 편집.
+      # raw 모드 — 복잡한 마크다운(코드블록·mermaid·HTML)에서 리치텍스트 렌더 회피
       - { name: body, label: 본문, widget: markdown, modes: ["raw"] }
-
-  - name: search-engine
-    label: "검색엔진"
-    folder: src/content/posts/search-engine
-    create: true
-    extension: md
-    format: frontmatter
-    sortable_fields: [pubDatetime, title]
-    fields: *postfields
-
-  - name: devops
-    label: "DevOps"
-    folder: src/content/posts/devops
-    create: true
-    extension: md
-    format: frontmatter
-    sortable_fields: [pubDatetime, title]
-    fields: *postfields
-
-  - name: full-stack
-    label: "Full Stack"
-    folder: src/content/posts/full-stack
-    create: true
-    extension: md
-    format: frontmatter
-    sortable_fields: [pubDatetime, title]
-    fields: *postfields
-
-  - name: notes
-    label: "Notes"
-    folder: src/content/posts/notes
-    create: true
-    extension: md
-    format: frontmatter
-    sortable_fields: [pubDatetime, title]
-    fields: *postfields
-
-  - name: portfolio
-    label: "Portfolio"
-    folder: src/content/posts/portfolio
-    create: true
-    extension: md
-    format: frontmatter
-    sortable_fields: [pubDatetime, title]
-    fields: *postfields
