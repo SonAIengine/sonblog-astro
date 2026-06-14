@@ -6,6 +6,8 @@ import {
 } from "astro/config";
 import tailwindcss from "@tailwindcss/vite";
 import { fileURLToPath } from "node:url";
+// 옛 MkDocs URL → 새 Astro URL SEO 리다이렉트 (scripts/build-redirects.mjs 생성)
+import seoRedirects from "./src/redirects.generated.json";
 import mdx from "@astrojs/mdx";
 import sitemap from "@astrojs/sitemap";
 import { unified } from "@astrojs/markdown-remark";
@@ -24,6 +26,8 @@ import config from "./astro-paper.config";
 export default defineConfig({
   site: "https://infoedu.co.kr",
   base: "/",
+  redirects: seoRedirects,
+  trailingSlash: "ignore",
   integrations: [
     mdx(),
     sitemap({
