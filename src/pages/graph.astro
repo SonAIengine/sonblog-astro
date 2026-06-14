@@ -1090,6 +1090,13 @@ const gm = graphData.metadata;
 }
 
 /* AstroPaper 레이아웃 — 블로그 헤더 유지 + 그래프는 남은 높이 꽉 채움 */
+/* 핵심: body는 min-h-svh(확정 높이 없음)라 height:100% 체인이 풀려버린다.
+   그래프 페이지일 때만 body를 뷰포트 높이로 고정 → 체인 확정 →
+   내부 패널만 스크롤되고 그래프 캔버스가 남은 영역을 꽉 채운다. */
+body:has(.graph-page) {
+  height: 100svh;
+  overflow: hidden;
+}
 #main-content.graph-main {
   max-width: 100% !important;
   width: 100%;
