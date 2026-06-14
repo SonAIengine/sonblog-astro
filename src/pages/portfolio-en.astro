@@ -70,11 +70,12 @@ const pc = {
       To improve search quality, I introduced OpenSearch k-NN and Qdrant hybrid search along with LLM query expansion, expanding into AI Search.
     </p>
     <p class="pf-about-text">
-      Since then I have been leading the development of an AI agent platform (XGEN 2.0).
+      Since then I have led an 8-person team building the XGEN AI agent platform.
       From vLLM/llama.cpp-based multi-GPU (CUDA, ROCm) LLM serving, LangChain/LangGraph-based Iterative RAG,
-      a GraphDB knowledge graph, and MCP-based AI agents, to a workflow engine&mdash;
-      I build and operate the entire stack of an AI service: from search to inference, automation, and infrastructure,
-      running 7 microservices on Kubernetes/ArgoCD GitOps.
+      a Neo4j knowledge graph, and MCP-based AI agents, to a workflow engine&mdash;
+      I run 7 microservices on Kubernetes/ArgoCD GitOps.
+      I also delivered a regional bank's GenAI platform (~60% token cost cut), co-ran Intel Gaudi2/3 inference PoCs,
+      and advised 30+ enterprise clients&mdash;owning the full stack from search to inference, automation, infrastructure, and client-facing consulting.
     </p>
     <p class="pf-about-text">
       Recently I have been focusing on the MCP (Model Context Protocol) ecosystem.
@@ -109,6 +110,7 @@ const pc = {
         <span class="pf-chip">LangChain</span>
         <span class="pf-chip">LangGraph</span>
         <span class="pf-chip">MCP</span>
+        <span class="pf-chip">Neo4j</span>
       </div>
       <div class="pf-chips-row">
         <span class="pf-chips-label">Infra</span>
@@ -192,11 +194,60 @@ const pc = {
 </section>
 
 <!-- ============================================
-     Section 4: Projects
+     Section 3: Experience
      ============================================ -->
 <section class="pf-section">
   <div class="pf-section-header">
     <span class="pf-section-num">03.</span>
+    <h2 class="pf-section-title">Experience</h2>
+    <div class="pf-section-line"></div>
+  </div>
+  <div class="pf-exp-list">
+    <div class="pf-exp-card">
+      <div class="pf-exp-head">
+        <h3 class="pf-exp-role">Part Leader · AI Lab → Tech &amp; Consulting</h3>
+        <span class="pf-exp-period">Mar 2024 — Present · 2 yr 4 mo</span>
+      </div>
+      <span class="pf-exp-company">Plateer · EC Solution Lab, AI Lab</span>
+      <ul class="pf-tl-list">
+        <li>Designed &amp; built the XGEN AI agent platform — vLLM/llama.cpp multi-GPU (CUDA·ROCm) LLM serving, LangChain/LangGraph Iterative RAG, Neo4j knowledge graph, MCP-based AI agents &amp; workflow engine, and a new HWPX/DOCX/PPTX Document Adapter</li>
+        <li>Core engineer on a regional bank's GenAI platform — full-stack AI chatbot (SSE streaming, multi-step agents) from requirements to delivery, ~60% token cost reduction, plus CI/CD infrastructure</li>
+        <li>Co-ran Intel Gaudi2/3 LLM inference PoCs (DeepSeek·Llama·QwQ quantization/perf) and led XGEN demos·PoCs·consulting for 30+ enterprise clients</li>
+        <li>Operated 7 microservices on k3s/Istio/ArgoCD GitOps with dev/stg/prd multi-env design, and built the XGEN GS-certification (TTA) test environment</li>
+        <li>Led an 8-person AI Lab team — task allocation, code review, mentoring, and engineer hiring interviews</li>
+      </ul>
+    </div>
+    <div class="pf-exp-card">
+      <div class="pf-exp-head">
+        <h3 class="pf-exp-role">Platform Division Manager · Full Stack</h3>
+        <span class="pf-exp-period">Feb 2023 — Feb 2024 · 1 yr 1 mo</span>
+      </div>
+      <span class="pf-exp-company">Seoul IR Network</span>
+      <ul class="pf-tl-list">
+        <li>Revamped &amp; operated the IRUP content clipping/analytics dashboard — 12 clients, real-time news/YouTube/report ingestion, auto dedup grouping, email/KakaoTalk alerts</li>
+        <li>Solo full-stack build of an internal e-approval system (Next.js/Node.js/Firebase) — approval flow, permissions, real-time sync; planned to deployed in 3 months</li>
+      </ul>
+    </div>
+    <div class="pf-exp-card">
+      <div class="pf-exp-head">
+        <h3 class="pf-exp-role">Engineering · Data Collection System</h3>
+        <span class="pf-exp-period">Jul 2021 — Dec 2022 · 1 yr 6 mo</span>
+      </div>
+      <span class="pf-exp-company">HJ Brain</span>
+      <ul class="pf-tl-list">
+        <li>Built &amp; ran a 10,000+ docs/day web crawling system — 20+ news-source crawlers; retry/exception handling raised success rate 85% → 98%</li>
+        <li>HTML parsing, text normalization, similarity-based dedup, cron batch pipeline; async processing made collection 3x faster</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================
+     Section 4: Projects
+     ============================================ -->
+<section class="pf-section">
+  <div class="pf-section-header">
+    <span class="pf-section-num">04.</span>
     <h2 class="pf-section-title">Projects</h2>
     <div class="pf-section-line"></div>
   </div>
@@ -478,7 +529,7 @@ const pc = {
      ============================================ -->
 <section class="pf-section">
   <div class="pf-section-header">
-    <span class="pf-section-num">04.</span>
+    <span class="pf-section-num">05.</span>
     <h2 class="pf-section-title">Open Source</h2>
     <div class="pf-section-line"></div>
   </div>
@@ -535,7 +586,7 @@ const pc = {
      ============================================ -->
 <section class="pf-section">
   <div class="pf-section-header">
-    <span class="pf-section-num">05.</span>
+    <span class="pf-section-num">06.</span>
     <h2 class="pf-section-title">Tech Stack</h2>
     <div class="pf-section-line"></div>
   </div>
@@ -566,6 +617,8 @@ const pc = {
         <span class="pf-stack-chip">LangChain</span>
         <span class="pf-stack-chip">LangGraph</span>
         <span class="pf-stack-chip">MCP</span>
+        <span class="pf-stack-chip">Neo4j</span>
+        <span class="pf-stack-chip">PyTorch</span>
         <span class="pf-stack-chip">FAISS</span>
         <span class="pf-stack-chip">FastEmbed</span>
       </div>
@@ -582,6 +635,9 @@ const pc = {
         <span class="pf-stack-chip">ArgoCD</span>
         <span class="pf-stack-chip">Caddy</span>
         <span class="pf-stack-chip">GitHub Actions</span>
+        <span class="pf-stack-chip">Helm</span>
+        <span class="pf-stack-chip">MLflow</span>
+        <span class="pf-stack-chip">AWS</span>
         <span class="pf-stack-chip">GitLab CI</span>
       </div>
     </div>
@@ -593,7 +649,7 @@ const pc = {
      ============================================ -->
 <section class="pf-section">
   <div class="pf-section-header">
-    <span class="pf-section-num">06.</span>
+    <span class="pf-section-num">07.</span>
     <h2 class="pf-section-title">Timeline</h2>
     <div class="pf-section-line"></div>
   </div>
@@ -643,11 +699,52 @@ const pc = {
 </section>
 
 <!-- ============================================
+     Section 8: Education
+     ============================================ -->
+<section class="pf-section">
+  <div class="pf-section-header">
+    <span class="pf-section-num">08.</span>
+    <h2 class="pf-section-title">Education</h2>
+    <div class="pf-section-line"></div>
+  </div>
+  <div class="pf-edu-grid">
+    <div class="pf-edu-card">
+      <span class="pf-edu-period">2026 — Present</span>
+      <h3 class="pf-edu-school">Korea University, Grad School</h3>
+      <span class="pf-edu-degree">M.S. in Artificial Intelligence · SW·AI Convergence</span>
+    </div>
+    <div class="pf-edu-card">
+      <span class="pf-edu-period">2019 — 2024</span>
+      <h3 class="pf-edu-school">Hanyang University</h3>
+      <span class="pf-edu-degree">B.S. in Urban Engineering · ML/DL trade-area analysis thesis (team lead)</span>
+    </div>
+    <div class="pf-edu-card">
+      <span class="pf-edu-period">2016 — 2018</span>
+      <h3 class="pf-edu-school">NILE (Credit Bank)</h3>
+      <span class="pf-edu-degree">B.S. in Computer Science · CS fundamentals</span>
+    </div>
+  </div>
+  <div class="pf-edu-extra">
+    <div class="pf-chips-row">
+      <span class="pf-chips-label">Certifications</span>
+      <span class="pf-chip">Information Processing Industrial Engineer</span>
+      <span class="pf-chip">SQLD</span>
+      <span class="pf-chip">Network Administrator Lv.2</span>
+    </div>
+    <div class="pf-chips-row">
+      <span class="pf-chips-label">Languages</span>
+      <span class="pf-chip">Korean (native)</span>
+      <span class="pf-chip">English (professional)</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================
      Section 8: By the Numbers
      ============================================ -->
 <section class="pf-section">
   <div class="pf-section-header">
-    <span class="pf-section-num">07.</span>
+    <span class="pf-section-num">09.</span>
     <h2 class="pf-section-title">By the Numbers</h2>
     <div class="pf-section-line"></div>
   </div>
@@ -657,11 +754,11 @@ const pc = {
       <span class="pf-number-label">Tech Blog Posts</span>
     </div>
     <div class="pf-number-card">
-      <span class="pf-number-value">7</span>
-      <span class="pf-number-label">Microservices (XGEN)</span>
+      <span class="pf-number-value">60%</span>
+      <span class="pf-number-label">Token Cost Cut (Bank GenAI)</span>
     </div>
     <div class="pf-number-card">
-      <span class="pf-number-value">5</span>
+      <span class="pf-number-value">11</span>
       <span class="pf-number-label">Open Source Projects</span>
     </div>
     <div class="pf-number-card">
@@ -669,16 +766,16 @@ const pc = {
       <span class="pf-number-label">Tool Benchmark (graph-tool-call)</span>
     </div>
     <div class="pf-number-card">
-      <span class="pf-number-value">9</span>
-      <span class="pf-number-label">Social Platforms Automated (gwanjong)</span>
+      <span class="pf-number-value">8</span>
+      <span class="pf-number-label">Team Led (AI Lab)</span>
     </div>
     <div class="pf-number-card">
       <span class="pf-number-value">28ms</span>
       <span class="pf-number-label">Rust Search Engine Response</span>
     </div>
     <div class="pf-number-card">
-      <span class="pf-number-value">5,000+</span>
-      <span class="pf-number-label">TPS Peak Traffic Handled</span>
+      <span class="pf-number-value">30+</span>
+      <span class="pf-number-label">Enterprise Clients Advised</span>
     </div>
     <div class="pf-number-card">
       <span class="pf-number-value">15x</span>
@@ -1476,6 +1573,52 @@ a.pf-oss-card:hover {
 }
 .pf-tl-list a:hover {
   color: var(--accent);
+}
+
+/* ── Experience ── */
+.pf-exp-list { display: flex; flex-direction: column; gap: 1rem; }
+.pf-exp-card {
+  padding: 1.5rem 1.6rem;
+  border-radius: 14px;
+  background: var(--pf-surface);
+  border: 1px solid var(--border);
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.3s, box-shadow 0.3s;
+}
+.pf-exp-card:hover {
+  border-color: var(--pf-border-accent);
+  box-shadow: 0 8px 20px var(--pf-shadow);
+  transform: translateY(-2px);
+}
+.pf-exp-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.3rem 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.15rem;
+}
+.pf-exp-role { margin: 0; padding: 0; border: none; font-size: 1rem; font-weight: 700; color: var(--foreground); }
+.pf-exp-period { font-family: var(--font-app); font-size: 0.72rem; font-weight: 500; letter-spacing: 0.02em; color: var(--accent); white-space: nowrap; }
+.pf-exp-company { display: block; margin-bottom: 0.85rem; font-size: 0.82rem; color: var(--muted-foreground); }
+.pf-exp-card .pf-tl-list li { margin-bottom: 0.4rem; }
+
+/* ── Education ── */
+.pf-edu-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+.pf-edu-card {
+  padding: 1.4rem;
+  border-radius: 14px;
+  background: var(--pf-surface);
+  border: 1px solid var(--border);
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.3s, box-shadow 0.3s;
+}
+.pf-edu-card:hover { border-color: var(--pf-border-accent); box-shadow: 0 8px 20px var(--pf-shadow); transform: translateY(-2px); }
+.pf-edu-period { font-family: var(--font-app); font-size: 0.68rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); }
+.pf-edu-school { margin: 0.45rem 0 0.25rem; padding: 0; border: none; font-size: 0.96rem; font-weight: 700; color: var(--foreground); }
+.pf-edu-degree { font-size: 0.8rem; line-height: 1.5; color: var(--muted-foreground); }
+.pf-edu-extra { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 1.4rem; }
+@media (max-width: 600px) {
+  .pf-edu-grid { grid-template-columns: 1fr; }
+  .pf-exp-card { padding: 1.25rem 1.3rem; }
 }
 
 /* ── By the Numbers ── */
