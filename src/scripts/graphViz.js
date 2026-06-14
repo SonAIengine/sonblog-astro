@@ -361,19 +361,31 @@ window.initGraphViz = function initGraphViz() {
 
   // ── synaptic-memory 검색 서버 (우선) — 없으면 클라이언트 BM25 폴백 ───────────
   const SEARCH_API = "https://search.infoedu.co.kr";
-  let _apiOk = null; // null=미확인, true/false
+  // 성공(true)만 캐시 — 실패는 캐시하지 않아 다음 검색에 재시도(재시작/스파이크 회복).
+  // 동시 호출은 진행 중 프로브를 공유해 /health 중복 호출 방지.
+  let _apiOk = false;
+  let _apiProbe = null;
   async function apiAvailable() {
-    if (_apiOk !== null) return _apiOk;
-    try {
-      const c = new AbortController();
-      const t = setTimeout(() => c.abort(), 4000);
-      const r = await fetch(`${SEARCH_API}/health`, { signal: c.signal });
-      clearTimeout(t);
-      _apiOk = r.ok;
-    } catch (e) {
-      _apiOk = false;
-    }
-    return _apiOk;
+    if (_apiOk) return true;
+    if (_apiProbe) return _apiProbe;
+    _apiProbe = (async () => {
+      try {
+        const c = new AbortController();
+        const t = setTimeout(() => c.abort(), 4000);
+        const r = await fetch(`${SEARCH_API}/health`, { signal: c.signal });
+        clearTimeout(t);
+        if (r.ok) {
+          _apiOk = true;
+          return true;
+        }
+      } catch (e) {
+        /* 실패 → 캐시 안 함 */
+      }
+      return false;
+    })();
+    const ok = await _apiProbe;
+    _apiProbe = null;
+    return ok;
   }
   async function synapticSearch(q, limit) {
     const c = new AbortController();
