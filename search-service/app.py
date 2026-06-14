@@ -26,8 +26,10 @@ RERANK_URL = os.environ.get("RERANK_URL", "http://localhost:8180")
 RERANK_MODEL = os.environ.get("RERANK_MODEL", "BAAI/bge-reranker-v2-m3")
 INDEX_JSON = os.environ.get(
     "INDEX_JSON",
-    os.path.join(os.path.dirname(__file__), "..", "dist", "search-index.json"),
+    os.path.join(os.path.dirname(__file__), "..", "dist", "search-fulltext.json"),
 )
+CHUNK_SIZE = int(os.environ.get("CHUNK_SIZE", "700"))
+CHUNK_OVERLAP = int(os.environ.get("CHUNK_OVERLAP", "120"))
 GRAPH_DB = os.environ.get("GRAPH_DB", os.path.join(os.path.dirname(__file__), "blog_graph.db"))
 # 리랭커 점수 노이즈 컷 — 이 값 미만은 무관한 글로 보고 제외(최소 1건은 보장)
 SCORE_FLOOR = float(os.environ.get("SCORE_FLOOR", "0.4"))
@@ -35,24 +37,63 @@ SCORE_FLOOR = float(os.environ.get("SCORE_FLOOR", "0.4"))
 state: dict = {"graph": None}
 
 
+def chunk_text(text: str) -> list[str]:
+    """전체 본문을 단락(\\n) 기준으로 ~CHUNK_SIZE자 청크로 분할.
+    긴 단락은 문자 윈도우(overlap 포함)로 추가 분할한다."""
+    text = (text or "").strip()
+    if not text:
+        return []
+    if len(text) <= CHUNK_SIZE:
+        return [text]
+    paras = [p.strip() for p in text.split("\n") if p.strip()]
+    chunks: list[str] = []
+    buf = ""
+    for p in paras:
+        if len(p) > CHUNK_SIZE:
+            if buf:
+                chunks.append(buf)
+                buf = ""
+            i = 0
+            step = max(1, CHUNK_SIZE - CHUNK_OVERLAP)
+            while i < len(p):
+                chunks.append(p[i : i + CHUNK_SIZE])
+                i += step
+        elif buf and len(buf) + 1 + len(p) > CHUNK_SIZE:
+            chunks.append(buf)
+            buf = p
+        else:
+            buf = f"{buf}\n{p}" if buf else p
+    if buf:
+        chunks.append(buf)
+    return chunks
+
+
 def load_chunks() -> list[dict]:
+    """글당 전체 본문을 청크로 분할해 ingest. 같은 글의 청크는 doc_id(=url)로
+    묶여 synaptic이 NEXT_CHUNK 그래프를 구성한다. 검색결과는 source=url로 글에 매핑."""
     with open(INDEX_JSON, encoding="utf-8") as f:
         docs = json.load(f)
     chunks = []
     for d in docs:
-        tags = d.get("tags", []) or []
-        # 제목·태그를 본문 앞에 넣어 FTS/임베딩 가중
-        content = "\n".join(
-            [d["title"], d.get("description", ""), " ".join(tags), d.get("body", "")]
-        ).strip()
-        chunks.append(
-            {
-                "content": content,
-                "title": d["title"],
-                "source": d["url"],  # 결과에서 node.source 로 회수
-                "category": d.get("category", ""),
-            }
-        )
+        url = d["url"]
+        title = d["title"]
+        cat = d.get("category", "")
+        tags = " ".join(d.get("tags", []) or [])
+        # 제목·설명·태그 메타 — 첫 청크에 결합해 제목/태그 매칭 가중
+        head = "\n".join([title, d.get("description", ""), tags]).strip()
+        pieces = chunk_text(d.get("body", "")) or [""]
+        for i, piece in enumerate(pieces):
+            content = f"{head}\n{piece}".strip() if i == 0 else piece
+            chunks.append(
+                {
+                    "content": content,
+                    "title": title,
+                    "doc_id": url,
+                    "source": url,
+                    "category": cat,
+                    "chunk_index": i,
+                }
+            )
     return chunks
 
 
