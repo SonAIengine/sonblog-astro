@@ -80,9 +80,9 @@ export default defineConfig({
       cssVariable: "--font-google-sans-code",
       provider: fontProviders.google(),
       fallbacks: ["monospace"],
-      weights: [300, 400, 500, 600, 700],
-      styles: ["normal", "italic"],
-      formats: ["woff", "ttf"],
+      weights: [400, 500, 600, 700],
+      styles: ["normal"],
+      formats: ["woff2"],
     },
   ],
   env: {

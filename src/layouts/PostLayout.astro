@@ -66,29 +66,22 @@ const structuredData = {
 </Layout>
 
 <script is:inline>
-  // mermaid는 런타임에 CDN에서 로드 (번들 제외 — 빌드 경량화)
+  // mermaid는 다이어그램이 뷰포트 근처에 올 때만 CDN에서 지연 로드
+  // (초기 렌더 차단 방지 — mermaid ~225KB를 critical path에서 제외)
   (function () {
-    var seen = new WeakSet(); // 노드당 1회만 렌더 (중복 호출 차단)
-    var idc = 0;
-    // base64(UTF-8) 디코드
+    var seen = new WeakSet();
+    var mermaidPromise = null;
     function b64(s) {
       var bin = atob(s);
       var bytes = new Uint8Array(bin.length);
       for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
       return new TextDecoder("utf-8").decode(bytes);
     }
-    function renderMermaid() {
-      var els = [];
-      document
-        .querySelectorAll("pre.mermaid[data-mermaid-src]")
-        .forEach(function (n) {
-          if (seen.has(n)) return;
-          seen.add(n);
-          els.push(n);
-        });
-      if (!els.length) return;
-      import("https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs").then(
-        function (m) {
+    function loadMermaid() {
+      if (!mermaidPromise) {
+        mermaidPromise = import(
+          "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs"
+        ).then(function (m) {
           var mermaid = m.default;
           var dark =
             document.documentElement.getAttribute("data-theme") === "dark";
@@ -97,21 +90,49 @@ const structuredData = {
             theme: dark ? "dark" : "neutral",
             securityLevel: "loose",
           });
-          // 검증된 방식: 새 div에 코드를 textContent로 넣고 run (pre 직접 run이 깨지는 문제 회피)
-          els.forEach(function (el) {
-            var code = b64(el.getAttribute("data-mermaid-src"));
-            var div = document.createElement("div");
-            div.className = "mermaid";
-            div.textContent = code;
-            el.replaceWith(div);
-            mermaid.run({ nodes: [div] }).catch(function (e) {
-              console.error("mermaid failed:", e);
-            });
-          });
-        }
-      );
+          return mermaid;
+        });
+      }
+      return mermaidPromise;
     }
-    document.addEventListener("astro:page-load", renderMermaid);
-    renderMermaid();
+    function renderEl(el) {
+      if (seen.has(el)) return;
+      seen.add(el);
+      loadMermaid().then(function (mermaid) {
+        var code = b64(el.getAttribute("data-mermaid-src"));
+        var div = document.createElement("div");
+        div.className = "mermaid";
+        div.textContent = code;
+        el.replaceWith(div);
+        mermaid.run({ nodes: [div] }).catch(function (e) {
+          console.error("mermaid failed:", e);
+        });
+      });
+    }
+    var io =
+      "IntersectionObserver" in window
+        ? new IntersectionObserver(
+            function (entries) {
+              entries.forEach(function (en) {
+                if (en.isIntersecting) {
+                  io.unobserve(en.target);
+                  renderEl(en.target);
+                }
+              });
+            },
+            { rootMargin: "500px" } // 화면 근처(아래 500px) 오면 미리 로드
+          )
+        : null;
+    function setup() {
+      document
+        .querySelectorAll("pre.mermaid[data-mermaid-src]")
+        .forEach(function (n) {
+          if (seen.has(n)) return;
+          if (io) io.observe(n);
+          else renderEl(n); // 폴백: 즉시
+        });
+    }
+    document.addEventListener("astro:page-load", setup);
+    setup();
   })();
 </script>
