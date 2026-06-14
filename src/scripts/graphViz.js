@@ -162,17 +162,21 @@ window.initGraphViz = function initGraphViz() {
     hoveredNodeRingColor: V.ring,
     focusedNodeRingColor: V.ring,
 
-    // 시뮬레이션 (유기적 클러스터링)
-    simulationGravity: 0.22,
-    simulationCenter: 0.35,
-    simulationRepulsion: 1.2,
-    simulationLinkSpring: 1.1,
-    simulationLinkDistance: 9,
-    simulationFriction: 0.86,
-    simulationDecay: 2000,
+    // 시뮬레이션 — 한 덩어리로 뭉치지 않게 척력↑ / 중력·구심력↓ / 링크거리↑
+    simulationGravity: 0.05,
+    simulationCenter: 0,
+    simulationRepulsion: 1.8,
+    simulationRepulsionTheta: 1.3,
+    simulationLinkSpring: 0.5,
+    simulationLinkDistance: 16,
+    simulationFriction: 0.88,
+    simulationDecay: 3000,
+    // 넓은 공간 + Barnes-Hut 척력으로 클러스터가 분리돼 보이게
+    useQuadtree: true,
+    spaceSize: 8192,
 
     fitViewOnInit: true,
-    fitViewDelay: 1400,
+    fitViewDelay: 2600,
     scaleNodesOnZoom: true,
 
     onClick: node => {
