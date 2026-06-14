@@ -700,9 +700,8 @@ const gm = graphData.metadata;
 [data-md-color-scheme="slate"] .gp-bc-current { color: #c8d6e8; }
 /* ── 노드 헤더 영역 ── */
 .gp-node-header {
-  padding: 0.4rem 0.65rem 0.35rem;
+  padding: 0.6rem 0.85rem 0.55rem;
   border-bottom: 1px solid var(--md-default-fg-color--lightest);
-  padding-right: 2rem; /* 닫기 버튼 공간 확보 */
 }
 .gp-header-row {
   display: flex;
@@ -717,14 +716,15 @@ const gm = graphData.metadata;
 }
 [data-md-color-scheme="slate"] .gp-inline-stats { color: #64748b; }
 .gp-title {
-  font-size: 0.88rem;
+  font-size: 0.95rem;
   font-weight: 700;
-  line-height: 1.25;
+  line-height: 1.4;
   margin: 0;
   color: var(--md-default-fg-color);
   border: none;
   padding: 0;
   word-break: keep-all;
+  text-wrap: balance; /* 줄 길이를 균형 있게 — 마지막 줄에 단어 하나만 남는 어색함 방지 */
 }
 [data-md-color-scheme="slate"] .gp-title { color: #e2e8f0; }
 /* 메타 라인: 시리즈 · 날짜 · 난이도 인라인 */
