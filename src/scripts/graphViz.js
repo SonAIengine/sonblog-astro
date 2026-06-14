@@ -993,13 +993,9 @@ window.initGraphViz = function initGraphViz() {
     const ql = q.toLowerCase();
     const reqQuery = currentQuery; // 경쟁 조건 가드
     const mode = "text"; // 클라이언트 폴백 = BM25
-    let engine;
-    try {
-      engine = await ensureSearch(); // 제목·스니펫용으로 항상 필요
-    } catch (e) {
-      engine = null;
-    }
-    if (reqQuery !== currentQuery) return;
+    // 폴백(BM25)용 클라이언트 인덱스는 지연 로드 — synaptic 서버가 우선이라
+    // ensureSearch(느린 Orama 빌드)가 /search 호출을 막지 않게 한다.
+    let engine = null;
 
     const seen = new Set();
     const postEntries = [];
@@ -1054,7 +1050,13 @@ window.initGraphViz = function initGraphViz() {
     if (usedApi) {
       /* synaptic 서버 결과 사용 — 추가 검색 없음 */
     } else if (mode === "text") {
-      // BM25 + 한국어 부분일치 폴백
+      // BM25 + 한국어 부분일치 폴백 (이때만 클라이언트 Orama 인덱스 로드)
+      try {
+        engine = await ensureSearch();
+      } catch (e) {
+        engine = null;
+      }
+      if (reqQuery !== currentQuery) return;
       if (engine) {
         try {
           const res = await engine.search(engine.db, {
