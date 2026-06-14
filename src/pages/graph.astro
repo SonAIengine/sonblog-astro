@@ -1200,6 +1200,30 @@ body:has(.graph-page) {
   100% { transform: translate(-50%, -50%) scale(2.4); opacity: 0; }
 }
 
+/* ── 상단 UI 정돈: 컨트롤 바 + 여백 ──────────────────────────────────────────── */
+.graph-page {
+  padding: 0.6rem 1rem 0.6rem !important;
+}
+/* 툴바를 풀폭 컨트롤 바로: 좌우 끝까지 + 은은한 배경 띠로 '의도된 바' 느낌 */
+.graph-toolbar {
+  margin: -0.6rem -1rem 0.7rem;
+  padding: 0.6rem 1rem;
+  gap: 0.55rem;
+  background: color-mix(in srgb, var(--md-default-fg-color) 3.5%, transparent);
+  border-bottom: 1px solid var(--md-default-fg-color--lightest);
+}
+[data-md-color-scheme="slate"] .graph-toolbar {
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom-color: #15171c;
+}
+.graph-toolbar-title {
+  font-size: 1rem;
+  letter-spacing: -0.01em;
+}
+.graph-toolbar-stats { font-size: 0.7rem; }
+/* 필터 칩과 초기화 사이 간격 일관 */
+.graph-toolbar .graph-toolbar-sep { margin: 0 0.1rem; }
+
 /* ════════════════════════════════════════════════════════════════════════════
    좌 그래프 / 우 검색엔진 패널 레이아웃
    ════════════════════════════════════════════════════════════════════════════ */
