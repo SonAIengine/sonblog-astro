@@ -113,7 +113,13 @@ window.initGraphViz = function initGraphViz() {
     ["category", "subcategory", "series", "tag"].forEach(t => activeTypes.add(t));
   }
 
-  const state = { selected: null, hovered: null, searchNodes: [] };
+  const state = {
+    selected: null,
+    hovered: null,
+    searchNodes: [],
+    clusterNodes: [],
+  };
+  let renderSeq = 0; // 패널 렌더 소유권 토큰 (비동기 검색이 상세를 덮어쓰는 레이스 방지)
 
   // post 노드 → 연결된 태그 id 집합 (비슷한 글 계산용)
   const postTagSet = new Map();
@@ -168,14 +174,16 @@ window.initGraphViz = function initGraphViz() {
   }
 
   // ── Cosmograph 인스턴스 ─────────────────────────────────────────────────────
-  const cosmograph = new Cosmograph(container, {
+  // cfg를 변수로 빼서 setConfig 시 전체를 다시 넘긴다
+  // (cosmos.setConfig는 부분 전달 시 나머지를 기본값으로 덮어쓰므로 전체 필요)
+  const cfg = {
     // 투명 배경 → CSS가 테마별 배경(라이트 클린 / 다크 차분) 담당
     backgroundColor: "rgba(0, 0, 0, 0)",
     nodeColor: n => communityColor(n.community, V.comm),
     nodeSize: nodeSizeFor,
     nodeSizeScale: 1,
-    // 호버/선택 시 비이웃 노드는 흐리게
-    nodeGreyoutOpacity: 0.07,
+    // 호버/선택 시 비이웃 노드는 흐리게(단 맥락은 보이게 — 너무 숨기지 않음)
+    nodeGreyoutOpacity: 0.25,
 
     renderLinks: true,
     // 링크를 source 노드의 커뮤니티 색으로 → 클러스터별 색 흐름이 보인다
@@ -206,17 +214,17 @@ window.initGraphViz = function initGraphViz() {
     hoveredNodeRingColor: V.ring,
     focusedNodeRingColor: V.ring,
 
-    // 시뮬레이션 — 클러스터 내부도 살짝 벌려 연결선이 보이게(노드에 안 가리게)
-    simulationGravity: 0.06,
-    simulationCenter: 0.03,
-    simulationRepulsion: 1.5,
-    simulationRepulsionTheta: 1.2,
-    simulationLinkSpring: 0.4,
-    simulationLinkDistance: 18,
+    // 시뮬레이션 — 클러스터(꽃)끼리도 멀리 벌어지게 척력↑·링크거리↑·중력↓
+    simulationGravity: 0.035,
+    simulationCenter: 0,
+    simulationRepulsion: 2.4,
+    simulationRepulsionTheta: 1.15,
+    simulationLinkSpring: 0.28,
+    simulationLinkDistance: 32,
     simulationFriction: 0.9,
     simulationDecay: 4000,
     useQuadtree: true,
-    spaceSize: 4096,
+    spaceSize: 8192,
 
     fitViewOnInit: true,
     fitViewDelay: 3000,
@@ -250,11 +258,22 @@ window.initGraphViz = function initGraphViz() {
       hideTooltip();
       applyHighlight();
     },
-  });
+  };
+  const cosmograph = new Cosmograph(container, cfg);
 
   const vis = visibleData();
   cosmograph.setData(vis.nodes, vis.links);
   _instance = cosmograph;
+
+  // 선택 노드 + (보이는) 이웃의 이름표를 캔버스에 고정 → 뷰어에서도 설명이 보이게.
+  // cosmos.setConfig는 부분 전달 시 나머지를 기본값으로 덮으므로 cfg 전체를 넘긴다.
+  function setForcedLabels(nodes) {
+    try {
+      cosmograph.setConfig({ ...cfg, showLabelsFor: nodes });
+    } catch (e) {
+      /* noop */
+    }
+  }
 
   // ── 툴팁 ─────────────────────────────────────────────────────────────────
   const tooltip = document.getElementById("graph-tooltip");
@@ -303,7 +322,7 @@ window.initGraphViz = function initGraphViz() {
     .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
   const TYPE_ORDER = { post: 0, tag: 1, subcategory: 2, category: 3, series: 4 };
   let currentQuery = "";
-  const searchMode = "hybrid"; // 단일 검색 로직: BM25 키워드 + e5 의미 벡터 결합 (실패 시 텍스트 폴백)
+  // 검색: synaptic-memory 서버(우선) → 실패/부재 시 클라이언트 BM25 폴백
 
   // ── 검색 엔진 (Phase 1: 텍스트 BM25) ───────────────────────────────────────
   const BASE = import.meta.env.BASE_URL.replace(/\/$/, ""); // "/sonblog-astro"
@@ -312,6 +331,40 @@ window.initGraphViz = function initGraphViz() {
   data.nodes.forEach(n => {
     if (n.type === "post" && n.url) urlToNode.set(n.url.replace(/\/$/, ""), n);
   });
+
+  // ── synaptic-memory 검색 서버 (우선) — 없으면 클라이언트 BM25 폴백 ───────────
+  const SEARCH_API = "https://search.infoedu.co.kr";
+  let _apiOk = null; // null=미확인, true/false
+  async function apiAvailable() {
+    if (_apiOk !== null) return _apiOk;
+    try {
+      const c = new AbortController();
+      const t = setTimeout(() => c.abort(), 2000);
+      const r = await fetch(`${SEARCH_API}/health`, { signal: c.signal });
+      clearTimeout(t);
+      _apiOk = r.ok;
+    } catch (e) {
+      _apiOk = false;
+    }
+    return _apiOk;
+  }
+  async function synapticSearch(q) {
+    const c = new AbortController();
+    const t = setTimeout(() => c.abort(), 6000);
+    try {
+      const r = await fetch(
+        `${SEARCH_API}/search?q=${encodeURIComponent(q)}&limit=30`,
+        { signal: c.signal }
+      );
+      if (!r.ok) return null;
+      const j = await r.json();
+      return Array.isArray(j.results) ? j.results : [];
+    } catch (e) {
+      return null;
+    } finally {
+      clearTimeout(t);
+    }
+  }
 
   let _orama = null; // { db, search, docs }
   let _oramaPromise = null;
@@ -569,17 +622,40 @@ window.initGraphViz = function initGraphViz() {
     return header + body + footer;
   }
 
-  // 노드 상세 보기 (그래프 포커스 + 우측 패널 상세 + '검색으로' 뒤로가기)
+  // 클릭 노드가 속한 토픽 클러스터(같은 community = 서브카테고리 + 형제 글 + 허브)
+  function clusterNodesFor(node) {
+    const out = new Map();
+    const add = n => {
+      if (n && activeTypes.has(n.type)) out.set(n.id, n);
+    };
+    add(node);
+    (adjacency.get(node.id) || []).forEach(id => add(nodesById.get(id)));
+    renderNodes.forEach(n => {
+      if (n.community === node.community) add(n);
+    });
+    return [...out.values()].slice(0, 120);
+  }
+
+  // 노드 상세 보기 (그래프: 토픽 클러스터 프레이밍·강조 + 우측 패널 상세)
   function showNode(node) {
     if (!node || !sideBody) return;
+    renderSeq++; // 패널 소유권 — 늦게 끝난 검색이 덮어쓰지 못하게
     state.selected = node;
+    const cluster = clusterNodesFor(node);
+    state.clusterNodes = cluster;
+    // 클러스터의 허브(카테고리/서브카테고리) 이름 + 클릭한 노드 이름을 캔버스에 라벨
+    const hubLabels = cluster.filter(n => n.type !== "post" && n.type !== "tag");
     try {
-      cosmograph.selectNode(node, true);
-      cosmograph.focusNode(node);
-      cosmograph.zoomToNode(node);
+      applyHighlight(); // 클러스터 강조(나머지 흐림 — 맥락 유지)
+      cosmograph.focusNode(node); // 클릭 노드에 링
+      cosmograph.fitViewByNodeIds(
+        cluster.map(n => n.id),
+        500
+      ); // 클러스터가 화면에 차도록 프레이밍(깊게 줌 안 함)
     } catch (e) {
       /* noop */
     }
+    setForcedLabels([node, ...hubLabels.slice(0, 10)]);
     sideBody.innerHTML =
       `<button type="button" class="gs-back" id="gs-back"><svg viewBox="0 0 16 16" width="12" height="12" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>검색으로</button>` +
       buildDetailHTML(node);
@@ -602,9 +678,15 @@ window.initGraphViz = function initGraphViz() {
   // 현재 상태(선택 노드 > 검색결과 > 없음)에 맞춰 그래프 강조 적용
   function applyHighlight() {
     try {
-      if (state.selected) cosmograph.selectNode(state.selected, true);
-      else if (state.searchNodes.length) cosmograph.selectNodes(state.searchNodes);
-      else cosmograph.unselectNodes();
+      if (state.selected) {
+        // 선택 노드의 토픽 클러스터를 강조(형제 글까지 보이게)
+        if (state.clusterNodes.length) cosmograph.selectNodes(state.clusterNodes);
+        else cosmograph.selectNode(state.selected, true);
+      } else if (state.searchNodes.length) {
+        cosmograph.selectNodes(state.searchNodes);
+      } else {
+        cosmograph.unselectNodes();
+      }
     } catch (e) {
       /* noop */
     }
@@ -612,11 +694,13 @@ window.initGraphViz = function initGraphViz() {
 
   function clearNode() {
     state.selected = null;
+    state.clusterNodes = [];
     try {
       cosmograph.focusNode(undefined);
     } catch (e) {
       /* noop */
     }
+    setForcedLabels(labelHubs); // 라벨을 분류 허브로 복원
     applyHighlight();
   }
 
@@ -640,8 +724,27 @@ window.initGraphViz = function initGraphViz() {
     sideBody.innerHTML = html;
     sideBody.scrollTop = 0;
     sideBody.querySelectorAll(".gs-item").forEach(el => {
+      const getNode = () => nodesById.get(el.dataset.nodeId);
+      // 패널 항목 hover → 그래프에서 해당 노드 강조(링) — 양방향 연계
+      el.addEventListener("mouseenter", () => {
+        const node = getNode();
+        if (node) {
+          try {
+            cosmograph.focusNode(node);
+          } catch (e) {
+            /* noop */
+          }
+        }
+      });
+      el.addEventListener("mouseleave", () => {
+        try {
+          cosmograph.focusNode(state.selected || undefined);
+        } catch (e) {
+          /* noop */
+        }
+      });
       el.addEventListener("click", () => {
-        const node = nodesById.get(el.dataset.nodeId);
+        const node = getNode();
         if (!node) return;
         if (!activeTypes.has(node.type)) {
           activeTypes.add(node.type);
@@ -658,6 +761,7 @@ window.initGraphViz = function initGraphViz() {
   // 검색/브라우즈 결과 목록 렌더
   async function renderList(query) {
     if (!sideBody) return;
+    const seq = ++renderSeq; // 이 렌더의 소유권 토큰
     currentQuery = query || "";
     const q = currentQuery.trim();
     if (searchClear) searchClear.style.display = q ? "flex" : "none";
@@ -687,7 +791,7 @@ window.initGraphViz = function initGraphViz() {
 
     const ql = q.toLowerCase();
     const reqQuery = currentQuery; // 경쟁 조건 가드
-    const mode = searchMode;
+    const mode = "text"; // 클라이언트 폴백 = BM25
     let engine;
     try {
       engine = await ensureSearch(); // 제목·스니펫용으로 항상 필요
@@ -712,7 +816,38 @@ window.initGraphViz = function initGraphViz() {
       });
     };
 
-    if (mode === "text") {
+    // synaptic-memory 서버 결과({url,title,score})를 패널 항목으로.
+    // 날짜·스니펫은 클라이언트 인덱스(engine.byUrl)에서 보강.
+    const pushApiHit = h => {
+      if (postEntries.length >= 80) return;
+      const url = (h.url || "").replace(/\/$/, "");
+      const node = urlToNode.get(url);
+      if (!node || seen.has(node.id)) return;
+      seen.add(node.id);
+      const doc = engine?.byUrl?.get(url);
+      postEntries.push({
+        nodeId: node.id,
+        type: "post",
+        date: node.date || doc?.date,
+        labelHtml: highlight(h.title || node.label || "", ql),
+        snippetHtml: highlight(doc ? snippetFor(doc, ql) : "", ql),
+      });
+    };
+
+    // 1순위: synaptic-memory 서버 검색(가용 시). 실패/부재 시 클라이언트 폴백.
+    let usedApi = false;
+    if (await apiAvailable()) {
+      const hits = await synapticSearch(q);
+      if (reqQuery !== currentQuery) return;
+      if (hits && hits.length) {
+        hits.forEach(pushApiHit);
+        usedApi = true;
+      }
+    }
+
+    if (usedApi) {
+      /* synaptic 서버 결과 사용 — 추가 검색 없음 */
+    } else if (mode === "text") {
       // BM25 + 한국어 부분일치 폴백
       if (engine) {
         try {
@@ -811,7 +946,7 @@ window.initGraphViz = function initGraphViz() {
         labelHtml: highlight(n.label, ql),
       }));
 
-    if (reqQuery !== currentQuery) return;
+    if (reqQuery !== currentQuery || seq !== renderSeq) return; // 노드 클릭 등으로 패널이 바뀌었으면 폐기
     // 매칭 노드를 그래프에 강조 (검색 결과 = 그래프 시각화)
     state.searchNodes = [...postEntries, ...nodeEntries]
       .map(e => nodesById.get(e.nodeId))
@@ -834,13 +969,12 @@ window.initGraphViz = function initGraphViz() {
     });
   });
 
-  // ── 하이브리드 단일 검색: 첫 포커스 시 벡터·임베더 미리 로드 ─────────────────
+  // ── 첫 포커스 시 검색 서버 가용성 미리 확인(폴백 빠르게 결정) ─────────────────
   let _preloaded = false;
   searchInput?.addEventListener("focus", () => {
     if (_preloaded) return;
     _preloaded = true;
-    ensureVectors().catch(() => {});
-    ensureEmbedder().catch(() => {});
+    apiAvailable();
   });
 
   // ── 검색 입력 (디바운스) ────────────────────────────────────────────────────
