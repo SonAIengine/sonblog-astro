@@ -32,18 +32,24 @@ function vizColors(dark) {
   return dark
     ? {
         comm: { s: 70, l: 63 }, // 다크: 밝고 선명
-        link: "rgba(148, 163, 184, 0.15)",
-        label: "#e2e8f0",
-        ring: "#e2e8f0",
+        linkAlpha: 0.55, // 링크는 source 커뮤니티 색 + 이 알파
+        label: "#f1f5f9",
+        ring: "#ffffff",
         fallback: "#94a3b8",
       }
     : {
         comm: { s: 58, l: 48 }, // 라이트: 채도 있고 약간 어둡게(흰 배경 가독)
-        link: "rgba(15, 23, 42, 0.08)",
-        label: "#334155",
+        linkAlpha: 0.5,
+        label: "#1e293b",
         ring: "#0f172a",
         fallback: "#64748b",
       };
+}
+
+// 링크는 source 노드의 커뮤니티 색을 따른다 (같은 클러스터 = 같은 색 흐름)
+function linkColorFor(srcNode, V) {
+  const h = ((srcNode?.community || 0) * GOLDEN_ANGLE) % 360;
+  return `hsla(${h.toFixed(1)}, ${V.comm.s}%, ${V.comm.l}%, ${V.linkAlpha})`;
 }
 
 function escapeHtml(s) {
@@ -134,32 +140,51 @@ window.initGraphViz = function initGraphViz() {
 
   let V = vizColors(isDarkMode());
 
+  // 클러스터 앵커: 카테고리/서브카테고리 노드에 토픽 이름을 고정 라벨로 표시
+  // → 그래프만 봐도 각 색 영역이 무슨 주제인지 파악된다.
+  const labelHubs = renderNodes.filter(
+    n => n.type === "category" || n.type === "subcategory"
+  );
+
+  // 노드 크기: 연결 많은 허브일수록 크게(degree 기반 size) + 분류 허브 가중
+  function nodeSizeFor(n) {
+    const base = Math.max(3, (n.size || 8) * 0.55);
+    if (n.type === "category") return base * 1.7;
+    if (n.type === "subcategory") return base * 1.35;
+    if (n.type === "series") return base * 1.2;
+    return base;
+  }
+
   // ── Cosmograph 인스턴스 ─────────────────────────────────────────────────────
   const cosmograph = new Cosmograph(container, {
     // 투명 배경 → CSS가 테마별 배경(라이트 클린 / 다크 차분) 담당
     backgroundColor: "rgba(0, 0, 0, 0)",
     nodeColor: n => communityColor(n.community, V.comm),
-    nodeSize: n => Math.max(3, (n.size || 8) * 0.55),
+    nodeSize: nodeSizeFor,
     nodeSizeScale: 1,
     // 호버/선택 시 비이웃 노드는 흐리게
     nodeGreyoutOpacity: 0.07,
 
     renderLinks: true,
-    linkColor: () => V.link,
-    linkWidth: 0.3,
+    // 링크를 source 노드의 커뮤니티 색으로 → 클러스터별 색 흐름이 보인다
+    linkColor: link =>
+      linkColorFor(nodesById.get(link.source?.id ?? link.source), V),
+    linkWidth: 1.4,
     linkWidthScale: 1,
     // 호버/선택 시 비관련 엣지는 숨김 → 해당 노드 연결만 또렷
     linkGreyoutOpacity: 0,
-    // 우아한 얇은 곡선 엣지
+    // 줌 레벨/링크 길이와 무관하게 거의 항상 또렷하게 (짧은 링크도 안 사라지게)
+    linkVisibilityDistanceRange: [1, 6],
+    linkVisibilityMinTransparency: 0.75,
     curvedLinks: true,
     curvedLinkSegments: 16,
-    curvedLinkWeight: 0.6,
-    curvedLinkControlPointDistance: 0.35,
+    curvedLinkWeight: 0.5,
+    curvedLinkControlPointDistance: 0.4,
 
-    // 허브 노드만 라벨 + 호버 → 여백 있는 깔끔한 구성
+    // 분류 허브에 토픽 이름 고정 라벨 + 호버 라벨
     showDynamicLabels: false,
-    showTopLabels: true,
-    showTopLabelsLimit: 22,
+    showTopLabels: false,
+    showLabelsFor: labelHubs,
     showHoveredNodeLabel: true,
     nodeLabelAccessor: n => n.label || n.id,
     nodeLabelColor: V.label,
@@ -169,21 +194,20 @@ window.initGraphViz = function initGraphViz() {
     hoveredNodeRingColor: V.ring,
     focusedNodeRingColor: V.ring,
 
-    // 시뮬레이션 — 강한 척력 + 느슨한 링크로 클러스터가 벌어지게
-    simulationGravity: 0.02,
-    simulationCenter: 0,
-    simulationRepulsion: 2.0,
-    simulationRepulsionTheta: 1.15,
-    simulationLinkSpring: 0.28,
-    simulationLinkDistance: 22,
+    // 시뮬레이션 — 클러스터 내부도 살짝 벌려 연결선이 보이게(노드에 안 가리게)
+    simulationGravity: 0.06,
+    simulationCenter: 0.03,
+    simulationRepulsion: 1.5,
+    simulationRepulsionTheta: 1.2,
+    simulationLinkSpring: 0.4,
+    simulationLinkDistance: 18,
     simulationFriction: 0.9,
-    simulationDecay: 5000,
-    // 넓은 공간 + Barnes-Hut 척력으로 클러스터 분리
+    simulationDecay: 4000,
     useQuadtree: true,
-    spaceSize: 8192,
+    spaceSize: 4096,
 
     fitViewOnInit: true,
-    fitViewDelay: 3500,
+    fitViewDelay: 3000,
     scaleNodesOnZoom: true,
 
     onClick: node => {
@@ -494,7 +518,8 @@ window.initGraphViz = function initGraphViz() {
     V = vizColors(isDarkMode());
     try {
       cosmograph.setConfig({
-        linkColor: () => V.link,
+        linkColor: link =>
+          linkColorFor(nodesById.get(link.source?.id ?? link.source), V),
         nodeColor: n => communityColor(n.community, V.comm),
         nodeLabelColor: V.label,
         hoveredNodeLabelColor: V.label,

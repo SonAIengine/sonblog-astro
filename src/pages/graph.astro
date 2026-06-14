@@ -1129,17 +1129,19 @@ main:has(.graph-page) { max-width: 100% !important; }
    기본 라벨은 다크 전용 박스라 제거. 테마 배경색 헤일로로 가독성 확보.
    글자색은 graphViz.js의 nodeLabelColor가 테마별로 주입한다. */
 #sigma-container .css-label--label {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
+  /* 클러스터 토픽 라벨만 표시되므로 또렷한 펜던트(배경칩)로 강조 */
+  background: color-mix(in srgb, var(--background) 82%, transparent) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12) !important;
+  border-radius: 6px !important;
   font-family: var(--font-app, inherit) !important;
-  font-size: 11px !important;
-  font-weight: 500 !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
   letter-spacing: -0.01em !important;
-  padding: 0 1px !important;
+  padding: 1px 6px !important;
+  color: var(--foreground) !important;
   text-shadow:
-    0 0 5px var(--background),
-    0 0 3px var(--background),
+    0 0 4px var(--background),
     0 0 2px var(--background) !important;
 }
 /* Cosmograph 워터마크(출처 표기) — 은은하게 */
