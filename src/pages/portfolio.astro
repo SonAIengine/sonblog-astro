@@ -64,25 +64,45 @@ const pc = {
     <div class="pf-section-line"></div>
   </div>
   <div class="pf-about">
+    <div class="pf-about-grid">
+      <div class="pf-about-narrative">
     <p class="pf-about-text">
-      커머스 검색 엔진에서 출발했다.
-      OpenSearch 키워드 검색을 5,000+ TPS 실 서비스에 적용하고, Rust로 리라이트하여 응답 28ms까지 끌어내렸다.
-      검색 품질을 높이기 위해 OpenSearch k-NN과 Qdrant 하이브리드 검색, LLM 쿼리 확장을 도입하며 AI Search로 확장했다.
+      AI 에이전트 플랫폼을 설계하고 운영하는 AI 엔지니어다.
+      vLLM/llama.cpp 기반 멀티 GPU(CUDA·ROCm) LLM 서빙, LangChain/LangGraph Iterative RAG,
+      Neo4j 지식 그래프, MCP 기반 AI Agent까지&mdash;
+      추론·검색·자동화·인프라를 아우르는 AI 서비스의 전체 스택을 직접 만든다.
     </p>
     <p class="pf-about-text">
-      이후 AI 에이전트 플랫폼(XGEN)을 맡아 8명 규모 팀을 리딩하고 있다.
-      vLLM/llama.cpp 기반 멀티 GPU(CUDA, ROCm) LLM 서빙, LangChain/LangGraph 기반 Iterative RAG,
-      Neo4j GraphDB 지식 그래프, MCP 기반 AI Agent, 워크플로우 엔진까지&mdash;
-      7개 마이크로서비스를 Kubernetes/ArgoCD GitOps로 운영한다.
-      지방은행 GenAI 플랫폼 구축(토큰 비용 60% 절감), Intel Gaudi2/3 추론 PoC,
-      30개+ 고객사 기술 컨설팅까지 직접 수행하며 검색부터 추론·자동화·인프라, 고객 대면까지 전체 스택을 만들고 운영한다.
+      현재 (주)플래티어에서 8명 팀을 이끌며 엔터프라이즈 AI 플랫폼(XGEN)을 개발하고,
+      기술·컨설팅 파트 리더로서 고객사의 AI 도입을 직접 설계한다.
+      지방은행 GenAI 플랫폼 구축으로 토큰 비용을 약 60% 절감했고,
+      Intel Gaudi2/3 LLM 추론 PoC와 30개+ 고객사 AI 기술 컨설팅을 수행했다.
     </p>
     <p class="pf-about-text">
-      최근에는 MCP(Model Context Protocol) 생태계에 집중하고 있다.
-      1,000+ API 도구를 그래프 기반으로 검색하는 <a href="/sonblog-astro/posts/ai/agent/graph-tool-call-llm-agent-graph-based-tool-search-engine/">graph-tool-call</a> 엔진을 오픈소스로 개발하고,
-      9개 소셜 플랫폼을 MCP 파이프라인으로 자동화하는 <a href="/sonblog-astro/posts/ai/agent/gwanjong-mcp-ai-social-agent-mcp-system-design-impl/">gwanjong-mcp</a> 에이전트를 운영 중이다.
-      AI 도구 검색, 소셜 자동화, 업무 지식 베이스까지&mdash;MCP를 실전에서 설계하고 운영하는 경험을 쌓고 있다.
+      그 출발점은 커머스 검색이었다. OpenSearch 키워드 검색을 5,000+ TPS 실서비스로 운영하고 Rust로 리라이트해 28ms를 달성했으며,
+      이후 하이브리드 검색과 LLM 쿼리 확장으로 AI Search를 거쳐 지금의 LLM·에이전트 영역에 닿았다.
+      최근에는 MCP(Model Context Protocol) 생태계에 집중해 <a href="/sonblog-astro/posts/ai/agent/graph-tool-call-llm-agent-graph-based-tool-search-engine/">graph-tool-call</a>,
+      <a href="/sonblog-astro/posts/ai/agent/gwanjong-mcp-ai-social-agent-mcp-system-design-impl/">gwanjong-mcp</a> 등 LLM 에이전트 인프라를 오픈소스로 만든다.
     </p>
+      </div>
+
+      <aside class="pf-about-card">
+        <span class="pf-about-card-label">At a glance</span>
+        <ul class="pf-about-facts">
+          <li><span class="pf-fact-k">현재</span><span class="pf-fact-v">(주)플래티어 · 기술·컨설팅 파트 리더</span></li>
+          <li><span class="pf-fact-k">팀</span><span class="pf-fact-v">8명 리딩 · AI R&amp;D 팀</span></li>
+          <li><span class="pf-fact-k">경력</span><span class="pf-fact-v">4년 · 백엔드/AI 엔지니어</span></li>
+          <li><span class="pf-fact-k">학력</span><span class="pf-fact-v">고려대 인공지능 석사 재학</span></li>
+          <li><span class="pf-fact-k">위치</span><span class="pf-fact-v">대한민국 · KST</span></li>
+          <li><span class="pf-fact-k">핵심</span><span class="pf-fact-v">LLM 서빙 · AI 검색 · MCP 에이전트</span></li>
+        </ul>
+        <div class="pf-about-card-links">
+          <a href="https://github.com/SonAIengine" target="_blank" rel="noopener">GitHub</a>
+          <a href="mailto:sonsj97@gmail.com">Email</a>
+        </div>
+      </aside>
+    </div>
+
     <div class="pf-chips-group">
       <div class="pf-chips-row">
         <span class="pf-chips-label">Languages</span>
@@ -1088,6 +1108,73 @@ a.pf-hero-btn--lang:hover {
   background: var(--pf-tint-strong);
   border-color: var(--pf-border-accent);
   transform: translateY(-1px);
+}
+
+/* ── About layout ── */
+.pf-about-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 58ch) 1fr;
+  gap: 2.5rem;
+  align-items: start;
+}
+.pf-about-narrative .pf-about-text:last-child { margin-bottom: 0; }
+.pf-about-card {
+  padding: 1.5rem 1.6rem;
+  border-radius: 14px;
+  background: var(--pf-surface);
+  border: 1px solid var(--border);
+}
+.pf-about-card-label {
+  display: block;
+  margin-bottom: 1rem;
+  font-family: var(--font-app);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.pf-about-facts { list-style: none; margin: 0; padding: 0; }
+.pf-about-facts li {
+  display: flex;
+  gap: 0.9rem;
+  align-items: baseline;
+  padding: 0.55rem 0;
+  border-top: 1px solid var(--border);
+}
+.pf-about-facts li:first-child { border-top: none; padding-top: 0; }
+.pf-fact-k {
+  flex: none;
+  width: 3.2rem;
+  font-family: var(--font-app);
+  font-size: 0.67rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+.pf-fact-v { font-size: 0.83rem; line-height: 1.45; color: var(--foreground); }
+.pf-about-card-links { display: flex; gap: 0.6rem; margin-top: 1.2rem; }
+.pf-about-card-links a {
+  flex: 1;
+  text-align: center;
+  padding: 0.42rem 0.5rem;
+  border-radius: 7px;
+  font-family: var(--font-app);
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--accent) !important;
+  background: var(--pf-tint);
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+  text-decoration: none !important;
+  transition: background 0.25s, border-color 0.25s, transform 0.25s;
+}
+.pf-about-card-links a:hover {
+  background: var(--pf-tint-strong);
+  border-color: var(--pf-border-accent);
+  transform: translateY(-1px);
+}
+@media (max-width: 860px) {
+  .pf-about-grid { grid-template-columns: 1fr; gap: 1.5rem; }
 }
 
 /* ── Expertise ── */

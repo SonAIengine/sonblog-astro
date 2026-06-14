@@ -64,25 +64,45 @@ const pc = {
     <div class="pf-section-line"></div>
   </div>
   <div class="pf-about">
+    <div class="pf-about-grid">
+      <div class="pf-about-narrative">
     <p class="pf-about-text">
-      I started with commerce search engines.
-      I put OpenSearch keyword search into a live service handling 5,000+ TPS, then rewrote it in Rust to bring response time down to 28ms.
-      To improve search quality, I introduced OpenSearch k-NN and Qdrant hybrid search along with LLM query expansion, expanding into AI Search.
+      I'm an AI engineer who designs and operates AI agent platforms.
+      From vLLM/llama.cpp multi-GPU (CUDA·ROCm) LLM serving, LangChain/LangGraph Iterative RAG,
+      and Neo4j knowledge graphs to MCP-based AI agents&mdash;
+      I build the entire AI service stack across inference, search, automation, and infrastructure.
     </p>
     <p class="pf-about-text">
-      Since then I have led an 8-person team building the XGEN AI agent platform.
-      From vLLM/llama.cpp-based multi-GPU (CUDA, ROCm) LLM serving, LangChain/LangGraph-based Iterative RAG,
-      a Neo4j knowledge graph, and MCP-based AI agents, to a workflow engine&mdash;
-      I run 7 microservices on Kubernetes/ArgoCD GitOps.
-      I also delivered a regional bank's GenAI platform (~60% token cost cut), co-ran Intel Gaudi2/3 inference PoCs,
-      and advised 30+ enterprise clients&mdash;owning the full stack from search to inference, automation, infrastructure, and client-facing consulting.
+      Today I lead an 8-person team at Plateer building the enterprise AI platform (XGEN),
+      and as Tech &amp; Consulting Part Leader I design clients' AI adoption directly.
+      I cut token cost ~60% on a regional bank's GenAI platform, co-ran Intel Gaudi2/3 LLM inference PoCs,
+      and advised 30+ enterprise clients on AI.
     </p>
     <p class="pf-about-text">
-      Recently I have been focusing on the MCP (Model Context Protocol) ecosystem.
-      I develop <a href="/sonblog-astro/posts/ai/agent/graph-tool-call-llm-agent-graph-based-tool-search-engine/">graph-tool-call</a>, an open-source engine that searches 1,000+ API tools on a graph,
-      and operate <a href="/sonblog-astro/posts/ai/agent/gwanjong-mcp-ai-social-agent-mcp-system-design-impl/">gwanjong-mcp</a>, an agent that automates 9 social platforms through an MCP pipeline.
-      From AI tool retrieval and social automation to a work knowledge base&mdash;I design and operate MCP in production.
+      It all started with commerce search. I ran OpenSearch keyword search at 5,000+ TPS in production and rewrote it in Rust for 28ms responses,
+      then moved through hybrid search and LLM query expansion (AI Search) to today's LLM and agent work.
+      Lately I focus on the MCP ecosystem, open-sourcing LLM-agent infrastructure like
+      <a href="/sonblog-astro/posts/ai/agent/graph-tool-call-llm-agent-graph-based-tool-search-engine/">graph-tool-call</a> and <a href="/sonblog-astro/posts/ai/agent/gwanjong-mcp-ai-social-agent-mcp-system-design-impl/">gwanjong-mcp</a>.
     </p>
+      </div>
+
+      <aside class="pf-about-card">
+        <span class="pf-about-card-label">At a glance</span>
+        <ul class="pf-about-facts">
+          <li><span class="pf-fact-k">Now</span><span class="pf-fact-v">Plateer · Tech &amp; Consulting Lead</span></li>
+          <li><span class="pf-fact-k">Team</span><span class="pf-fact-v">Leading 8 · AI R&amp;D</span></li>
+          <li><span class="pf-fact-k">Exp</span><span class="pf-fact-v">4 yrs · Backend/AI Engineer</span></li>
+          <li><span class="pf-fact-k">Edu</span><span class="pf-fact-v">M.S. in AI, Korea Univ. (ongoing)</span></li>
+          <li><span class="pf-fact-k">Based</span><span class="pf-fact-v">South Korea · KST</span></li>
+          <li><span class="pf-fact-k">Focus</span><span class="pf-fact-v">LLM Serving · AI Search · MCP Agents</span></li>
+        </ul>
+        <div class="pf-about-card-links">
+          <a href="https://github.com/SonAIengine" target="_blank" rel="noopener">GitHub</a>
+          <a href="mailto:sonsj97@gmail.com">Email</a>
+        </div>
+      </aside>
+    </div>
+
     <div class="pf-chips-group">
       <div class="pf-chips-row">
         <span class="pf-chips-label">Languages</span>
@@ -1088,6 +1108,73 @@ a.pf-hero-btn--lang:hover {
   background: var(--pf-tint-strong);
   border-color: var(--pf-border-accent);
   transform: translateY(-1px);
+}
+
+/* ── About layout ── */
+.pf-about-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 58ch) 1fr;
+  gap: 2.5rem;
+  align-items: start;
+}
+.pf-about-narrative .pf-about-text:last-child { margin-bottom: 0; }
+.pf-about-card {
+  padding: 1.5rem 1.6rem;
+  border-radius: 14px;
+  background: var(--pf-surface);
+  border: 1px solid var(--border);
+}
+.pf-about-card-label {
+  display: block;
+  margin-bottom: 1rem;
+  font-family: var(--font-app);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.pf-about-facts { list-style: none; margin: 0; padding: 0; }
+.pf-about-facts li {
+  display: flex;
+  gap: 0.9rem;
+  align-items: baseline;
+  padding: 0.55rem 0;
+  border-top: 1px solid var(--border);
+}
+.pf-about-facts li:first-child { border-top: none; padding-top: 0; }
+.pf-fact-k {
+  flex: none;
+  width: 3.2rem;
+  font-family: var(--font-app);
+  font-size: 0.67rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+.pf-fact-v { font-size: 0.83rem; line-height: 1.45; color: var(--foreground); }
+.pf-about-card-links { display: flex; gap: 0.6rem; margin-top: 1.2rem; }
+.pf-about-card-links a {
+  flex: 1;
+  text-align: center;
+  padding: 0.42rem 0.5rem;
+  border-radius: 7px;
+  font-family: var(--font-app);
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--accent) !important;
+  background: var(--pf-tint);
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+  text-decoration: none !important;
+  transition: background 0.25s, border-color 0.25s, transform 0.25s;
+}
+.pf-about-card-links a:hover {
+  background: var(--pf-tint-strong);
+  border-color: var(--pf-border-accent);
+  transform: translateY(-1px);
+}
+@media (max-width: 860px) {
+  .pf-about-grid { grid-template-columns: 1fr; gap: 1.5rem; }
 }
 
 /* ── Expertise ── */
