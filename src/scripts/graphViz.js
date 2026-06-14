@@ -14,6 +14,16 @@ const TYPE_LABELS = {
 
 const DIFFICULTY_LABELS = { beginner: "입문", intermediate: "중급", advanced: "고급" };
 
+// 검색 인덱스의 category(폴더명) → 표시 라벨
+const CATEGORY_LABELS = {
+  ai: "AI",
+  "search-engine": "검색엔진",
+  devops: "DevOps",
+  "full-stack": "Full Stack",
+  notes: "Notes",
+  portfolio: "Portfolio",
+};
+
 function isDarkMode() {
   return document.documentElement.getAttribute("data-theme") === "dark";
 }
@@ -356,7 +366,7 @@ window.initGraphViz = function initGraphViz() {
     if (_apiOk !== null) return _apiOk;
     try {
       const c = new AbortController();
-      const t = setTimeout(() => c.abort(), 2000);
+      const t = setTimeout(() => c.abort(), 4000);
       const r = await fetch(`${SEARCH_API}/health`, { signal: c.signal });
       clearTimeout(t);
       _apiOk = r.ok;
@@ -365,17 +375,21 @@ window.initGraphViz = function initGraphViz() {
     }
     return _apiOk;
   }
-  async function synapticSearch(q) {
+  async function synapticSearch(q, limit) {
     const c = new AbortController();
     const t = setTimeout(() => c.abort(), 6000);
     try {
       const r = await fetch(
-        `${SEARCH_API}/search?q=${encodeURIComponent(q)}&limit=30`,
+        `${SEARCH_API}/search?q=${encodeURIComponent(q)}&limit=${limit || 30}`,
         { signal: c.signal }
       );
       if (!r.ok) return null;
       const j = await r.json();
-      return Array.isArray(j.results) ? j.results : [];
+      return {
+        results: Array.isArray(j.results) ? j.results : [],
+        stages: j.stages || [],
+        ms: j.ms,
+      };
     } catch (e) {
       return null;
     } finally {
@@ -434,6 +448,27 @@ window.initGraphViz = function initGraphViz() {
     } else {
       statusEl.hidden = true;
     }
+  }
+
+  // 검색 소스·건수·속도 배지
+  const metaEl = document.getElementById("gs-meta");
+  function setSearchMeta(source, count, ms) {
+    if (!metaEl) return;
+    if (!source) {
+      metaEl.hidden = true;
+      return;
+    }
+    const label =
+      source === "server"
+        ? "서버 시맨틱"
+        : source === "semantic"
+          ? "브라우저 시맨틱"
+          : "오프라인 검색";
+    const dot = source === "server" || source === "semantic" ? "server" : "local";
+    metaEl.innerHTML =
+      `<span class="gs-dot gs-dot--${dot}"></span>` +
+      `${label} · ${count}건${ms != null ? ` · ${Math.round(ms)}ms` : ""}`;
+    metaEl.hidden = false;
   }
 
   // 사전 계산된 문서 벡터 (int8 → Float32 정규화)
@@ -616,17 +651,11 @@ window.initGraphViz = function initGraphViz() {
       body += `</div>`;
     }
 
-    // 비슷한 글 (포스트 노드만)
+    // 관련 글 (포스트 노드만) — 서버 시맨틱으로 비동기 채움(showNode → populateRelated)
     if (node.type === "post") {
-      const sim = similarPosts(node, 5);
-      if (sim.length) {
-        body += `<div class="gp-section"><div class="gp-section-title">비슷한 글<span class="gp-section-count">${sim.length}</span></div><ul class="gp-post-list">`;
-        sim.forEach(s => {
-          const dateStr = s.node.date ? `<span class="gp-post-date">${escapeHtml(s.node.date)}</span>` : "";
-          body += `<li class="gp-post-item"><span class="gp-post-link gs-nav" data-node-id="${escapeHtml(s.node.id)}">${escapeHtml(s.node.label)}</span>${dateStr}</li>`;
-        });
-        body += `</ul></div>`;
-      }
+      body +=
+        `<div class="gp-section"><div class="gp-section-title">관련 글</div>` +
+        `<div id="gp-related-list" class="gp-related-loading">관련 글 찾는 중…</div></div>`;
     }
     body += `</div>`;
 
@@ -689,6 +718,77 @@ window.initGraphViz = function initGraphViz() {
           if (t) showNode(t);
         });
       });
+    if (node.type === "post") populateRelated(node, renderSeq);
+  }
+
+  // 공통 태그 라벨 (왜 관련인지) — 최대 3개
+  function sharedTagLabels(a, b) {
+    const ta = postTagSet.get(a.id);
+    const tb = postTagSet.get(b.id);
+    if (!ta || !tb) return [];
+    const out = [];
+    tb.forEach(id => {
+      if (ta.has(id) && out.length < 3) {
+        const n = nodesById.get(id);
+        if (n) out.push(n.label);
+      }
+    });
+    return out;
+  }
+
+  function renderRelated(seq, items) {
+    if (seq !== renderSeq) return; // 그 사이 다른 노드 클릭 → 폐기
+    const target = document.getElementById("gp-related-list");
+    if (!target) return;
+    if (!items.length) {
+      target.classList.remove("gp-related-loading");
+      target.textContent = "관련 글 없음";
+      return;
+    }
+    let html = `<ul class="gp-post-list">`;
+    items.forEach(it => {
+      const dateStr = it.node.date ? `<span class="gp-post-date">${escapeHtml(it.node.date)}</span>` : "";
+      const why = it.why && it.why.length ? `<span class="gp-related-why">공통: ${escapeHtml(it.why.join(", "))}</span>` : "";
+      html += `<li class="gp-post-item"><span class="gp-post-link gs-nav" data-node-id="${escapeHtml(it.node.id)}">${escapeHtml(it.node.label)}</span>${dateStr}${why}</li>`;
+    });
+    html += `</ul>`;
+    target.classList.remove("gp-related-loading");
+    target.innerHTML = html;
+    target.querySelectorAll(".gs-nav[data-node-id]").forEach(el => {
+      el.addEventListener("click", () => {
+        const t = nodesById.get(el.dataset.nodeId);
+        if (t) showNode(t);
+      });
+    });
+  }
+
+  // 상세의 '관련 글' — 태그기반을 즉시 표시하고, 서버 시맨틱이 오면 교체(절대 안 멈춤)
+  async function populateRelated(node, seq) {
+    // 1) 즉시: 공통 태그 Jaccard
+    const tagBased = similarPosts(node, 6).map(s => ({
+      node: s.node,
+      why: sharedTagLabels(node, s.node),
+    }));
+    renderRelated(seq, tagBased);
+
+    // 2) 백그라운드: 서버 시맨틱으로 업그레이드(가용 시)
+    try {
+      if (!(await apiAvailable())) return;
+      const api = await synapticSearch(node.label, 8);
+      if (!api || !api.results.length || seq !== renderSeq) return;
+      const selfUrl = (node.url || "").replace(/\/$/, "");
+      const sem = [];
+      for (const h of api.results) {
+        const u = (h.url || "").replace(/\/$/, "");
+        if (u === selfUrl) continue;
+        const rn = urlToNode.get(u);
+        if (rn) sem.push({ node: rn, why: sharedTagLabels(node, rn) });
+        if (sem.length >= 6) break;
+      }
+      if (sem.length) renderRelated(seq, sem);
+    } catch (e) {
+      /* noop */
+    }
   }
 
   // 그래프 선택 해제 (전체 노드 복원)
@@ -730,10 +830,18 @@ window.initGraphViz = function initGraphViz() {
       sec.entries.forEach(e => {
         const date = e.date ? `<span class="gs-item-date">${escapeHtml(e.date)}</span>` : "";
         const snip = e.snippetHtml ? `<div class="gs-item-snippet">${e.snippetHtml}</div>` : "";
+        const cat =
+          e.category && CATEGORY_LABELS[e.category]
+            ? `<span class="gs-cat">${escapeHtml(CATEGORY_LABELS[e.category])}</span>`
+            : "";
+        const rel =
+          typeof e.rel === "number"
+            ? `<div class="gs-rel"><span style="width:${Math.round(e.rel * 100)}%"></span></div>`
+            : "";
         html +=
           `<li class="gs-item" data-node-id="${escapeHtml(e.nodeId)}">` +
           `<div class="gs-item-main"><span class="gt-type gt-type--${e.type}">${escapeHtml(TYPE_LABELS[e.type] || e.type)}</span>` +
-          `<span class="gs-item-label">${e.labelHtml || escapeHtml(e.label)}</span>${date}</div>${snip}</li>`;
+          `<span class="gs-item-label">${e.labelHtml || escapeHtml(e.label)}</span>${cat}${date}</div>${snip}${rel}</li>`;
       });
       html += `</ul>`;
     });
@@ -786,6 +894,7 @@ window.initGraphViz = function initGraphViz() {
     // 빈 쿼리 → 전체 글 브라우즈 + 그래프 강조 해제
     if (!q) {
       state.searchNodes = [];
+      setSearchMeta(null);
       if (!state.selected) applyHighlight();
       renderEntries([
         {
@@ -828,6 +937,7 @@ window.initGraphViz = function initGraphViz() {
         nodeId: node.id,
         type: "post",
         date: doc.date,
+        category: doc.category,
         labelHtml: highlight(doc.title, ql),
         snippetHtml: highlight(snippetFor(doc, ql), ql),
       });
@@ -846,6 +956,8 @@ window.initGraphViz = function initGraphViz() {
         nodeId: node.id,
         type: "post",
         date: node.date || doc?.date,
+        category: doc?.category,
+        score: typeof h.score === "number" ? h.score : undefined,
         labelHtml: highlight(h.title || node.label || "", ql),
         snippetHtml: highlight(doc ? snippetFor(doc, ql) : "", ql),
       });
@@ -853,12 +965,14 @@ window.initGraphViz = function initGraphViz() {
 
     // 1순위: synaptic-memory 서버 검색(가용 시). 실패/부재 시 클라이언트 폴백.
     let usedApi = false;
+    let apiMs = null;
     if (await apiAvailable()) {
-      const hits = await synapticSearch(q);
+      const api = await synapticSearch(q);
       if (reqQuery !== currentQuery) return;
-      if (hits && hits.length) {
-        hits.forEach(pushApiHit);
+      if (api && api.results.length) {
+        api.results.forEach(pushApiHit);
         usedApi = true;
+        apiMs = api.ms;
       }
     }
 
@@ -964,6 +1078,19 @@ window.initGraphViz = function initGraphViz() {
       }));
 
     if (reqQuery !== currentQuery || seq !== renderSeq) return; // 노드 클릭 등으로 패널이 바뀌었으면 폐기
+
+    // 관련도 바: 결과 집합 내에서 점수 정규화
+    const maxScore = postEntries.reduce(
+      (m, e) => (typeof e.score === "number" ? Math.max(m, e.score) : m),
+      0
+    );
+    if (maxScore > 0)
+      postEntries.forEach(e => {
+        if (typeof e.score === "number") e.rel = Math.max(0.12, e.score / maxScore);
+      });
+
+    setSearchMeta(usedApi ? "server" : "local", postEntries.length, apiMs);
+
     // 매칭 노드를 그래프에 강조 (검색 결과 = 그래프 시각화)
     state.searchNodes = [...postEntries, ...nodeEntries]
       .map(e => nodesById.get(e.nodeId))
@@ -1006,6 +1133,41 @@ window.initGraphViz = function initGraphViz() {
     if (searchInput) searchInput.value = "";
     renderList("");
     searchInput?.focus();
+  });
+
+  // ── 키보드 내비게이션 (↑↓ 이동 · Enter 열기 · Esc 닫기) ─────────────────────
+  function moveFocus(delta) {
+    const items = [...sideBody.querySelectorAll(".gs-item")];
+    if (!items.length) return;
+    let idx = items.findIndex(el => el.classList.contains("is-focus"));
+    idx = idx < 0 ? (delta > 0 ? 0 : items.length - 1) : idx + delta;
+    idx = Math.max(0, Math.min(items.length - 1, idx));
+    items.forEach((el, i) => el.classList.toggle("is-focus", i === idx));
+    items[idx].scrollIntoView({ block: "nearest" });
+  }
+  searchInput?.addEventListener("keydown", e => {
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      moveFocus(1);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      moveFocus(-1);
+    } else if (e.key === "Enter") {
+      const el =
+        sideBody.querySelector(".gs-item.is-focus") || sideBody.querySelector(".gs-item");
+      if (el) {
+        e.preventDefault();
+        el.click();
+      }
+    } else if (e.key === "Escape") {
+      if (searchInput.value) {
+        searchInput.value = "";
+        renderList("");
+      } else if (state.selected) {
+        clearNode();
+        renderList(currentQuery);
+      }
+    }
   });
   // 인덱스 idle 프리페치 → 첫 검색 지연 최소화
   if ("requestIdleCallback" in window) {
