@@ -44,27 +44,27 @@ const topicSummaries = topics.map(topic => {
     data-home-path={homePath}
     class="app-layout"
   >
-    <section id="hero" class="border-border border-b pt-8 pb-8">
+    <section id="hero" class="border-border border-b pt-6 pb-7 sm:pt-8 sm:pb-8">
       <p
         class="font-app text-accent text-xs font-semibold tracking-[0.2em] uppercase"
       >
         AI Engineer
       </p>
-      <h1 class="mt-2 mb-2 inline-block text-4xl font-bold sm:text-5xl">
+      <h1 class="mt-2 mb-2 inline-block text-3xl font-bold sm:text-5xl">
         손성준
       </h1>
-      <p class="font-app text-muted-foreground text-sm sm:text-base">
+      <p class="font-app text-muted-foreground text-sm leading-6 sm:text-base">
         LLM Serving · AI Search · MCP Agents · DevOps
       </p>
 
-      <p class="mt-5 max-w-2xl">
+      <p class="mt-5 max-w-2xl text-sm leading-7 sm:text-base sm:leading-8">
         LLM 서빙, AI 검색엔진, RAG, MCP 에이전트, Kubernetes 인프라를 다루는
         기술 블로그입니다. 커머스 검색엔진에서 출발해 AI 에이전트
         플랫폼(XGEN)까지, 실전에서 직접 만들고 운영한 경험을 기록합니다.
       </p>
 
       <div
-        class="font-app mt-5 flex flex-wrap items-baseline gap-x-6 gap-y-1 text-sm"
+        class="font-app mt-5 grid grid-cols-3 gap-3 text-sm sm:flex sm:flex-wrap sm:items-baseline sm:gap-x-6 sm:gap-y-1"
       >
         <span>
           <strong class="text-accent text-base">{posts.length}+</strong>
@@ -80,22 +80,24 @@ const topicSummaries = topics.map(topic => {
         </span>
       </div>
 
-      <div class="mt-6 flex flex-wrap items-center gap-3">
+      <div
+        class="mt-6 grid grid-cols-2 items-center gap-3 sm:flex sm:flex-wrap"
+      >
         <a
           href={getRelativeLocaleUrl(locale, "portfolio")}
-          class="bg-accent text-accent-foreground rounded-md px-4 py-2 text-sm font-medium transition hover:opacity-90"
+          class="bg-accent text-accent-foreground rounded-md px-4 py-2 text-center text-sm font-medium transition hover:opacity-90"
         >
           Portfolio
         </a>
         <a
           href={getRelativeLocaleUrl(locale, "posts")}
-          class="border-border hover:border-accent hover:text-accent rounded-md border px-4 py-2 text-sm font-medium transition"
+          class="border-border hover:border-accent hover:text-accent rounded-md border px-4 py-2 text-center text-sm font-medium transition"
         >
           Posts
         </a>
         <a
           href={getRelativeLocaleUrl(locale, "topics")}
-          class="border-border hover:border-accent hover:text-accent rounded-md border px-4 py-2 text-sm font-medium transition"
+          class="border-border hover:border-accent hover:text-accent rounded-md border px-4 py-2 text-center text-sm font-medium transition"
         >
           Topics
         </a>
@@ -103,14 +105,14 @@ const topicSummaries = topics.map(topic => {
           href="https://github.com/SonAIengine"
           target="_blank"
           rel="noopener"
-          class="border-border hover:border-accent hover:text-accent rounded-md border px-4 py-2 text-sm font-medium transition"
+          class="border-border hover:border-accent hover:text-accent rounded-md border px-4 py-2 text-center text-sm font-medium transition"
         >
           GitHub
         </a>
         <a
           target="_blank"
           href={`${import.meta.env.BASE_URL.replace(/\/?$/, "/")}rss.xml`}
-          class="hover:text-accent ms-1 inline-block"
+          class="hover:text-accent col-span-2 inline-flex justify-center py-1 sm:col-span-1 sm:ms-1 sm:inline-block sm:py-0"
           aria-label="RSS Feed"
           title="RSS Feed"
         >
@@ -124,7 +126,7 @@ const topicSummaries = topics.map(topic => {
       </div>
     </section>
 
-    <section id="expertise" class="border-border border-b py-8">
+    <section id="expertise" class="border-border border-b py-7 sm:py-8">
       <div class="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p
@@ -132,7 +134,7 @@ const topicSummaries = topics.map(topic => {
           >
             Topics
           </p>
-          <h2 class="mt-1 text-2xl font-semibold tracking-wide">
+          <h2 class="mt-1 text-xl font-semibold tracking-wide sm:text-2xl">
             관심사별로 바로 읽기
           </h2>
         </div>
@@ -148,17 +150,17 @@ const topicSummaries = topics.map(topic => {
           topicSummaries.map(topic => (
             <a
               href={getRelativeLocaleUrl(locale, `topics/${topic.slug}`)}
-              class="border-border hover:border-accent/70 group rounded-md border p-4 transition"
+              class="border-border hover:border-accent/70 group rounded-md border p-3 transition sm:p-4"
             >
               <div class="flex items-start justify-between gap-3">
-                <h3 class="group-hover:text-accent text-lg leading-tight font-semibold">
+                <h3 class="group-hover:text-accent text-base leading-tight font-semibold sm:text-lg">
                   {topic.title}
                 </h3>
                 <span class="font-app text-accent text-sm font-semibold whitespace-nowrap">
                   {topic.count}
                 </span>
               </div>
-              <p class="text-muted-foreground mt-2 text-sm leading-6">
+              <p class="text-muted-foreground mt-2 text-xs leading-5 sm:text-sm sm:leading-6">
                 {topic.eyebrow}
               </p>
             </a>
@@ -172,11 +174,11 @@ const topicSummaries = topics.map(topic => {
         <section
           id="featured"
           class:list={[
-            "pt-12 pb-6",
+            "pt-8 pb-6 sm:pt-12",
             { "border-border border-b": recentPosts.length > 0 },
           ]}
         >
-          <h2 class="text-2xl font-semibold tracking-wide">
+          <h2 class="text-xl font-semibold tracking-wide sm:text-2xl">
             {t.home.featured}
           </h2>
           <ul class="mt-5 grid gap-4 sm:grid-cols-2">
@@ -190,8 +192,8 @@ const topicSummaries = topics.map(topic => {
 
     {
       recentPosts.length > 0 && (
-        <section id="recent-posts" class="pt-12 pb-6">
-          <h2 class="text-2xl font-semibold tracking-wide">
+        <section id="recent-posts" class="pt-8 pb-6 sm:pt-12">
+          <h2 class="text-xl font-semibold tracking-wide sm:text-2xl">
             {t.home.recentPosts}
           </h2>
           <ul class="border-border mt-3 divide-y border-y">

@@ -124,7 +124,7 @@ const ogImage = ogImageUrl
   >
     <h1
       style={{ viewTransitionName: toTransitionName(title) }}
-      class="text-accent inline-block text-2xl font-bold sm:text-3xl"
+      class="text-accent inline-block text-[1.75rem] leading-tight font-bold break-words sm:text-3xl"
     >
       {title}
     </h1>
@@ -150,7 +150,7 @@ const ogImage = ogImageUrl
         id="article"
         class:list={[
           "mt-8 w-full",
-          "app-prose max-w-app",
+          "app-prose max-w-app min-w-0",
           "prose-pre:bg-(--shiki-light-bg) dark:prose-pre:bg-(--shiki-dark-bg)",
         ]}
       >
@@ -649,10 +649,42 @@ const ogImage = ogImageUrl
     max-width: min(72rem, calc(100% - 2rem));
   }
 
+  @media (max-width: 640px) {
+    .post-page-main {
+      max-width: 100%;
+    }
+
+    #article.app-prose {
+      margin-top: 2rem;
+      font-size: 0.95rem;
+      line-height: 1.75;
+    }
+
+    #article.app-prose h2 {
+      margin-top: 2rem;
+      font-size: 1.35rem;
+      line-height: 1.3;
+    }
+
+    #article.app-prose h3 {
+      font-size: 1.1rem;
+      line-height: 1.35;
+    }
+
+    #article.app-prose pre {
+      max-width: calc(100vw - 2rem);
+    }
+  }
+
   .article-shell {
     display: grid;
     gap: 2rem;
     align-items: start;
+    min-width: 0;
+  }
+
+  .article-shell > * {
+    min-width: 0;
   }
 
   .article-toc {

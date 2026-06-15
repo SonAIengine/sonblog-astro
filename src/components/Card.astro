@@ -38,7 +38,7 @@ const tags = data.tags.slice(0, 2);
 
 {
   tone === "featured" ? (
-    <li class="border-border hover:border-accent/70 bg-background group rounded-md border p-5 transition">
+    <li class="border-border hover:border-accent/70 bg-background group rounded-md border p-4 transition sm:p-5">
       <a
         href={href}
         class="block focus-visible:outline-2 focus-visible:outline-offset-4"
@@ -51,15 +51,15 @@ const tags = data.tags.slice(0, 2);
         </div>
         <Heading
           transition:name={toTransitionName(title)}
-          class="group-hover:text-accent mt-3 text-xl leading-snug font-semibold"
+          class="post-card-title group-hover:text-accent mt-3 text-lg leading-snug font-semibold sm:text-xl"
         >
           {title}
         </Heading>
-        <p class="post-card-desc text-muted-foreground mt-3 text-sm leading-6">
+        <p class="post-card-desc text-muted-foreground mt-2 text-sm leading-6 sm:mt-3">
           {description}
         </p>
         {tags.length > 0 && (
-          <div class="mt-4 flex flex-wrap gap-2" aria-label="Tags">
+          <div class="mt-3 flex flex-wrap gap-2 sm:mt-4" aria-label="Tags">
             {tags.map(tag => (
               <span class="bg-muted text-muted-foreground rounded px-2 py-1 text-xs">
                 {tag}
@@ -70,32 +70,32 @@ const tags = data.tags.slice(0, 2);
       </a>
     </li>
   ) : tone === "compact" ? (
-    <li class="py-4">
+    <li class="py-3 sm:py-4">
       <a
         href={href}
-        class="group grid gap-2 rounded-md py-1 focus-visible:outline-2 focus-visible:outline-offset-4 sm:grid-cols-[minmax(0,1fr)_8rem]"
+        class="group grid min-w-0 gap-2 rounded-md py-1 focus-visible:outline-2 focus-visible:outline-offset-4 sm:grid-cols-[minmax(0,1fr)_8rem]"
       >
-        <div>
+        <div class="min-w-0">
           <Heading
             transition:name={toTransitionName(title)}
-            class="group-hover:text-accent text-base leading-snug font-semibold"
+            class="post-card-title group-hover:text-accent text-base leading-snug font-semibold"
           >
             {title}
           </Heading>
-          <p class="post-card-desc text-muted-foreground mt-1 text-sm leading-6">
+          <p class="post-card-desc post-card-desc--mobile-short text-muted-foreground mt-1 text-sm leading-6">
             {description}
           </p>
         </div>
         {showMeta && (
           <Datetime
             {...props}
-            class="font-app justify-start text-xs sm:mt-0 sm:justify-end"
+            class="font-app min-w-0 justify-start text-xs sm:mt-0 sm:justify-end"
           />
         )}
       </a>
     </li>
   ) : tone === "learning" ? (
-    <li class="border-border grid gap-3 border-t py-3 sm:grid-cols-[2rem_minmax(0,1fr)]">
+    <li class="border-border grid gap-2 border-t py-3 sm:grid-cols-[2rem_minmax(0,1fr)] sm:gap-3">
       <span class="font-app text-accent text-sm font-semibold">
         {String(index ?? 1).padStart(2, "0")}
       </span>
@@ -105,7 +105,7 @@ const tags = data.tags.slice(0, 2);
       >
         <Heading
           transition:name={toTransitionName(title)}
-          class="group-hover:text-accent text-base leading-snug font-semibold"
+          class="post-card-title group-hover:text-accent text-[0.95rem] leading-snug font-semibold sm:text-base"
         >
           {title}
         </Heading>
@@ -134,6 +134,11 @@ const tags = data.tags.slice(0, 2);
 }
 
 <style>
+  .post-card-title,
+  .post-card-desc {
+    overflow-wrap: anywhere;
+  }
+
   .post-card-desc {
     display: -webkit-box;
     overflow: hidden;
@@ -143,5 +148,11 @@ const tags = data.tags.slice(0, 2);
 
   .post-card-desc--short {
     -webkit-line-clamp: 2;
+  }
+
+  @media (max-width: 640px) {
+    .post-card-desc--mobile-short {
+      -webkit-line-clamp: 2;
+    }
   }
 </style>

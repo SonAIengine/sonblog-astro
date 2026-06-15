@@ -87,13 +87,15 @@ const learningStages = topic.learningPath
   <Breadcrumb />
 
   <Main pageTitle={topic.title} pageDesc={topic.description}>
-    <section class="border-border border-b pb-8">
+    <section class="border-border border-b pb-6 sm:pb-8">
       <p
-        class="text-accent font-app text-xs font-semibold tracking-wide uppercase"
+        class="text-accent font-app text-xs leading-5 font-semibold tracking-wide uppercase"
       >
         {topic.eyebrow}
       </p>
-      <div class="font-app mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+      <div
+        class="font-app mt-4 grid grid-cols-3 gap-3 text-sm sm:flex sm:flex-wrap sm:gap-x-6 sm:gap-y-2"
+      >
         <span>
           <strong class="text-accent text-base">{topicPosts.length}</strong>{
             " "
@@ -113,17 +115,19 @@ const learningStages = topic.learningPath
 
     {
       learningStages.length > 0 && (
-        <section class="border-border border-b py-8">
-          <h2 class="text-xl font-semibold">학습 경로</h2>
-          <ol class="mt-5 grid gap-5">
+        <section class="border-border border-b py-7 sm:py-8">
+          <h2 class="text-lg font-semibold sm:text-xl">학습 경로</h2>
+          <ol class="mt-4 grid gap-4 sm:mt-5 sm:gap-5">
             {learningStages.map((stage, index) => (
-              <li class="border-border rounded-md border p-4 sm:p-5">
-                <div class="grid gap-3 sm:grid-cols-[4rem_minmax(0,1fr)]">
+              <li class="border-border rounded-md border p-3 sm:p-5">
+                <div class="grid gap-2 sm:grid-cols-[4rem_minmax(0,1fr)] sm:gap-3">
                   <p class="font-app text-accent text-xs font-semibold tracking-wide uppercase">
                     Step {index + 1}
                   </p>
                   <div>
-                    <h3 class="text-lg font-semibold">{stage.title}</h3>
+                    <h3 class="text-base font-semibold sm:text-lg">
+                      {stage.title}
+                    </h3>
                     <p class="text-muted-foreground mt-2 text-sm leading-6">
                       {stage.description}
                     </p>
@@ -152,9 +156,9 @@ const learningStages = topic.learningPath
 
     {
       featuredPosts.length > 0 && (
-        <section class="border-border border-b py-8">
-          <h2 class="text-xl font-semibold">대표 글</h2>
-          <ul class="mt-5 grid gap-4 sm:grid-cols-2">
+        <section class="border-border border-b py-7 sm:py-8">
+          <h2 class="text-lg font-semibold sm:text-xl">대표 글</h2>
+          <ul class="mt-4 grid gap-3 sm:mt-5 sm:grid-cols-2 sm:gap-4">
             {featuredPosts.map(
               post => post && <Card variant="h3" tone="featured" {...post} />
             )}
@@ -165,9 +169,9 @@ const learningStages = topic.learningPath
 
     {
       topTags.length > 0 && (
-        <section class="border-border border-b py-8">
-          <h2 class="text-xl font-semibold">핵심 태그</h2>
-          <ul class="mt-4 flex flex-wrap gap-4">
+        <section class="border-border border-b py-7 sm:py-8">
+          <h2 class="text-lg font-semibold sm:text-xl">핵심 태그</h2>
+          <ul class="mt-4 flex flex-wrap gap-3 sm:gap-4">
             {topTags.map(({ tag, tagName, count }) => (
               <Tag {tag} {tagName} {count} size="sm" />
             ))}
@@ -178,8 +182,8 @@ const learningStages = topic.learningPath
 
     {
       topSeries.length > 0 && (
-        <section class="border-border border-b py-8">
-          <h2 class="text-xl font-semibold">시리즈</h2>
+        <section class="border-border border-b py-7 sm:py-8">
+          <h2 class="text-lg font-semibold sm:text-xl">시리즈</h2>
           <ul class="mt-4 space-y-2">
             {topSeries.map(([name, count]) => (
               <li class="text-sm">
@@ -197,9 +201,9 @@ const learningStages = topic.learningPath
       )
     }
 
-    <section class="py-8">
+    <section class="py-7 sm:py-8">
       <div class="flex items-center justify-between gap-4">
-        <h2 class="text-xl font-semibold">최신 글</h2>
+        <h2 class="text-lg font-semibold sm:text-xl">최신 글</h2>
         <a
           class="text-accent text-sm underline decoration-dashed underline-offset-4"
           href={getRelativeLocaleUrl(locale, "posts")}
