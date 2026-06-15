@@ -206,10 +206,12 @@ window.initGraphViz = function initGraphViz() {
     // 줌 레벨/링크 길이와 무관하게 거의 항상 또렷하게 (짧은 링크도 안 사라지게)
     linkVisibilityDistanceRange: [1, 6],
     linkVisibilityMinTransparency: 0.75,
-    // 곡선 링크는 엣지당 16세그먼트를 시뮬레이션 매 프레임 재계산 →
-    // 3005엣지 × 16 = ~4.8만 세그먼트로 초기 로딩 시 브라우저가 멈춤.
-    // 직선 링크로 전환해 GPU 지오메트리/메모리 부담 제거.
-    curvedLinks: false,
+    // disableSimulation으로 좌표가 정적이라 곡선 지오메트리는 초기 1회만 계산된다
+    // (예전엔 시뮬레이션 매 프레임 재계산이라 멈췄지만, 이제 부담 없음).
+    curvedLinks: true,
+    curvedLinkSegments: 16,
+    curvedLinkWeight: 0.5,
+    curvedLinkControlPointDistance: 0.4,
 
     // 분류 허브에 토픽 이름 고정 라벨 + 호버 라벨
     showDynamicLabels: false,
