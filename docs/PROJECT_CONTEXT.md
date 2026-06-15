@@ -90,8 +90,18 @@ src/content/posts/
 - graph 원본 산출물은 `public/assets/graph/graph-data.json`이다.
 - `pnpm run graph` 또는 `pnpm run build`가 community/layout을 갱신한다.
 - `/graph/` 페이지는 초기 HTML에 graph JSON을 inline하지 않는다.
-- 사용자가 `그래프 로드`를 누르면 JSON과 graph bundle을 lazy load한다.
+- `/graph/`는 idle 시점에 JSON과 graph bundle을 자동 lazy load한다.
+- 그래프 초기화 실패 시 로딩 패널을 유지하고 재시도 버튼을 노출한다.
+- 우측 패널은 그래프 검색 추천 칩과 노드 선택/검색 결과를 함께 제공한다.
 - graph 검색도 raw query 없이 hash 기반 GoatCounter 이벤트만 보낸다.
+
+## UI/UX 구조
+
+- 공통 글 카드 `src/components/Card.astro`는 `tone`으로 목록 밀도를 나눈다.
+- 홈 대표 글은 `tone="featured"`, 최신 글은 `tone="compact"`를 사용한다.
+- 토픽 학습 경로는 `tone="learning"`으로 단계 안의 글을 compact row로 표시한다.
+- `/search/`는 추천 검색어 칩, Pagefind 결과 라벨, 시맨틱 추천 결과 라벨을 함께 제공한다.
+- 포스트 상세 페이지는 데스크톱에서 본문 `h2/h3` 기반 sticky TOC를 자동 생성한다.
 
 ## Topic Hub
 

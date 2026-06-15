@@ -115,19 +115,32 @@ const learningStages = topic.learningPath
       learningStages.length > 0 && (
         <section class="border-border border-b py-8">
           <h2 class="text-xl font-semibold">학습 경로</h2>
-          <ol class="mt-4 grid gap-4">
+          <ol class="mt-5 grid gap-5">
             {learningStages.map((stage, index) => (
-              <li class="border-border rounded-md border p-4">
-                <p class="text-accent font-app text-xs font-semibold uppercase">
-                  Step {index + 1}
-                </p>
-                <h3 class="mt-1 text-lg font-semibold">{stage.title}</h3>
-                <p class="text-muted-foreground mt-2 text-sm">
-                  {stage.description}
-                </p>
+              <li class="border-border rounded-md border p-4 sm:p-5">
+                <div class="grid gap-3 sm:grid-cols-[4rem_minmax(0,1fr)]">
+                  <p class="font-app text-accent text-xs font-semibold tracking-wide uppercase">
+                    Step {index + 1}
+                  </p>
+                  <div>
+                    <h3 class="text-lg font-semibold">{stage.title}</h3>
+                    <p class="text-muted-foreground mt-2 text-sm leading-6">
+                      {stage.description}
+                    </p>
+                  </div>
+                </div>
                 <ul class="mt-4">
                   {stage.posts.map(
-                    post => post && <Card variant="h3" {...post} />
+                    (post, postIndex) =>
+                      post && (
+                        <Card
+                          variant="h3"
+                          tone="learning"
+                          index={postIndex + 1}
+                          showMeta={false}
+                          {...post}
+                        />
+                      )
                   )}
                 </ul>
               </li>
@@ -141,8 +154,10 @@ const learningStages = topic.learningPath
       featuredPosts.length > 0 && (
         <section class="border-border border-b py-8">
           <h2 class="text-xl font-semibold">대표 글</h2>
-          <ul>
-            {featuredPosts.map(post => post && <Card variant="h3" {...post} />)}
+          <ul class="mt-5 grid gap-4 sm:grid-cols-2">
+            {featuredPosts.map(
+              post => post && <Card variant="h3" tone="featured" {...post} />
+            )}
           </ul>
         </section>
       )
@@ -192,8 +207,12 @@ const learningStages = topic.learningPath
           전체 글
         </a>
       </div>
-      <ul>
-        {latestPosts.map(post => <Card variant="h3" {...post} />)}
+      <ul class="border-border mt-3 divide-y border-y">
+        {
+          latestPosts.map(post => (
+            <Card variant="h3" tone="compact" {...post} />
+          ))
+        }
       </ul>
     </section>
   </Main>

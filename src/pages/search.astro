@@ -25,6 +25,7 @@ const backUrl = config.features.showBackButton
 const pagefindBundlePath = getAssetPath("pagefind/");
 
 const t = useTranslations(locale);
+const recommendedQueries = ["RAG", "Qdrant", "vLLM", "K3s", "MCP", "Tauri"];
 ---
 
 <Layout title={`${t.pages.searchTitle} | ${config.site.title}`}>
@@ -33,14 +34,40 @@ const t = useTranslations(locale);
   <Breadcrumb />
 
   <Main pageTitle={t.pages.searchTitle} pageDesc={t.pages.searchDesc}>
+    <section class="search-suggestions" aria-label="추천 검색어">
+      <div>
+        <p
+          class="font-app text-accent text-xs font-semibold tracking-wide uppercase"
+        >
+          Quick search
+        </p>
+        <p class="text-muted-foreground mt-1 text-sm">
+          자주 이어지는 주제로 바로 검색해보세요.
+        </p>
+      </div>
+      <div class="search-suggestion-list">
+        {
+          recommendedQueries.map(query => (
+            <button
+              class="search-suggestion"
+              type="button"
+              data-search-query={query}
+            >
+              {query}
+            </button>
+          ))
+        }
+      </div>
+    </section>
+
     <section
       id="semantic-search"
-      class="border-border bg-muted/40 mb-6 hidden rounded-md border p-4"
+      class="border-border bg-muted/30 mb-6 hidden rounded-md border p-4"
       data-search-api="https://search.infoedu.co.kr"
       aria-live="polite"
     >
       <div class="mb-3 flex items-center justify-between gap-4">
-        <h2 class="text-base font-semibold">관련 결과</h2>
+        <h2 class="text-base font-semibold">시맨틱 추천</h2>
         <span
           id="semantic-search-meta"
           class="text-muted-foreground font-app text-xs"
@@ -189,6 +216,7 @@ const t = useTranslations(locale);
       const clearButton = document.querySelector(".pagefind-ui__search-clear");
       searchInput?.addEventListener("input", resetSearchParam);
       clearButton?.addEventListener("click", resetSearchParam);
+      bindSearchSuggestions(searchInput as HTMLInputElement | null, search);
       attachSemanticSearch(searchInput as HTMLInputElement | null);
       observePagefindResults(searchInput as HTMLInputElement | null);
 
@@ -198,6 +226,33 @@ const t = useTranslations(locale);
         }
       }
     });
+
+    function bindSearchSuggestions(
+      searchInput: HTMLInputElement | null,
+      search: { triggerSearch: (term: string) => void }
+    ) {
+      if (!searchInput || searchInput.dataset.suggestionBound === "true") {
+        return;
+      }
+
+      const buttons = document.querySelectorAll<HTMLButtonElement>(
+        "[data-search-query]"
+      );
+      if (buttons.length === 0) return;
+
+      searchInput.dataset.suggestionBound = "true";
+      buttons.forEach(button => {
+        button.addEventListener("click", () => {
+          const query = button.dataset.searchQuery?.trim();
+          if (!query) return;
+
+          searchInput.value = query;
+          search.triggerSearch(query);
+          searchInput.dispatchEvent(new Event("input", { bubbles: true }));
+          searchInput.focus();
+        });
+      });
+    }
 
     function attachSemanticSearch(searchInput: HTMLInputElement | null) {
       if (
@@ -318,6 +373,12 @@ const t = useTranslations(locale);
       semanticResults.replaceChildren(
         ...results.map(result => {
           const item = document.createElement("li");
+          item.className = "semantic-result-item";
+
+          const badge = document.createElement("span");
+          badge.className = "search-source-badge";
+          badge.textContent = "Semantic";
+
           const link = document.createElement("a");
           link.href = result.url;
           link.className =
@@ -332,7 +393,7 @@ const t = useTranslations(locale);
           score.textContent =
             typeof result.score === "number" ? result.score.toFixed(3) : "";
 
-          item.append(link, score);
+          item.append(badge, link, score);
           return item;
         })
       );
@@ -352,6 +413,76 @@ const t = useTranslations(locale);
 </script>
 
 <style is:global>
+  .search-suggestions {
+    display: grid;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 0.375rem;
+    background: color-mix(in oklab, var(--muted) 35%, transparent);
+  }
+
+  @media (min-width: 640px) {
+    .search-suggestions {
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+    }
+  }
+
+  .search-suggestion-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .search-suggestion,
+  .search-source-badge,
+  #pagefind-search .pagefind-ui__result-title::before {
+    display: inline-flex;
+    align-items: center;
+    min-height: 1.75rem;
+    border: 1px solid var(--border);
+    border-radius: 0.375rem;
+    padding: 0.25rem 0.55rem;
+    font-family: var(--font-app);
+    font-size: 0.75rem;
+    line-height: 1;
+    color: var(--muted-foreground);
+    background: var(--background);
+  }
+
+  .search-suggestion {
+    cursor: pointer;
+    transition:
+      border-color 160ms ease,
+      color 160ms ease;
+  }
+
+  .search-suggestion:hover,
+  .search-suggestion:focus-visible {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .semantic-result-item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .semantic-result-item:first-child {
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .search-source-badge {
+    color: var(--accent);
+  }
+
   #pagefind-search {
     --pagefind-ui-font: var(--font-app);
     --pagefind-ui-text: var(--foreground);
@@ -383,6 +514,12 @@ const t = useTranslations(locale);
       outline-color: var(--accent);
       text-decoration-style: dashed;
       text-underline-offset: 4px;
+    }
+
+    .pagefind-ui__result-title::before {
+      content: "Pagefind";
+      margin-inline-end: 0.5rem;
+      vertical-align: text-bottom;
     }
 
     .pagefind-ui__result-title a:focus-visible,

@@ -11,6 +11,7 @@ import LinkButton from "@/components/LinkButton.astro";
 import { getSortedPosts } from "@/utils/getSortedPosts";
 import { useTranslations } from "@/i18n";
 import config from "@/config";
+import { topics } from "@/data/topics";
 
 const { posts: postsConfig } = config;
 
@@ -22,6 +23,17 @@ const sortedPosts = getSortedPosts(posts);
 const featuredPosts = sortedPosts.filter(({ data }) => data.featured);
 const recentPosts = sortedPosts.filter(({ data }) => !data.featured);
 const homePath = getRelativeLocaleUrl(locale, "");
+const topicSummaries = topics.map(topic => {
+  const topicTags = new Set(topic.tags.map(tag => tag.toLowerCase()));
+  const count = posts.filter(post => {
+    const filePath = post.filePath ?? "";
+    const inCategory = filePath.includes(`/posts/${topic.slug}/`);
+    const hasTag = post.data.tags.some(tag => topicTags.has(tag.toLowerCase()));
+    return inCategory || hasTag;
+  }).length;
+
+  return { ...topic, count };
+});
 ---
 
 <Layout>
@@ -112,6 +124,49 @@ const homePath = getRelativeLocaleUrl(locale, "");
       </div>
     </section>
 
+    <section id="expertise" class="border-border border-b py-8">
+      <div class="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p
+            class="font-app text-accent text-xs font-semibold tracking-wide uppercase"
+          >
+            Topics
+          </p>
+          <h2 class="mt-1 text-2xl font-semibold tracking-wide">
+            관심사별로 바로 읽기
+          </h2>
+        </div>
+        <a
+          href={getRelativeLocaleUrl(locale, "topics")}
+          class="text-accent text-sm underline decoration-dashed underline-offset-4"
+        >
+          전체 토픽
+        </a>
+      </div>
+      <div class="mt-5 grid gap-3 sm:grid-cols-2">
+        {
+          topicSummaries.map(topic => (
+            <a
+              href={getRelativeLocaleUrl(locale, `topics/${topic.slug}`)}
+              class="border-border hover:border-accent/70 group rounded-md border p-4 transition"
+            >
+              <div class="flex items-start justify-between gap-3">
+                <h3 class="group-hover:text-accent text-lg leading-tight font-semibold">
+                  {topic.title}
+                </h3>
+                <span class="font-app text-accent text-sm font-semibold whitespace-nowrap">
+                  {topic.count}
+                </span>
+              </div>
+              <p class="text-muted-foreground mt-2 text-sm leading-6">
+                {topic.eyebrow}
+              </p>
+            </a>
+          ))
+        }
+      </div>
+    </section>
+
     {
       featuredPosts.length > 0 && (
         <section
@@ -124,9 +179,9 @@ const homePath = getRelativeLocaleUrl(locale, "");
           <h2 class="text-2xl font-semibold tracking-wide">
             {t.home.featured}
           </h2>
-          <ul>
+          <ul class="mt-5 grid gap-4 sm:grid-cols-2">
             {featuredPosts.map(data => (
-              <Card variant="h3" {...data} />
+              <Card variant="h3" tone="featured" {...data} />
             ))}
           </ul>
         </section>
@@ -139,9 +194,9 @@ const homePath = getRelativeLocaleUrl(locale, "");
           <h2 class="text-2xl font-semibold tracking-wide">
             {t.home.recentPosts}
           </h2>
-          <ul>
+          <ul class="border-border mt-3 divide-y border-y">
             {recentPosts.slice(0, postsConfig.perIndex).map(data => (
-              <Card variant="h3" {...data} />
+              <Card variant="h3" tone="compact" {...data} />
             ))}
           </ul>
         </section>

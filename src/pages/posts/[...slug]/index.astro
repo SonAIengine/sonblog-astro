@@ -116,7 +116,10 @@ const ogImage = ogImageUrl
 
   <main
     id="main-content"
-    class:list={["app-layout", { "mt-8": !config.features.showBackButton }]}
+    class:list={[
+      "app-layout post-page-main",
+      { "mt-8": !config.features.showBackButton },
+    ]}
     data-pagefind-body
   >
     <h1
@@ -142,16 +145,29 @@ const ogImage = ogImageUrl
 
     <SeriesNav series={post.data.series} currentId={post.id} />
 
-    <article
-      id="article"
-      class:list={[
-        "mt-8 w-full",
-        "app-prose max-w-app",
-        "prose-pre:bg-(--shiki-light-bg) dark:prose-pre:bg-(--shiki-dark-bg)",
-      ]}
-    >
-      <Content />
-    </article>
+    <div class="article-shell">
+      <article
+        id="article"
+        class:list={[
+          "mt-8 w-full",
+          "app-prose max-w-app",
+          "prose-pre:bg-(--shiki-light-bg) dark:prose-pre:bg-(--shiki-dark-bg)",
+        ]}
+      >
+        <Content />
+      </article>
+
+      <aside
+        id="article-toc"
+        class="article-toc"
+        aria-label="글 목차"
+        data-pagefind-ignore
+        hidden
+      >
+        <p class="article-toc-title">On this page</p>
+        <ol id="article-toc-list"></ol>
+      </aside>
+    </div>
 
     <hr class="my-8 border-dashed" />
 
@@ -222,6 +238,75 @@ const ogImage = ogImageUrl
     });
   }
   updateScrollProgress();
+
+  function buildArticleToc() {
+    const toc = document.getElementById("article-toc");
+    const list = document.getElementById("article-toc-list");
+    const headings = Array.from(
+      document.querySelectorAll("#article h2[id], #article h3[id]")
+    );
+
+    if (!toc || !list || headings.length < 2) {
+      toc?.remove();
+      return;
+    }
+
+    const linksById = new Map();
+    const fragment = document.createDocumentFragment();
+
+    for (const heading of headings) {
+      const id = heading.id;
+      const text = heading.textContent?.trim();
+      if (!id || !text) continue;
+
+      const item = document.createElement("li");
+      item.className =
+        heading.tagName === "H3"
+          ? "article-toc-item article-toc-item--nested"
+          : "article-toc-item";
+
+      const link = document.createElement("a");
+      link.href = "#" + id;
+      link.textContent = text;
+      linksById.set(id, link);
+
+      item.appendChild(link);
+      fragment.appendChild(item);
+    }
+
+    if (linksById.size < 2) {
+      toc.remove();
+      return;
+    }
+
+    list.replaceChildren(fragment);
+    toc.hidden = false;
+
+    const setActive = id => {
+      for (const link of linksById.values()) {
+        link.classList.toggle("is-active", link.hash === "#" + id);
+      }
+    };
+
+    setActive(headings[0].id);
+
+    if (!("IntersectionObserver" in window)) return;
+
+    const observer = new IntersectionObserver(
+      entries => {
+        const visible = entries
+          .filter(entry => entry.isIntersecting)
+          .sort(
+            (a, b) => a.boundingClientRect.top - b.boundingClientRect.top
+          )[0];
+        if (visible?.target?.id) setActive(visible.target.id);
+      },
+      { rootMargin: "-18% 0px -72% 0px", threshold: [0, 1] }
+    );
+
+    for (const heading of headings) observer.observe(heading);
+  }
+  buildArticleToc();
 
   function addHeadingLinks() {
     const headings = Array.from(
@@ -558,3 +643,81 @@ const ogImage = ogImageUrl
     window.scrollTo({ left: 0, top: 0, behavior: "instant" })
   );
 </script>
+
+<style is:global>
+  .post-page-main {
+    max-width: min(72rem, calc(100% - 2rem));
+  }
+
+  .article-shell {
+    display: grid;
+    gap: 2rem;
+    align-items: start;
+  }
+
+  .article-toc {
+    display: none;
+  }
+
+  @media (min-width: 1100px) {
+    .article-shell {
+      grid-template-columns: minmax(0, 48rem) 15rem;
+      justify-content: center;
+    }
+
+    .article-toc {
+      position: sticky;
+      top: 5rem;
+      display: block;
+      max-height: calc(100dvh - 6rem);
+      margin-top: 2rem;
+      overflow: auto;
+      padding-inline-start: 0.25rem;
+    }
+
+    .article-toc[hidden] {
+      display: none;
+    }
+  }
+
+  .article-toc-title {
+    margin-bottom: 0.75rem;
+    font-family: var(--font-app);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+
+  .article-toc ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .article-toc a {
+    display: block;
+    border-inline-start: 2px solid var(--border);
+    padding: 0.35rem 0 0.35rem 0.75rem;
+    color: var(--muted-foreground);
+    font-size: 0.875rem;
+    line-height: 1.35;
+    text-decoration: none;
+    transition:
+      border-color 160ms ease,
+      color 160ms ease;
+  }
+
+  .article-toc a:hover,
+  .article-toc a:focus-visible,
+  .article-toc a.is-active {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .article-toc-item--nested a {
+    padding-inline-start: 1.5rem;
+    font-size: 0.8125rem;
+  }
+</style>

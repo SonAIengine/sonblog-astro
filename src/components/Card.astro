@@ -4,28 +4,144 @@ import { getPostUrl } from "@/utils/getPostPaths";
 import { toTransitionName } from "@/utils/toTransitionName";
 import Datetime from "./Datetime.astro";
 
+type CardTone = "list" | "featured" | "compact" | "learning";
+
 type Props = {
   variant?: "h2" | "h3";
+  tone?: CardTone;
+  index?: number;
+  showMeta?: boolean;
 } & CollectionEntry<"posts">;
 
-const { variant: Heading = "h2", id, data, filePath } = Astro.props;
+const {
+  variant: Heading = "h2",
+  tone = "list",
+  index,
+  showMeta = true,
+  id,
+  data,
+  filePath,
+} = Astro.props;
 
 const { title, description, ...props } = data;
+const href = getPostUrl(id, filePath, Astro.currentLocale);
+const categorySlug = id.split("/")[0] ?? "";
+const categoryLabel =
+  new Map([
+    ["ai", "AI"],
+    ["search-engine", "Search"],
+    ["full-stack", "Full Stack"],
+    ["devops", "DevOps"],
+  ]).get(categorySlug) ?? categorySlug.replaceAll("-", " ");
+const tags = data.tags.slice(0, 2);
 ---
 
-<li class="my-6">
-  <a
-    href={getPostUrl(id, filePath, Astro.currentLocale)}
-    class:list={[
-      "text-accent inline-block text-lg font-medium",
-      "decoration-dashed underline-offset-4 hover:underline",
-      "focus-visible:no-underline focus-visible:underline-offset-0",
-    ]}
-  >
-    <Heading transition:name={toTransitionName(title)}>
-      {title}
-    </Heading>
-  </a>
-  <Datetime {...props} />
-  <p>{description}</p>
-</li>
+{
+  tone === "featured" ? (
+    <li class="border-border hover:border-accent/70 bg-background group rounded-md border p-5 transition">
+      <a
+        href={href}
+        class="block focus-visible:outline-2 focus-visible:outline-offset-4"
+      >
+        <div class="font-app text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+          {categoryLabel && (
+            <span class="text-accent font-semibold">{categoryLabel}</span>
+          )}
+          {showMeta && <Datetime {...props} class="text-xs" />}
+        </div>
+        <Heading
+          transition:name={toTransitionName(title)}
+          class="group-hover:text-accent mt-3 text-xl leading-snug font-semibold"
+        >
+          {title}
+        </Heading>
+        <p class="post-card-desc text-muted-foreground mt-3 text-sm leading-6">
+          {description}
+        </p>
+        {tags.length > 0 && (
+          <div class="mt-4 flex flex-wrap gap-2" aria-label="Tags">
+            {tags.map(tag => (
+              <span class="bg-muted text-muted-foreground rounded px-2 py-1 text-xs">
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
+      </a>
+    </li>
+  ) : tone === "compact" ? (
+    <li class="py-4">
+      <a
+        href={href}
+        class="group grid gap-2 rounded-md py-1 focus-visible:outline-2 focus-visible:outline-offset-4 sm:grid-cols-[minmax(0,1fr)_8rem]"
+      >
+        <div>
+          <Heading
+            transition:name={toTransitionName(title)}
+            class="group-hover:text-accent text-base leading-snug font-semibold"
+          >
+            {title}
+          </Heading>
+          <p class="post-card-desc text-muted-foreground mt-1 text-sm leading-6">
+            {description}
+          </p>
+        </div>
+        {showMeta && (
+          <Datetime
+            {...props}
+            class="font-app justify-start text-xs sm:mt-0 sm:justify-end"
+          />
+        )}
+      </a>
+    </li>
+  ) : tone === "learning" ? (
+    <li class="border-border grid gap-3 border-t py-3 sm:grid-cols-[2rem_minmax(0,1fr)]">
+      <span class="font-app text-accent text-sm font-semibold">
+        {String(index ?? 1).padStart(2, "0")}
+      </span>
+      <a
+        href={href}
+        class="group rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4"
+      >
+        <Heading
+          transition:name={toTransitionName(title)}
+          class="group-hover:text-accent text-base leading-snug font-semibold"
+        >
+          {title}
+        </Heading>
+        <p class="post-card-desc post-card-desc--short text-muted-foreground mt-1 text-sm leading-6">
+          {description}
+        </p>
+        {showMeta && <Datetime {...props} class="mt-2 text-xs" />}
+      </a>
+    </li>
+  ) : (
+    <li class="my-6">
+      <a
+        href={href}
+        class:list={[
+          "text-accent inline-block text-lg font-medium",
+          "decoration-dashed underline-offset-4 hover:underline",
+          "focus-visible:no-underline focus-visible:underline-offset-0",
+        ]}
+      >
+        <Heading transition:name={toTransitionName(title)}>{title}</Heading>
+      </a>
+      <Datetime {...props} />
+      <p>{description}</p>
+    </li>
+  )
+}
+
+<style>
+  .post-card-desc {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+
+  .post-card-desc--short {
+    -webkit-line-clamp: 2;
+  }
+</style>

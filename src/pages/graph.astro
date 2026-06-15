@@ -18,11 +18,14 @@ const graphDataUrl = "/assets/graph/graph-data.json";
     <span class="graph-toolbar-title">Knowledge Graph</span>
     <span class="graph-toolbar-stats" id="graph-stats">{gm.total_posts} posts · {gm.total_tags} tags · {gm.total_categories} categories</span>
     <span class="graph-toolbar-sep"></span>
-    <label class="graph-filter-chip graph-filter-chip--category"><input type="checkbox" class="graph-filter-cb" data-type="category" checked disabled data-graph-control><span class="chip-dot"></span>카테고리</label>
-    <label class="graph-filter-chip graph-filter-chip--subcategory"><input type="checkbox" class="graph-filter-cb" data-type="subcategory" checked disabled data-graph-control><span class="chip-dot"></span>서브카테고리</label>
-    <label class="graph-filter-chip graph-filter-chip--series"><input type="checkbox" class="graph-filter-cb" data-type="series" checked disabled data-graph-control><span class="chip-dot"></span>시리즈</label>
-    <label class="graph-filter-chip graph-filter-chip--tag"><input type="checkbox" class="graph-filter-cb" data-type="tag" disabled data-graph-control><span class="chip-dot"></span>태그</label>
-    <label class="graph-filter-chip graph-filter-chip--post"><input type="checkbox" class="graph-filter-cb" data-type="post" checked disabled data-graph-control><span class="chip-dot"></span>포스트</label>
+    <div class="graph-filter-group" role="group" aria-label="노드 필터">
+      <span class="graph-filter-label">Filter</span>
+      <label class="graph-filter-chip graph-filter-chip--category"><input type="checkbox" class="graph-filter-cb" data-type="category" checked disabled data-graph-control><span class="chip-dot"></span>카테고리</label>
+      <label class="graph-filter-chip graph-filter-chip--subcategory"><input type="checkbox" class="graph-filter-cb" data-type="subcategory" checked disabled data-graph-control><span class="chip-dot"></span>서브카테고리</label>
+      <label class="graph-filter-chip graph-filter-chip--series"><input type="checkbox" class="graph-filter-cb" data-type="series" checked disabled data-graph-control><span class="chip-dot"></span>시리즈</label>
+      <label class="graph-filter-chip graph-filter-chip--tag"><input type="checkbox" class="graph-filter-cb" data-type="tag" disabled data-graph-control><span class="chip-dot"></span>태그</label>
+      <label class="graph-filter-chip graph-filter-chip--post"><input type="checkbox" class="graph-filter-cb" data-type="post" checked disabled data-graph-control><span class="chip-dot"></span>포스트</label>
+    </div>
     <div class="graph-toolbar-spacer"></div>
     <button id="graph-reset" class="graph-btn" disabled data-graph-control><svg viewBox="0 0 20 20" fill="none" width="12" height="12"><path d="M4 10a6 6 0 1 0 1.5-3.9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M4 5.5V10h4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>초기화</button>
   </div>
@@ -50,10 +53,21 @@ const graphDataUrl = "/assets/graph/graph-data.json";
           <input type="text" id="graph-search" placeholder="글·태그·주제 검색..." autocomplete="off" disabled data-graph-control>
           <button id="graph-search-clear" class="graph-search-clear" aria-label="검색 초기화" disabled data-graph-control><svg viewBox="0 0 16 16" fill="none"><path d="M4 4L12 12M12 4L4 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
         </div>
+        <div class="graph-query-suggestions" aria-label="추천 그래프 검색어">
+          <button class="graph-query-chip" type="button" data-graph-query="RAG" disabled data-graph-control>RAG</button>
+          <button class="graph-query-chip" type="button" data-graph-query="Qdrant" disabled data-graph-control>Qdrant</button>
+          <button class="graph-query-chip" type="button" data-graph-query="vLLM" disabled data-graph-control>vLLM</button>
+          <button class="graph-query-chip" type="button" data-graph-query="K3s" disabled data-graph-control>K3s</button>
+          <button class="graph-query-chip" type="button" data-graph-query="MCP" disabled data-graph-control>MCP</button>
+        </div>
         <div id="gs-meta" class="gs-meta" hidden></div>
       </div>
       <div id="graph-panel-body" class="gp-body">
-        <div class="gs-empty">대기 중</div>
+        <div class="gs-empty gs-empty--intro">
+          <p class="gs-empty-kicker">Graph Search</p>
+          <h2>검색하거나 노드를 선택하세요</h2>
+          <p>글, 태그, 카테고리 사이의 연결을 오른쪽 패널에서 바로 확인할 수 있습니다.</p>
+        </div>
       </div>
     </aside>
 
@@ -77,6 +91,32 @@ const graphDataUrl = "/assets/graph/graph-data.json";
       .forEach(control => {
         control.disabled = false;
       });
+  }
+
+  function disableGraphControls() {
+    document
+      .querySelectorAll<HTMLInputElement | HTMLButtonElement>("[data-graph-control]")
+      .forEach(control => {
+        control.disabled = true;
+      });
+  }
+
+  function bindGraphQuerySuggestions() {
+    const root = document.querySelector<HTMLElement>(".graph-page");
+    const searchInput = document.querySelector<HTMLInputElement>("#graph-search");
+    const buttons = document.querySelectorAll<HTMLButtonElement>("[data-graph-query]");
+    if (!root || !searchInput || buttons.length === 0 || root.dataset.queryBound === "true") return;
+
+    root.dataset.queryBound = "true";
+    buttons.forEach(button => {
+      button.addEventListener("click", () => {
+        const query = button.dataset.graphQuery?.trim();
+        if (!query || button.disabled) return;
+        searchInput.value = query;
+        searchInput.dispatchEvent(new Event("input", { bubbles: true }));
+        searchInput.focus();
+      });
+    });
   }
 
   async function loadGraph() {
@@ -107,15 +147,21 @@ const graphDataUrl = "/assets/graph/graph-data.json";
       })
       .then(() => import("@/scripts/graphViz.js"))
       .then(() => {
+        (window as any).initGraphViz?.();
         panel?.remove();
         enableGraphControls();
-        (window as any).initGraphViz?.();
         root.dataset.graphLoaded = "true";
         root.classList.remove("is-loading");
         root.classList.add("is-loaded");
       })
       .catch(() => {
         graphLoadPromise = null;
+        const graphContainer = document.querySelector<HTMLElement>("#sigma-container");
+        if (graphContainer) {
+          (graphContainer as HTMLElement & { __cosmoInited?: boolean }).__cosmoInited = false;
+          graphContainer.querySelectorAll("canvas, .gp-marker").forEach(element => element.remove());
+        }
+        disableGraphControls();
         root.classList.remove("is-loading");
         root.classList.add("is-load-failed");
         panel?.setAttribute("aria-busy", "false");
@@ -134,6 +180,7 @@ const graphDataUrl = "/assets/graph/graph-data.json";
     const retryButton = document.querySelector<HTMLButtonElement>("#graph-retry");
     if (!root || root.dataset.loaderBound === "true") return;
     root.dataset.loaderBound = "true";
+    bindGraphQuerySuggestions();
 
     retryButton?.addEventListener("click", () => {
       loadGraph();
@@ -386,6 +433,30 @@ const graphDataUrl = "/assets/graph/graph-data.json";
 [data-md-color-scheme="slate"] .graph-btn:hover { background: #1e293b; color: #e2e8f0; }
 /* ── 필터 바 ────────────────────────────────────────────────────────────────── */
 
+.graph-filter-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  padding: 0.14rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--md-default-fg-color--lightest) 42%, transparent);
+}
+.graph-filter-label {
+  padding: 0 0.3rem 0 0.45rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--md-default-fg-color--lighter);
+}
+[data-md-color-scheme="slate"] .graph-filter-group {
+  border-color: #1e293b;
+  background: rgba(15, 23, 42, 0.72);
+}
+[data-md-color-scheme="slate"] .graph-filter-label {
+  color: #64748b;
+}
 .graph-filter-chip {
   display: inline-flex;
   align-items: center;
@@ -400,6 +471,13 @@ const graphDataUrl = "/assets/graph/graph-data.json";
   transition: all 0.15s;
   color: #374151;
   white-space: nowrap;
+}
+.chip-dot {
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 999px;
+  opacity: 0.35;
+  flex-shrink: 0;
 }
 [data-md-color-scheme="slate"] .graph-filter-chip {
   border-color: #1e293b; background: #0f172a; color: #94a3b8;
@@ -1222,6 +1300,22 @@ const graphDataUrl = "/assets/graph/graph-data.json";
     flex-basis: 100%;
     height: 0;
   }
+.graph-filter-group {
+    order: 10;
+    flex: 1 1 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    border-radius: 8px;
+    scrollbar-width: none;
+  }
+.graph-filter-group::-webkit-scrollbar {
+    display: none;
+  }
+.graph-filter-label {
+    position: sticky;
+    left: 0;
+    background: inherit;
+  }
 .graph-filter-chip { order: 10; }
 .graph-filter-chip {
     font-size: 0.62rem;
@@ -1237,6 +1331,14 @@ const graphDataUrl = "/assets/graph/graph-data.json";
 .graph-btn {
     font-size: 0.65rem;
     padding: 0.2rem 0.4rem;
+  }
+.graph-query-suggestions {
+    gap: 0.28rem;
+  }
+.graph-query-chip {
+    min-height: 1.45rem;
+    font-size: 0.64rem;
+    padding: 0.15rem 0.42rem;
   }
 /* sigma 컨테이너: 모바일에서도 flex 레이아웃 유지 */
   #sigma-container {
@@ -1432,6 +1534,46 @@ body:has(.graph-page) {
   padding: 0.5rem 1.9rem 0.5rem 2rem;
 }
 .graph-side .graph-search-icon { left: 0.7rem; }
+.graph-query-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+}
+.graph-query-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.55rem;
+  padding: 0.18rem 0.5rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 999px;
+  background: var(--md-default-bg-color);
+  color: var(--md-default-fg-color--light);
+  font-family: var(--md-text-font);
+  font-size: 0.68rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.14s, color 0.14s, background 0.14s;
+}
+.graph-query-chip:hover,
+.graph-query-chip:focus-visible {
+  border-color: var(--md-primary-fg-color);
+  color: var(--md-primary-fg-color);
+}
+.graph-query-chip:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+[data-md-color-scheme="slate"] .graph-query-chip {
+  border-color: #1e293b;
+  background: #0f172a;
+  color: #94a3b8;
+}
+[data-md-color-scheme="slate"] .graph-query-chip:hover,
+[data-md-color-scheme="slate"] .graph-query-chip:focus-visible {
+  border-color: #a78bfa;
+  color: #c4b5fd;
+}
 
 /* 패널 본문: 이 컨테이너가 스크롤 (상세의 내부 스크롤은 해제) */
 .graph-side .gp-body {
@@ -1561,6 +1703,37 @@ body:has(.graph-page) {
   text-align: center;
   font-size: 0.82rem;
   color: var(--md-default-fg-color--light);
+}
+.gs-empty--intro {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  min-height: 100%;
+  gap: 0.55rem;
+  padding: 2rem 1.25rem;
+}
+.gs-empty--intro h2 {
+  margin: 0;
+  max-width: 16rem;
+  font-size: 1rem;
+  line-height: 1.35;
+  color: var(--md-default-fg-color);
+}
+.gs-empty--intro p {
+  margin: 0;
+  max-width: 20rem;
+  line-height: 1.6;
+}
+.gs-empty-kicker {
+  font-family: var(--md-text-font);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--md-primary-fg-color);
+}
+[data-md-color-scheme="slate"] .gs-empty--intro h2 {
+  color: #e2e8f0;
 }
 
 /* 뒤로가기 (상세 → 목록) */
