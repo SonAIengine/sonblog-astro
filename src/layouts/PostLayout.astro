@@ -16,13 +16,20 @@ const { site } = config;
 const { title, description, ogImage, canonicalURL, pubDatetime, modDatetime } =
   Astro.props;
 
+const pageUrl = canonicalURL ?? new URL(Astro.url.pathname, Astro.site).href;
+
 const structuredData = {
   "@context": "https://schema.org",
   "@type": "BlogPosting",
   headline: title ?? site.title,
+  description,
   image: ogImage,
+  mainEntityOfPage: {
+    "@type": "WebPage",
+    "@id": pageUrl,
+  },
   ...(pubDatetime && { datePublished: pubDatetime.toISOString() }),
-  ...(modDatetime && { dateModified: modDatetime.toISOString() }),
+  dateModified: (modDatetime ?? pubDatetime)?.toISOString(),
   author: [
     {
       "@type": "Person",
@@ -33,11 +40,8 @@ const structuredData = {
 };
 ---
 
-<Layout {title} {description} {ogImage} {canonicalURL}>
+<Layout {title} {description} {ogImage} {canonicalURL} ogType="article">
   <Fragment slot="head">
-    <!-- Override og:type for article pages -->
-    <meta property="og:type" content="article" />
-
     {
       pubDatetime && (
         <meta
@@ -79,19 +83,20 @@ const structuredData = {
     }
     function loadMermaid() {
       if (!mermaidPromise) {
-        mermaidPromise = import(
-          "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs"
-        ).then(function (m) {
-          var mermaid = m.default;
-          var dark =
-            document.documentElement.getAttribute("data-theme") === "dark";
-          mermaid.initialize({
-            startOnLoad: false,
-            theme: dark ? "dark" : "neutral",
-            securityLevel: "loose",
-          });
-          return mermaid;
-        });
+        mermaidPromise =
+          import("https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs").then(
+            function (m) {
+              var mermaid = m.default;
+              var dark =
+                document.documentElement.getAttribute("data-theme") === "dark";
+              mermaid.initialize({
+                startOnLoad: false,
+                theme: dark ? "dark" : "neutral",
+                securityLevel: "loose",
+              });
+              return mermaid;
+            }
+          );
       }
       return mermaidPromise;
     }

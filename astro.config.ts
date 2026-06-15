@@ -14,6 +14,7 @@ import { unified } from "@astrojs/markdown-remark";
 import remarkToc from "remark-toc";
 import remarkCollapse from "remark-collapse";
 import rehypeCallouts from "rehype-callouts";
+import { rehypeAutoInternalLinks } from "./src/utils/rehypeAutoInternalLinks";
 import { remarkMermaid } from "./src/utils/remarkMermaid";
 import {
   transformerNotationDiff,
@@ -31,8 +32,14 @@ export default defineConfig({
   integrations: [
     mdx(),
     sitemap({
-      filter: page =>
-        config.features?.showArchives !== false || !page.endsWith("/archives/"),
+      filter: page => {
+        const pathname = new URL(page).pathname;
+        return (
+          !(pathname in seoRedirects) &&
+          (config.features?.showArchives !== false ||
+            !page.endsWith("/archives/"))
+        );
+      },
     }),
   ],
   i18n: {
@@ -49,7 +56,7 @@ export default defineConfig({
         [remarkCollapse, { test: "Table of contents" }],
         remarkMermaid,
       ],
-      rehypePlugins: [rehypeCallouts],
+      rehypePlugins: [rehypeCallouts, rehypeAutoInternalLinks],
     }),
     shikiConfig: {
       themes: { light: "min-light", dark: "night-owl" },
@@ -65,6 +72,10 @@ export default defineConfig({
   },
   vite: {
     plugins: [tailwindcss()],
+    build: {
+      // The graph page is intentionally powered by lazy-loaded Cosmograph/WebGL.
+      chunkSizeWarningLimit: 900,
+    },
     resolve: {
       alias: {
         // Cosmograph 내부 텔레메트리(Supabase 전송) 차단 + 번들 경량화
@@ -82,7 +93,12 @@ export default defineConfig({
       // 라틴/숫자는 Sans Code. 한글은 이 폰트에 글리프가 없어 다음 폰트(Pretendard)로
       // 넘어간다 → Windows에서 monospace(굴림)로 깨지던 문제 해결.
       // Pretendard는 Layout.astro에서 CDN(dynamic-subset)으로 로드하며 family명이 "Pretendard".
-      fallbacks: ["Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", "monospace"],
+      fallbacks: [
+        "Pretendard",
+        "Apple SD Gothic Neo",
+        "Malgun Gothic",
+        "monospace",
+      ],
       weights: [400, 500, 600, 700],
       styles: ["normal"],
       formats: ["woff2"],

@@ -69,6 +69,15 @@ function escapeHtml(s) {
     .replace(/>/g, "&gt;");
 }
 
+function queryKey(query) {
+  let hash = 2166136261;
+  for (let index = 0; index < query.length; index += 1) {
+    hash ^= query.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(36);
+}
+
 // ── 메인 진입점 ──────────────────────────────────────────────────────────────
 let _instance = null;
 
@@ -130,6 +139,32 @@ window.initGraphViz = function initGraphViz() {
     clusterNodes: [],
   };
   let renderSeq = 0; // 패널 렌더 소유권 토큰 (비동기 검색이 상세를 덮어쓰는 레이스 방지)
+  const trackedGraphEvents = new Set();
+
+  function countGraphEvent(path, title) {
+    if (trackedGraphEvents.has(path)) return;
+    trackedGraphEvents.add(path);
+    window.goatcounter?.count?.({ path, title });
+  }
+
+  function trackGraphSearch(source, query, count, ms) {
+    const q = query.trim().toLowerCase();
+    if (q.length < 2) return;
+    const latency = typeof ms === "number" ? `&ms=${Math.round(ms)}` : "";
+    countGraphEvent(
+      `/event/graph-search/${source}/${queryKey(q)}?count=${Math.min(count, 80)}&qlen=${q.length}${latency}`,
+      `graph ${source} search`
+    );
+  }
+
+  function trackGraphClick(node) {
+    const q = currentQuery.trim().toLowerCase();
+    if (q.length < 2 || !node) return;
+    countGraphEvent(
+      `/event/graph-search/click/${queryKey(q)}?type=${encodeURIComponent(node.type || "unknown")}`,
+      "graph search click"
+    );
+  }
 
   // post 노드 → 연결된 태그 id 집합 (비슷한 글 계산용)
   const postTagSet = new Map();
@@ -422,7 +457,6 @@ window.initGraphViz = function initGraphViz() {
   const allPosts = data.nodes
     .filter(n => n.type === "post" && n.url)
     .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
-  const TYPE_ORDER = { post: 0, tag: 1, subcategory: 2, category: 3, series: 4 };
   let currentQuery = "";
   // 검색: synaptic-memory 서버(우선) → 실패/부재 시 클라이언트 BM25 폴백
 
@@ -492,7 +526,7 @@ window.initGraphViz = function initGraphViz() {
     _oramaPromise = (async () => {
       const orama = await import("@orama/orama");
       const docs = await fetch(`${BASE}/search-index.json`).then(r => r.json());
-      const db = await orama.create({
+      const db = orama.create({
         schema: {
           title: "string",
           description: "string",
@@ -524,19 +558,6 @@ window.initGraphViz = function initGraphViz() {
     const desc = doc.description || doc.body || "";
     return desc ? desc.slice(0, 130) + (desc.length > 130 ? "…" : "") : "";
   }
-  // ── 시멘틱 검색 (Phase 3: 빌드 임베딩 + 브라우저 WebGPU 쿼리 임베딩) ─────────
-  const SEM_MODEL = "Xenova/multilingual-e5-small";
-  const statusEl = document.getElementById("gs-status");
-  function setStatus(msg) {
-    if (!statusEl) return;
-    if (msg) {
-      statusEl.textContent = msg;
-      statusEl.hidden = false;
-    } else {
-      statusEl.hidden = true;
-    }
-  }
-
   // 검색 소스·건수·속도 배지
   const metaEl = document.getElementById("gs-meta");
   function setSearchMeta(source, count, ms) {
@@ -545,102 +566,12 @@ window.initGraphViz = function initGraphViz() {
       metaEl.hidden = true;
       return;
     }
-    const label =
-      source === "server"
-        ? "서버 시맨틱"
-        : source === "semantic"
-          ? "브라우저 시맨틱"
-          : "오프라인 검색";
-    const dot = source === "server" || source === "semantic" ? "server" : "local";
+    const label = source === "server" ? "서버 시맨틱" : "오프라인 검색";
+    const dot = source === "server" ? "server" : "local";
     metaEl.innerHTML =
       `<span class="gs-dot gs-dot--${dot}"></span>` +
       `${label} · ${count}건${ms != null ? ` · ${Math.round(ms)}ms` : ""}`;
     metaEl.hidden = false;
-  }
-
-  // 사전 계산된 문서 벡터 (int8 → Float32 정규화)
-  let _vectors = null;
-  let _vectorsPromise = null;
-  function ensureVectors() {
-    if (_vectors) return Promise.resolve(_vectors);
-    if (_vectorsPromise) return _vectorsPromise;
-    _vectorsPromise = (async () => {
-      const data = await fetch(`${BASE}/search-vectors.json`).then(r => r.json());
-      const map = new Map();
-      for (const url in data.vectors) {
-        const i8 = Int8Array.from(atob(data.vectors[url]), c => c.charCodeAt(0));
-        const f = new Float32Array(i8.length);
-        for (let i = 0; i < i8.length; i++) f[i] = i8[i] / 127;
-        map.set(url.replace(/\/$/, ""), f);
-      }
-      _vectors = { dim: data.dim, map };
-      return _vectors;
-    })();
-    return _vectorsPromise;
-  }
-
-  // 브라우저 쿼리 임베더 (WebGPU → 없으면 WASM 폴백). CDN ESM 동적 import.
-  let _embedder = null;
-  let _embedderPromise = null;
-  let _embedBackend = "";
-  function ensureEmbedder() {
-    if (_embedder) return Promise.resolve(_embedder);
-    if (_embedderPromise) return _embedderPromise;
-    _embedderPromise = (async () => {
-      setStatus("AI 모델 로딩…");
-      const CDN = "https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.2.0";
-      const T = await import(/* @vite-ignore */ CDN);
-      // WASM 폴백 안정화: 단일 스레드(COEP 불필요), proxy 끔
-      try {
-        T.env.backends.onnx.wasm.numThreads = 1;
-        T.env.backends.onnx.wasm.proxy = false;
-      } catch (e) {
-        /* noop */
-      }
-      // WebGPU 실제 가용성 확인 → 있으면 GPU(3080), 없으면 WASM
-      let device = "wasm";
-      try {
-        if (navigator.gpu && (await navigator.gpu.requestAdapter())) {
-          device = "webgpu";
-        }
-      } catch (e) {
-        /* webgpu 미지원 → wasm */
-      }
-      const onProgress = p => {
-        if (p.status === "progress" && /\.onnx/.test(p.file || "")) {
-          setStatus(`AI 모델 다운로드 ${Math.round(p.progress || 0)}%`);
-        }
-      };
-      const ex = await T.pipeline("feature-extraction", SEM_MODEL, {
-        dtype: "q8",
-        device,
-        progress_callback: onProgress,
-      });
-      _embedder = ex;
-      _embedBackend = device;
-      console.log(`[semantic] backend: ${device}`);
-      return ex;
-    })();
-    return _embedderPromise;
-  }
-
-  async function embedQuery(q) {
-    const ex = await ensureEmbedder();
-    const out = await ex(`query: ${q}`, { pooling: "mean", normalize: true });
-    return out.data; // Float32Array(dim), 정규화됨
-  }
-
-  // 코사인(정규화 벡터 → 내적) 랭킹 → [{url, score}]
-  function cosineRank(qvec, limit) {
-    const res = [];
-    _vectors.map.forEach((vec, url) => {
-      let s = 0;
-      const n = Math.min(qvec.length, vec.length);
-      for (let i = 0; i < n; i++) s += qvec[i] * vec[i];
-      res.push({ url, score: s });
-    });
-    res.sort((a, b) => b.score - a.score);
-    return res.slice(0, limit || 60);
   }
 
   // 첫 매치 1곳만 <mark> 강조 (안전하게 escape)
@@ -1044,6 +975,7 @@ window.initGraphViz = function initGraphViz() {
           const v = visibleData();
           cosmograph.setData(v.nodes, v.links, false);
         }
+        trackGraphClick(node);
         showNode(node);
       });
     });
@@ -1083,7 +1015,6 @@ window.initGraphViz = function initGraphViz() {
 
     const ql = q.toLowerCase();
     const reqQuery = currentQuery; // 경쟁 조건 가드
-    const mode = "text"; // 클라이언트 폴백 = BM25
     // 폴백(BM25)용 클라이언트 인덱스는 지연 로드 — synaptic 서버가 우선이라
     // ensureSearch(느린 Orama 빌드)가 /search 호출을 막지 않게 한다.
     let engine = null;
@@ -1148,6 +1079,7 @@ window.initGraphViz = function initGraphViz() {
           if (typeof e.score === "number") e.rel = Math.max(0.12, e.score / maxScore);
         });
       setSearchMeta(source, postEntries.length, ms);
+      trackGraphSearch(source, q, postEntries.length, ms);
       state.searchNodes = [...postEntries, ...nodeEntries]
         .map(e => nodesById.get(e.nodeId))
         .filter(Boolean);

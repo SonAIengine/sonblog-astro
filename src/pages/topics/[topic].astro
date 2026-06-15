@@ -1,0 +1,202 @@
+---
+import type { GetStaticPaths } from "astro";
+import { getCollection } from "astro:content";
+import { getRelativeLocaleUrl } from "astro:i18n";
+import Layout from "@/layouts/Layout.astro";
+import Header from "@/components/Header.astro";
+import Breadcrumb from "@/components/Breadcrumb.astro";
+import Main from "@/components/Main.astro";
+import Footer from "@/components/Footer.astro";
+import Card from "@/components/Card.astro";
+import Tag from "@/components/Tag.astro";
+import { getSortedPosts } from "@/utils/getSortedPosts";
+import { slugifyStr } from "@/utils/slugify";
+import config from "@/config";
+import { topics, type Topic } from "@/data/topics";
+
+export const getStaticPaths = (() =>
+  topics.map(topic => ({
+    params: { topic: topic.slug },
+    props: { topic },
+  }))) satisfies GetStaticPaths;
+
+const { topic } = Astro.props as { topic: Topic };
+const locale = Astro.currentLocale ?? config.site.lang;
+const posts = getSortedPosts(await getCollection("posts"));
+const topicTagSet = new Set(topic.tags.map(tag => tag.toLowerCase()));
+
+const topicPosts = posts.filter(post => {
+  const filePath = post.filePath ?? "";
+  const inCategory = filePath.includes(`/posts/${topic.slug}/`);
+  const hasTag = post.data.tags.some(tag => topicTagSet.has(tag.toLowerCase()));
+  return inCategory || hasTag;
+});
+
+const byId = new Map(topicPosts.map(post => [post.id.toLowerCase(), post]));
+const featuredPosts = topic.featuredIds
+  .map(id => byId.get(id.toLowerCase()))
+  .filter(Boolean)
+  .slice(0, 4);
+const latestPosts = topicPosts
+  .filter(post => !featuredPosts.some(featured => featured?.id === post.id))
+  .slice(0, 8);
+
+const tagCounts = new Map<
+  string,
+  { tag: string; tagName: string; count: number }
+>();
+for (const post of topicPosts) {
+  for (const tagName of post.data.tags) {
+    const tag = slugifyStr(tagName);
+    const current = tagCounts.get(tag);
+    if (current) current.count += 1;
+    else tagCounts.set(tag, { tag, tagName, count: 1 });
+  }
+}
+const topTags = [...tagCounts.values()]
+  .filter(tag => tag.count >= 2)
+  .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag))
+  .slice(0, 12);
+
+const series = new Map<string, number>();
+for (const post of topicPosts) {
+  if (!post.data.series) continue;
+  series.set(post.data.series, (series.get(post.data.series) ?? 0) + 1);
+}
+const topSeries = [...series.entries()]
+  .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+  .slice(0, 5);
+
+const learningStages = topic.learningPath
+  .map(stage => ({
+    ...stage,
+    posts: stage.postIds
+      .map(id => byId.get(id.toLowerCase()))
+      .filter(Boolean)
+      .slice(0, 3),
+  }))
+  .filter(stage => stage.posts.length > 0);
+---
+
+<Layout
+  title={`${topic.title} | ${config.site.title}`}
+  description={topic.description}
+>
+  <Header />
+
+  <Breadcrumb />
+
+  <Main pageTitle={topic.title} pageDesc={topic.description}>
+    <section class="border-border border-b pb-8">
+      <p
+        class="text-accent font-app text-xs font-semibold tracking-wide uppercase"
+      >
+        {topic.eyebrow}
+      </p>
+      <div class="font-app mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+        <span>
+          <strong class="text-accent text-base">{topicPosts.length}</strong>{
+            " "
+          }
+          posts
+        </span>
+        <span>
+          <strong class="text-accent text-base">{topTags.length}</strong>{" "}
+          active tags
+        </span>
+        <span>
+          <strong class="text-accent text-base">{topSeries.length}</strong>{" "}
+          series
+        </span>
+      </div>
+    </section>
+
+    {
+      learningStages.length > 0 && (
+        <section class="border-border border-b py-8">
+          <h2 class="text-xl font-semibold">학습 경로</h2>
+          <ol class="mt-4 grid gap-4">
+            {learningStages.map((stage, index) => (
+              <li class="border-border rounded-md border p-4">
+                <p class="text-accent font-app text-xs font-semibold uppercase">
+                  Step {index + 1}
+                </p>
+                <h3 class="mt-1 text-lg font-semibold">{stage.title}</h3>
+                <p class="text-muted-foreground mt-2 text-sm">
+                  {stage.description}
+                </p>
+                <ul class="mt-4">
+                  {stage.posts.map(
+                    post => post && <Card variant="h3" {...post} />
+                  )}
+                </ul>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )
+    }
+
+    {
+      featuredPosts.length > 0 && (
+        <section class="border-border border-b py-8">
+          <h2 class="text-xl font-semibold">대표 글</h2>
+          <ul>
+            {featuredPosts.map(post => post && <Card variant="h3" {...post} />)}
+          </ul>
+        </section>
+      )
+    }
+
+    {
+      topTags.length > 0 && (
+        <section class="border-border border-b py-8">
+          <h2 class="text-xl font-semibold">핵심 태그</h2>
+          <ul class="mt-4 flex flex-wrap gap-4">
+            {topTags.map(({ tag, tagName, count }) => (
+              <Tag {tag} {tagName} {count} size="sm" />
+            ))}
+          </ul>
+        </section>
+      )
+    }
+
+    {
+      topSeries.length > 0 && (
+        <section class="border-border border-b py-8">
+          <h2 class="text-xl font-semibold">시리즈</h2>
+          <ul class="mt-4 space-y-2">
+            {topSeries.map(([name, count]) => (
+              <li class="text-sm">
+                <a
+                  class="hover:text-accent underline decoration-dashed underline-offset-4"
+                  href={`${getRelativeLocaleUrl(locale, "search")}?q=${encodeURIComponent(name)}`}
+                >
+                  {name}
+                </a>
+                <span class="text-muted-foreground"> · {count} posts</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+
+    <section class="py-8">
+      <div class="flex items-center justify-between gap-4">
+        <h2 class="text-xl font-semibold">최신 글</h2>
+        <a
+          class="text-accent text-sm underline decoration-dashed underline-offset-4"
+          href={getRelativeLocaleUrl(locale, "posts")}
+        >
+          전체 글
+        </a>
+      </div>
+      <ul>
+        {latestPosts.map(post => <Card variant="h3" {...post} />)}
+      </ul>
+    </section>
+  </Main>
+
+  <Footer />
+</Layout>

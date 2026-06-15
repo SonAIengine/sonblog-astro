@@ -36,3 +36,7 @@
 :target {
   scroll-margin-block: 1rem;
 }
+
+.app-prose a.auto-internal-link {
+  text-decoration-style: dotted;
+}

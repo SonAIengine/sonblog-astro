@@ -1,9 +1,9 @@
 # Base stage for building the static files
-FROM node:lts AS base
+FROM node:22.12.0-bookworm-slim AS base
 WORKDIR /app
 
 # Install pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@10.29.1 --activate
 
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile

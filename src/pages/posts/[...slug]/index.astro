@@ -9,6 +9,7 @@ import Datetime from "@/components/Datetime.astro";
 import Tag from "@/components/Tag.astro";
 import { getPostSlug, getPostUrl } from "@/utils/getPostPaths";
 import { getSortedPosts } from "@/utils/getSortedPosts";
+import { getUniqueTags, PUBLIC_TAG_MIN_COUNT } from "@/utils/getUniqueTags";
 import { slugifyStr } from "@/utils/slugify";
 import { toTransitionName } from "@/utils/toTransitionName";
 import EditPost from "./_components/EditPost.astro";
@@ -74,6 +75,11 @@ const {
 } = post.data;
 
 const { Content } = await render(post);
+const publicTagSlugs = new Set(
+  getUniqueTags(await getCollection("posts"), {
+    minCount: PUBLIC_TAG_MIN_COUNT,
+  }).map(tag => tag.tag)
+);
 
 let ogImageUrl: string | undefined;
 
@@ -154,10 +160,26 @@ const ogImage = ogImageUrl
     <BackToTopButton />
 
     <ul class="mt-4 mb-8 flex flex-wrap gap-4 sm:my-8">
-      {tags.map(tag => <Tag tag={slugifyStr(tag)} tagName={tag} size="sm" />)}
+      {
+        tags.map(tag => {
+          const tagSlug = slugifyStr(tag);
+          return (
+            <Tag
+              tag={tagSlug}
+              tagName={tag}
+              size="sm"
+              linked={publicTagSlugs.has(tagSlug)}
+            />
+          );
+        })
+      }
     </ul>
 
-    <RelatedPosts tags={post.data.tags} currentId={post.id} />
+    <RelatedPosts
+      tags={post.data.tags}
+      currentId={post.id}
+      series={post.data.series}
+    />
 
     <ShareLinks />
 

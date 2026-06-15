@@ -4,46 +4,56 @@ import Header from "@/components/Header.astro";
 import fs from "node:fs";
 const graphData = JSON.parse(fs.readFileSync("public/assets/graph/graph-data.json", "utf-8"));
 const gm = graphData.metadata;
+const graphDataUrl = "/assets/graph/graph-data.json";
 ---
 
 <Layout title="Knowledge Graph | SON BLOG">
 
 <Header />
 <main id="main-content" class="graph-main">
-<div class="graph-page">
+<div class="graph-page" data-graph-lazy="true" data-graph-data-url={graphDataUrl}>
 
   <!-- ── 상단 툴바 (한 줄) ── -->
   <div class="graph-toolbar">
     <span class="graph-toolbar-title">Knowledge Graph</span>
     <span class="graph-toolbar-stats" id="graph-stats">{gm.total_posts} posts · {gm.total_tags} tags · {gm.total_categories} categories</span>
     <span class="graph-toolbar-sep"></span>
-    <label class="graph-filter-chip graph-filter-chip--category"><input type="checkbox" class="graph-filter-cb" data-type="category" checked><span class="chip-dot"></span>카테고리</label>
-    <label class="graph-filter-chip graph-filter-chip--subcategory"><input type="checkbox" class="graph-filter-cb" data-type="subcategory" checked><span class="chip-dot"></span>서브카테고리</label>
-    <label class="graph-filter-chip graph-filter-chip--series"><input type="checkbox" class="graph-filter-cb" data-type="series" checked><span class="chip-dot"></span>시리즈</label>
-    <label class="graph-filter-chip graph-filter-chip--tag"><input type="checkbox" class="graph-filter-cb" data-type="tag"><span class="chip-dot"></span>태그</label>
-    <label class="graph-filter-chip graph-filter-chip--post"><input type="checkbox" class="graph-filter-cb" data-type="post" checked><span class="chip-dot"></span>포스트</label>
+    <label class="graph-filter-chip graph-filter-chip--category"><input type="checkbox" class="graph-filter-cb" data-type="category" checked disabled data-graph-control><span class="chip-dot"></span>카테고리</label>
+    <label class="graph-filter-chip graph-filter-chip--subcategory"><input type="checkbox" class="graph-filter-cb" data-type="subcategory" checked disabled data-graph-control><span class="chip-dot"></span>서브카테고리</label>
+    <label class="graph-filter-chip graph-filter-chip--series"><input type="checkbox" class="graph-filter-cb" data-type="series" checked disabled data-graph-control><span class="chip-dot"></span>시리즈</label>
+    <label class="graph-filter-chip graph-filter-chip--tag"><input type="checkbox" class="graph-filter-cb" data-type="tag" disabled data-graph-control><span class="chip-dot"></span>태그</label>
+    <label class="graph-filter-chip graph-filter-chip--post"><input type="checkbox" class="graph-filter-cb" data-type="post" checked disabled data-graph-control><span class="chip-dot"></span>포스트</label>
     <div class="graph-toolbar-spacer"></div>
-    <button id="graph-reset" class="graph-btn"><svg viewBox="0 0 20 20" fill="none" width="12" height="12"><path d="M4 10a6 6 0 1 0 1.5-3.9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M4 5.5V10h4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>초기화</button>
+    <button id="graph-reset" class="graph-btn" disabled data-graph-control><svg viewBox="0 0 20 20" fill="none" width="12" height="12"><path d="M4 10a6 6 0 1 0 1.5-3.9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M4 5.5V10h4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>초기화</button>
   </div>
 
   <!-- ── 메인 레이아웃: 좌 그래프 / 우 검색엔진 패널 ── -->
   <div class="graph-layout">
 
     <!-- 그래프 캔버스 -->
-    <div id="sigma-container"></div>
+    <div id="sigma-container">
+      <div id="graph-lazy-panel" class="graph-lazy-panel" data-pagefind-ignore>
+        <p class="graph-lazy-kicker">{gm.total_posts} posts · {gm.total_tags} tags · {gm.total_categories} categories</p>
+        <h1>Knowledge Graph</h1>
+        <button id="graph-load" class="graph-load-btn" type="button">
+          그래프 로드
+        </button>
+      </div>
+    </div>
 
     <!-- 우측 검색엔진 패널 (상시 노출) -->
     <aside id="graph-side" class="graph-side">
       <div class="gs-head">
         <div class="graph-search-wrap">
           <svg class="graph-search-icon" viewBox="0 0 20 20" fill="none"><circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" stroke-width="1.5"/><path d="M13.5 13.5L17 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-          <input type="text" id="graph-search" placeholder="글·태그·주제 검색..." autocomplete="off">
-          <button id="graph-search-clear" class="graph-search-clear" aria-label="검색 초기화"><svg viewBox="0 0 16 16" fill="none"><path d="M4 4L12 12M12 4L4 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+          <input type="text" id="graph-search" placeholder="글·태그·주제 검색..." autocomplete="off" disabled data-graph-control>
+          <button id="graph-search-clear" class="graph-search-clear" aria-label="검색 초기화" disabled data-graph-control><svg viewBox="0 0 16 16" fill="none"><path d="M4 4L12 12M12 4L4 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
         </div>
-        <div id="gs-status" class="gs-status" hidden></div>
         <div id="gs-meta" class="gs-meta" hidden></div>
       </div>
-      <div id="graph-panel-body" class="gp-body"></div>
+      <div id="graph-panel-body" class="gp-body">
+        <div class="gs-empty">대기 중</div>
+      </div>
     </aside>
 
   </div><!-- /.graph-layout -->
@@ -54,20 +64,76 @@ const gm = graphData.metadata;
 <div id="graph-tooltip" class="graph-tooltip"></div>
 </main>
 
-<!-- 그래프 데이터 인라인 삽입 -->
-
-
 <!-- 패널 리사이즈 -->
 </Layout>
 
-<script is:inline set:html={`window.__GRAPH_DATA__ = ${JSON.stringify(graphData)};`} />
 <script>
-  import "@/scripts/graphViz.js";
-  function run() {
-    if ((window as any).initGraphViz) (window as any).initGraphViz();
+  let graphLoadPromise: Promise<void> | null = null;
+
+  function enableGraphControls() {
+    document
+      .querySelectorAll<HTMLInputElement | HTMLButtonElement>("[data-graph-control]")
+      .forEach(control => {
+        control.disabled = false;
+      });
   }
-  document.addEventListener("astro:page-load", run);
-  if (document.readyState !== "loading") run();
+
+  async function loadGraph() {
+    const root = document.querySelector<HTMLElement>(".graph-page");
+    const panel = document.querySelector<HTMLElement>("#graph-lazy-panel");
+    const button = document.querySelector<HTMLButtonElement>("#graph-load");
+    if (!root || root.dataset.graphLoaded === "true") return;
+    if (graphLoadPromise) return graphLoadPromise;
+
+    root.classList.add("is-loading");
+    if (button) {
+      button.disabled = true;
+      button.textContent = "그래프 로딩...";
+    }
+
+    graphLoadPromise = Promise.resolve()
+      .then(async () => {
+        if ((window as any).__GRAPH_DATA__) return;
+        const dataUrl = root.dataset.graphDataUrl;
+        if (!dataUrl) throw new Error("graph data url missing");
+        const response = await fetch(dataUrl);
+        if (!response.ok) throw new Error("graph data failed");
+        (window as any).__GRAPH_DATA__ = await response.json();
+      })
+      .then(() => import("@/scripts/graphViz.js"))
+      .then(() => {
+        panel?.remove();
+        enableGraphControls();
+        (window as any).initGraphViz?.();
+        root.dataset.graphLoaded = "true";
+        root.classList.remove("is-loading");
+        root.classList.add("is-loaded");
+      })
+      .catch(() => {
+        graphLoadPromise = null;
+        root.classList.remove("is-loading");
+        root.classList.add("is-load-failed");
+        if (button) {
+          button.disabled = false;
+          button.textContent = "다시 시도";
+        }
+      });
+
+    return graphLoadPromise;
+  }
+
+  function setupGraphLoader() {
+    const root = document.querySelector<HTMLElement>(".graph-page");
+    const button = document.querySelector<HTMLButtonElement>("#graph-load");
+    if (!root || !button || root.dataset.loaderBound === "true") return;
+    root.dataset.loaderBound = "true";
+    button.addEventListener("click", () => {
+      loadGraph();
+    });
+  }
+
+  document.addEventListener("astro:page-load", setupGraphLoader);
+  if (document.readyState !== "loading") setupGraphLoader();
 </script>
 
 <style is:global>
@@ -355,6 +421,66 @@ const gm = graphData.metadata;
   will-change: width;
   transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
+.graph-filter-chip:has(input:disabled),
+.graph-btn:disabled,
+.graph-search-wrap input:disabled,
+.graph-search-clear:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+.graph-lazy-panel {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+  padding: 2rem;
+  text-align: center;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(124, 58, 237, 0.12), transparent 34%),
+    linear-gradient(180deg, color-mix(in srgb, var(--md-default-bg-color) 96%, transparent), var(--md-default-bg-color));
+}
+.graph-lazy-panel h1 {
+  margin: 0;
+  font-size: clamp(1.35rem, 3vw, 2rem);
+  line-height: 1.1;
+}
+.graph-lazy-panel p {
+  max-width: 34rem;
+  margin: 0;
+  color: var(--md-default-fg-color--light);
+}
+.graph-lazy-kicker {
+  font-family: var(--md-text-font);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.graph-load-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 8rem;
+  min-height: 2.35rem;
+  border: 1px solid var(--md-primary-fg-color);
+  border-radius: 6px;
+  background: var(--md-primary-fg-color);
+  color: #fff;
+  font-family: var(--md-text-font);
+  font-size: 0.86rem;
+  font-weight: 700;
+  transition: opacity 0.15s, transform 0.15s;
+}
+.graph-load-btn:hover {
+  transform: translateY(-1px);
+}
+.graph-load-btn:disabled {
+  opacity: 0.7;
+}
 [data-md-color-scheme="slate"] #sigma-container {
   background-color: #0a0b0d;
   background-image: radial-gradient(
@@ -362,6 +488,16 @@ const gm = graphData.metadata;
     #101216 0%,
     #0a0b0d 70%
   );
+}
+[data-md-color-scheme="slate"] .graph-lazy-panel {
+  background:
+    radial-gradient(circle at 50% 42%, rgba(167, 139, 250, 0.16), transparent 34%),
+    linear-gradient(180deg, rgba(10, 11, 13, 0.96), #0a0b0d);
+}
+[data-md-color-scheme="slate"] .graph-load-btn {
+  background: #a78bfa;
+  border-color: #a78bfa;
+  color: #0b0d10;
 }
 /* ── 툴팁 ───────────────────────────────────────────────────────────────────── */
 
@@ -1581,25 +1717,6 @@ body:has(.graph-page) {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 [data-md-color-scheme="slate"] .gs-mode.is-active { background: #0b0d10; }
-.gs-status {
-  margin-top: 0.4rem;
-  font-size: 0.68rem;
-  color: var(--md-primary-fg-color);
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-.gs-status::before {
-  content: "";
-  width: 9px;
-  height: 9px;
-  border: 1.5px solid currentColor;
-  border-top-color: transparent;
-  border-radius: 50%;
-  animation: gsspin 0.7s linear infinite;
-}
-@keyframes gsspin { to { transform: rotate(360deg); } }
-
 /* 모바일: 그래프 위 / 검색 아래로 쌓기 */
 @media (max-width: 720px) {
   .graph-layout { flex-direction: column; }

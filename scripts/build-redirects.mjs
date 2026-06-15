@@ -78,10 +78,11 @@ for (const abs of walk(DOCS)) {
   }
 }
 
-// ── 카테고리/서브카테고리 랜딩 페이지 → 태그 페이지 ───────────────────────────
+// ── 카테고리/서브카테고리 랜딩 페이지 → 토픽/태그 페이지 ─────────────────────
 // 옛 MkDocs는 /ai/ , /ai/agent/ 같은 디렉토리 랜딩이 존재. 새 사이트엔 없으므로
-// 대응 태그 페이지(/tags/{slug}/)로 보낸다. 태그가 없으면 상위 카테고리, 그것도
-// 없으면 /posts/.
+// 상위 주제는 새 topic hub로 보내고, 세부 디렉토리는 대응 태그 페이지를 우선한다.
+// 태그가 없으면 상위 topic hub, 그것도 없으면 /posts/.
+const TOPIC_SLUGS = new Set(["ai", "search-engine", "full-stack", "devops"]);
 function tagExists(slug) {
   return fs.existsSync(path.resolve("dist/tags", slug, "index.html"));
 }
@@ -102,8 +103,12 @@ for (const rel of walkDirs(DOCS)) {
   const segs = rel.split("/");
   const last = segs[segs.length - 1];
   const top = segs[0];
-  let dest = tagExists(last)
+  let dest = segs.length === 1 && TOPIC_SLUGS.has(top)
+    ? `/topics/${top}/`
+    : tagExists(last)
     ? `/tags/${last}/`
+    : TOPIC_SLUGS.has(top)
+      ? `/topics/${top}/`
     : tagExists(top)
       ? `/tags/${top}/`
       : "/posts/";
@@ -116,10 +121,24 @@ for (const [o, n] of Object.entries(SPECIAL)) redirects[o] = n;
 
 // 실제 Astro 페이지가 있는 경로는 리다이렉트에서 제외 — 그 페이지를 가리지 않게.
 // (예: 옛 mkdocs /portfolio/ 섹션이 새 portfolio.astro 쇼케이스를 덮어쓰던 버그 방지)
-const REAL_PAGES = ["/", "/portfolio/", "/portfolio-en/", "/graph/", "/posts/", "/tags/", "/archives/", "/search/"];
+const REAL_PAGES = [
+  "/",
+  "/portfolio/",
+  "/portfolio-en/",
+  "/graph/",
+  "/posts/",
+  "/tags/",
+  "/archives/",
+  "/search/",
+  "/topics/",
+  "/topics/ai/",
+  "/topics/search-engine/",
+  "/topics/full-stack/",
+  "/topics/devops/",
+];
 for (const p of REAL_PAGES) delete redirects[p];
 
-fs.writeFileSync(OUT, JSON.stringify(redirects));
+fs.writeFileSync(OUT, `${JSON.stringify(redirects, null, 2)}\n`);
 console.log(
   `redirects: ${Object.keys(redirects).length} (글 title매칭 ${matched}, 경로폴백 ${fallback}, 미매칭 ${missed})`
 );

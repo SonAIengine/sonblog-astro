@@ -1,19 +1,30 @@
 ---
 import { getCollection } from "astro:content";
+import { getPostUrl } from "@/utils/getPostPaths";
+import { getSortedPosts } from "@/utils/getSortedPosts";
+import { postFilter } from "@/utils/postFilter";
+import { slugifyAll } from "@/utils/slugify";
 
 interface Props {
   tags: string[];
   currentId: string;
+  series?: string;
 }
-const { tags, currentId } = Astro.props;
-const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
+const { tags, currentId, series } = Astro.props;
+const currentCategory = currentId.split("/")[0] ?? "";
+const currentTags = new Set(slugifyAll(tags));
 
-const all = await getCollection("posts", ({ data }) => !data.draft);
+const all = getSortedPosts((await getCollection("posts")).filter(postFilter));
 const scored = all
   .filter(p => p.id !== currentId)
   .map(p => ({
     p,
-    score: p.data.tags.filter((t: string) => tags.includes(t)).length,
+    score:
+      slugifyAll(p.data.tags).filter((tag: string) => currentTags.has(tag))
+        .length *
+        3 +
+      (series && p.data.series === series ? 5 : 0) +
+      (p.id.split("/")[0] === currentCategory ? 1 : 0),
   }))
   .filter(x => x.score > 0)
   .sort(
@@ -31,7 +42,10 @@ const scored = all
       <ul>
         {scored.map(({ p }) => (
           <li>
-            <a href={`${base}posts/${p.id}/`}>{p.data.title}</a>
+            <a href={getPostUrl(p.id, p.filePath, Astro.currentLocale)}>
+              {p.data.title}
+            </a>
+            <p>{p.data.description}</p>
           </li>
         ))}
       </ul>
@@ -53,7 +67,7 @@ const scored = all
     padding: 0;
   }
   .related-posts li {
-    margin: 0.4rem 0;
+    margin: 0.7rem 0;
   }
   .related-posts a {
     color: var(--accent);
@@ -61,5 +75,10 @@ const scored = all
   }
   .related-posts a:hover {
     text-decoration: underline;
+  }
+  .related-posts p {
+    color: var(--muted-foreground);
+    font-size: 0.88rem;
+    margin: 0.15rem 0 0;
   }
 </style>

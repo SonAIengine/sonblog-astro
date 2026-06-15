@@ -1,7 +1,6 @@
 ---
 import { Font } from "astro:assets";
 import { ClientRouter } from "astro:transitions";
-import { getRelativeLocaleUrl } from "astro:i18n";
 import { resolveDefaultOgImagePath } from "@/utils/resolveDefaultOgImagePath";
 import { getAssetPath } from "@/utils/withBase";
 import config from "@/config";
@@ -12,6 +11,7 @@ type Props = {
   description?: string;
   ogImage?: string;
   canonicalURL?: string;
+  ogType?: "website" | "article";
 };
 
 const { site } = config;
@@ -21,13 +21,11 @@ const {
   description = site.description,
   ogImage = resolveDefaultOgImagePath(config),
   canonicalURL = new URL(Astro.url.pathname, Astro.site).href,
+  ogType = "website",
 } = Astro.props;
 
 const socialImageURL = new URL(ogImage, Astro.site ?? Astro.url);
-const rssHref = getRelativeLocaleUrl(
-  Astro.currentLocale ?? config.site.lang,
-  "rss.xml"
-);
+const rssHref = getAssetPath("rss.xml");
 ---
 
 <!doctype html>
@@ -64,7 +62,7 @@ const rssHref = getRelativeLocaleUrl(
     <link rel="sitemap" href={getAssetPath("sitemap-index.xml")} />
 
     <!-- Open Graph -->
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content={ogType} />
     <meta property="og:site_name" content={site.title} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
@@ -97,8 +95,7 @@ const rssHref = getRelativeLocaleUrl(
       is:inline
       data-goatcounter="https://sonblog.goatcounter.com/count"
       async
-      src="https://gc.zgo.at/count.js"
-    ></script>
+      src="https://gc.zgo.at/count.js"></script>
     <script is:inline>
       (function () {
         // 첫 로드는 count.js가 자동 집계, 이후 instant navigation만 수동 집계 (중복 방지)

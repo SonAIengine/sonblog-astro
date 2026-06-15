@@ -1,18 +1,19 @@
 ---
 import { getCollection } from "astro:content";
+import { getPostUrl } from "@/utils/getPostPaths";
+import { postFilter } from "@/utils/postFilter";
 
 interface Props {
   series?: string;
   currentId: string;
 }
 const { series, currentId } = Astro.props;
-const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
 
 let items: any[] = [];
 if (series) {
   const all = await getCollection(
     "posts",
-    ({ data }) => data.series === series && !data.draft
+    post => post.data.series === series && postFilter(post)
   );
   items = all.sort(
     (a, b) => (a.data.seriesOrder ?? 999) - (b.data.seriesOrder ?? 999)
@@ -35,7 +36,9 @@ const pos = items.findIndex(p => p.id === currentId);
             </li>
           ) : (
             <li>
-              <a href={`${base}posts/${p.id}/`}>{p.data.title}</a>
+              <a href={getPostUrl(p.id, p.filePath, Astro.currentLocale)}>
+                {p.data.title}
+              </a>
             </li>
           )
         )}

@@ -1,166 +1,83 @@
-# AstroPaper 📄
+# SON BLOG
 
-![AstroPaper](public/default-og.jpg)
-[![Figma](https://img.shields.io/badge/Figma-F24E1E?style=for-the-badge&logo=figma&logoColor=white)](https://www.figma.com/community/file/1356898632249991861)
-![Typescript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
-![GitHub](https://img.shields.io/github/license/satnaing/astro-paper?color=%232F3741&style=for-the-badge)
-[![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white&style=for-the-badge)](https://conventionalcommits.org)
-[![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg?style=for-the-badge)](http://commitizen.github.io/cz-cli/)
+AI Engineer 손성준의 기술 블로그 겸 포트폴리오 사이트입니다.
 
-AstroPaper is a minimal, responsive, accessible and SEO-friendly Astro blog theme. This theme is designed and crafted based on [my personal blog](https://satnaing.dev/blog).
+주요 주제는 LLM Serving, AI Search, RAG, MCP Agent, Rust 검색 엔진, Kubernetes/DevOps 운영입니다. AstroPaper v6를 기반으로 하되 한국어 콘텐츠, Knowledge Graph, Pagefind 검색, Mermaid 다이어그램, Decap CMS, 검색 인덱스 산출물을 블로그 운영 방식에 맞게 확장했습니다.
 
-Read [the blog posts](https://astro-paper.pages.dev/posts/) or check [the README Documentation Section](#-documentation) for more info.
+## Tech Stack
 
-## 🔥 Features
+- Astro 6
+- TypeScript
+- Tailwind CSS 4
+- MDX / Markdown content collections
+- Pagefind static search
+- Mermaid
+- Cosmograph knowledge graph
+- Satori / Sharp OG image pipeline
 
-- [x] type-safe markdown
-- [x] super fast performance
-- [x] accessible (Keyboard/VoiceOver)
-- [x] responsive (mobile ~ desktops)
-- [x] SEO-friendly
-- [x] light & dark mode
-- [x] static search ([Pagefind](https://pagefind.app/))
-- [x] draft posts & pagination
-- [x] sitemap & rss feed
-- [x] MDX support
-- [x] collapsible table of contents
-- [x] followed best practices
-- [x] highly customizable
-- [x] dynamic OG image generation for blog posts ([Blog Post](https://astro-paper.pages.dev/posts/dynamic-og-image-generation-in-astropaper-blog-posts/))
-- [x] i18n ready
+## Content
 
-_Note: I've tested screen-reader accessibility of AstroPaper using **VoiceOver** on Mac and **TalkBack** on Android. I couldn't test all other screen-readers out there. However, accessibility enhancements in AstroPaper should be working fine on others as well._
+글은 `src/content/posts` 아래에 카테고리/서브카테고리 구조로 저장합니다.
 
-## ✅ Lighthouse Score
-
-<p align="center">
-  <a href="https://pagespeed.web.dev/report?url=https%3A%2F%2Fastro-paper.pages.dev%2F&form_factor=desktop">
-    <img width="710" alt="AstroPaper Lighthouse Score" src="AstroPaper-lighthouse-score.svg">
-  </a>
-</p>
-
-## 🚀 Project Structure
-
-Inside of AstroPaper, you'll see the following folders and files:
-
-```bash
-/
-├── public/
-│   ├── pagefind/          # auto-generated on build
-│   ├── favicon.svg
-│   └── default-og.jpg
-├── src/
-│   ├── assets/
-│   │   ├── icons/
-│   │   └── images/
-│   ├── components/
-│   ├── content/
-│   │   ├── pages/
-│   │   │   └── about.md
-│   │   └── posts/
-│   │       └── some-blog-posts.md
-│   ├── i18n/
-│   ├── layouts/
-│   ├── pages/
-│   ├── scripts/
-│   ├── styles/
-│   ├── types/
-│   ├── utils/
-│   ├── config.ts
-│   └── content.config.ts
-├── astro-paper.config.ts  # user-defined configurations
-└── astro.config.ts
+```text
+src/content/posts/
+  ai/
+  search-engine/
+  devops/
+  full-stack/
+  portfolio/
 ```
 
-All blog posts are stored in the `src/content/posts/` directory. You can organise posts into subdirectories — the subdirectory name becomes part of the post URL.
+주요 공개 페이지:
 
-## 📖 Documentation
+- `/` - 홈
+- `/posts/` - 전체 글
+- `/search/` - 통합 검색
+- `/graph/` - Knowledge Graph
+- `/portfolio/` - 한국어 포트폴리오
+- `/portfolio-en/` - English portfolio
+- `/archives/` - 아카이브
+- `/tags/` - 태그
 
-Documentation can be read in two formats\_ _markdown_ & _blog post_.
-
-- Configuration - [markdown](src/content/posts/how-to-configure-astropaper-theme.md) | [blog post](https://astro-paper.pages.dev/posts/how-to-configure-astropaper-theme/)
-- Add Posts - [markdown](src/content/posts/adding-new-post.md) | [blog post](https://astro-paper.pages.dev/posts/adding-new-posts-in-astropaper-theme/)
-- Customize Color Schemes - [markdown](src/content/posts/customizing-astropaper-theme-color-schemes.md) | [blog post](https://astro-paper.pages.dev/posts/customizing-astropaper-theme-color-schemes/)
-- Predefined Color Schemes - [markdown](src/content/posts/predefined-color-schemes.md) | [blog post](https://astro-paper.pages.dev/posts/predefined-color-schemes/)
-
-## 💻 Tech Stack
-
-**Main Framework** - [Astro](https://astro.build/)  
-**Type Checking** - [TypeScript](https://www.typescriptlang.org/)  
-**Styling** - [TailwindCSS](https://tailwindcss.com/)  
-**UI/UX** - [Figma Design File](https://www.figma.com/community/file/1356898632249991861)  
-**Static Search** - [Pagefind](https://pagefind.app/)  
-**Icons** - [Tablers](https://tabler-icons.io/)  
-**Code Formatting** - [Prettier](https://prettier.io/)  
-**Deployment** - [Cloudflare Pages](https://pages.cloudflare.com/)  
-**Linting** - [ESLint](https://eslint.org)  
-**Dynamic OG images** - [Satori](https://github.com/vercel/satori) + [Sharp](https://sharp.pixelplumbing.com/) + [Astro Fonts](https://docs.astro.build/en/guides/fonts/)
-
-## 👨🏻‍💻 Running Locally
-
-You can start using this project locally by running the following command in your desired directory:
+## Commands
 
 ```bash
-# pnpm
-pnpm create astro@latest --template satnaing/astro-paper
-
-# npm
-npm create astro@latest -- --template satnaing/astro-paper
-
-# yarn
-yarn create astro --template satnaing/astro-paper
-
-# bun
-bun create astro@latest -- --template satnaing/astro-paper
-```
-
-Then start the project by running the following commands:
-
-```bash
-# install dependencies if you haven't done so in the previous step.
-pnpm install
-
-# start running the project
+pnpm install --frozen-lockfile
+pnpm run verify
 pnpm dev
+pnpm build
+pnpm preview
+pnpm run lint
+pnpm run format:check
+pnpm astro check
 ```
 
-## Google Site Verification (optional)
+`pnpm build`는 다음 작업을 함께 수행합니다.
 
-You can add your [Google Site Verification HTML tag](https://support.google.com/webmasters/answer/9008080#meta_tag_verification&zippy=%2Chtml-tag) by setting `site.googleVerification` in `astro-paper.config.ts`:
+- Knowledge Graph community/layout 갱신
+- Mermaid 문법 검사
+- Astro 정적 빌드
+- Pagefind 인덱싱
 
-```ts file="astro-paper.config.ts"
-export default defineAstroPaperConfig({
-  site: {
-    // ...
-    googleVerification: "your-google-site-verification-value",
-  },
-  // ...
-});
-```
+## Search
 
-> See [this discussion](https://github.com/satnaing/astro-paper/discussions/334#discussioncomment-10139247) for adding AstroPaper to the Google Search Console.
+기본 검색은 Pagefind 정적 인덱스를 사용합니다. 그래프 페이지는 `search-index.json`을 기반으로 Orama BM25 검색과 서버 시맨틱 검색 fallback을 함께 사용할 수 있습니다.
 
-## 🧞 Commands
+서버 검색 서비스는 `search-service/app.py`에 있으며, 빌드 산출물 `dist/search-fulltext.json`을 읽어 SynapticGraph 기반 검색 인덱스를 구성합니다.
 
-All commands are run from the root of the project, from a terminal:
+## CMS
 
-| Command          | Action                                                                                                                           |
-| :--------------- | :------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm install`   | Installs dependencies                                                                                                            |
-| `pnpm dev`       | Starts local dev server at `localhost:4321`                                                                                      |
-| `pnpm build`     | Type-checks, builds the site, runs Pagefind indexing, and copies the index to `public/pagefind/`                                 |
-| `pnpm preview`   | Preview your build locally, before deploying                                                                                     |
-| `pnpm sync`      | Generates TypeScript types for all Astro modules. [Learn more](https://docs.astro.build/en/reference/cli-reference/#astro-sync). |
-| `pnpm astro ...` | Run CLI commands like `astro add`, `astro check`                                                                                 |
+Decap CMS 설정은 `public/admin/config.yml`에 있습니다. GitHub OAuth 프록시는 `cms-auth/server.mjs`를 사용합니다.
 
-## ✨ Feedback & Suggestions
+## Deployment
 
-If you have any suggestions/feedback, you can contact me via [my email](mailto:satnaingdev+astropaper@gmail.com). Alternatively, feel free to open an issue if you find bugs or want to request new features.
+GitHub Pages 배포는 `.github/workflows/deploy.yml`에서 수행합니다. Node.js와 pnpm 버전은 재현성을 위해 다음 기준으로 고정합니다.
 
-## 📜 License
+- Node.js `22.12.0`
+- pnpm `10.29.1`
 
-Licensed under the MIT License, Copyright © 2026
+운영/배포/URL/검색/그래프 관련 유지보수 기준은 `docs/PROJECT_CONTEXT.md`와 `AGENTS.md`에 정리되어 있습니다.
 
----
+## License
 
-Made with 🤍 by [Sat Naing](https://satnaing.dev) 👨🏻‍💻 and [contributors](https://github.com/satnaing/astro-paper/graphs/contributors).
+이 저장소의 사이트 구현은 MIT 라이선스 기반 AstroPaper를 커스터마이즈한 것입니다. 블로그 글의 저작권은 별도 명시가 없는 한 작성자에게 있습니다.

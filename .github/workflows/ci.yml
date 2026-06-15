@@ -16,7 +16,7 @@ jobs:
   build:
     name: Code standards & build
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 10
 
     steps:
       - name: "☁️ Checkout repository"
@@ -25,22 +25,19 @@ jobs:
       - name: "📦 Install pnpm"
         uses: pnpm/action-setup@v4
         with:
-          version: "11.3.0"
+          version: "10.29.1"
 
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "24"
+          node-version: "22.12.0"
           cache: "pnpm"
 
       - name: "📦 Install dependencies"
         run: pnpm install --frozen-lockfile
 
-      - name: "🔎 Lint code"
-        run: pnpm run lint
-
-      - name: "📝 Checking code format"
-        run: pnpm run format:check
+      - name: "🔎 Verify code"
+        run: pnpm run verify
 
       - name: "🚀 Build the project"
         run: pnpm run build

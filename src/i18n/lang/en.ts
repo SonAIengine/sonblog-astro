@@ -42,7 +42,7 @@ export default {
     tagDesc: "All the articles with the tag",
 
     tagsTitle: "Tags",
-    tagsDesc: "All the tags used in posts.",
+    tagsDesc: "Repeated tags used for topic navigation.",
 
     postsTitle: "Posts",
     postsDesc: "All the articles I've posted.",

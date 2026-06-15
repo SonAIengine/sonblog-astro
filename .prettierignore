@@ -11,7 +11,28 @@
 !.prettierrc
 !eslint.config.js
 !README.md
+!AGENTS.md
+!/docs
 !.vscode
 
 # Ignore MDX files
 *.mdx
+
+# Generated/runtime artifacts
+/.astro
+/dist
+/node_modules
+/public/pagefind
+/public/search-vectors.json
+/public/assets/graph/graph-data.json
+/src/redirects.generated.json
+/reports
+
+# Long-form content is authored in prose-first Markdown. Keep CI focused on app code.
+/src/content/posts
+
+# Large hand-tuned interactive pages/scripts.
+/src/pages/graph.astro
+/src/pages/portfolio.astro
+/src/pages/portfolio-en.astro
+/src/scripts/graphViz.js
