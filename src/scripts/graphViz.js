@@ -108,10 +108,10 @@ window.initGraphViz = function initGraphViz() {
   });
   const degreeOf = id => (adjacency.get(id) || []).length;
 
-  // graph-data.json의 모든 노드 x/y가 0이라, 그대로 넣으면 force layout이
-  // 한 점에 겹친 채 시작해 퍼지지 않는다. x/y를 제거해 Cosmograph가
-  // 무작위 초기 위치를 잡도록 한다. (색/크기/url 등 나머지 속성은 유지)
-  const renderNodes = data.nodes.map(({ x, y, ...rest }) => rest);
+  // x/y는 빌드 타임(scripts/add-layout.mjs)에서 ForceAtlas2로 사전 계산되어
+  // graph-data.json에 박혀 있다. 그대로 사용하고 클라이언트 시뮬레이션은
+  // disableSimulation으로 끈다 → 페이지 열 때 물리 계산 0, 멈춤 없음.
+  const renderNodes = data.nodes;
 
   // ── 상태 ───────────────────────────────────────────────────────────────────
   // 체크박스 기본값과 동기화: post는 기본 off
@@ -206,10 +206,10 @@ window.initGraphViz = function initGraphViz() {
     // 줌 레벨/링크 길이와 무관하게 거의 항상 또렷하게 (짧은 링크도 안 사라지게)
     linkVisibilityDistanceRange: [1, 6],
     linkVisibilityMinTransparency: 0.75,
-    curvedLinks: true,
-    curvedLinkSegments: 16,
-    curvedLinkWeight: 0.5,
-    curvedLinkControlPointDistance: 0.4,
+    // 곡선 링크는 엣지당 16세그먼트를 시뮬레이션 매 프레임 재계산 →
+    // 3005엣지 × 16 = ~4.8만 세그먼트로 초기 로딩 시 브라우저가 멈춤.
+    // 직선 링크로 전환해 GPU 지오메트리/메모리 부담 제거.
+    curvedLinks: false,
 
     // 분류 허브에 토픽 이름 고정 라벨 + 호버 라벨
     showDynamicLabels: false,
@@ -224,20 +224,14 @@ window.initGraphViz = function initGraphViz() {
     hoveredNodeRingColor: V.ring,
     focusedNodeRingColor: V.ring,
 
-    // 시뮬레이션 — 클러스터(꽃)끼리도 멀리 벌어지게 척력↑·링크거리↑·중력↓
-    simulationGravity: 0.035,
-    simulationCenter: 0,
-    simulationRepulsion: 2.4,
-    simulationRepulsionTheta: 1.15,
-    simulationLinkSpring: 0.28,
-    simulationLinkDistance: 32,
-    simulationFriction: 0.9,
-    simulationDecay: 1000, // 빨리 식어 정착(클수록 느리게 식음)
-    useQuadtree: true,
+    // 레이아웃은 빌드 타임에 사전 계산(scripts/add-layout.mjs)되어 노드 x/y에 들어있다.
+    // disableSimulation → Cosmograph는 그 좌표를 그대로 위치로 쓰고 물리 계산을 안 한다.
+    // (예전엔 매 페이지 로드마다 force simulation을 돌려 브라우저가 멈췄음)
+    disableSimulation: true,
     spaceSize: 8192,
 
     fitViewOnInit: true,
-    fitViewDelay: 3000,
+    fitViewDelay: 250, // 시뮬레이션이 없으니 즉시 화면 맞춤
     // false → 확대해도 노드는 같은 px, 레이아웃만 벌어짐 → 간격 생겨 클릭 쉬움
     scaleNodesOnZoom: false,
 
@@ -344,28 +338,13 @@ window.initGraphViz = function initGraphViz() {
   }
   window.addEventListener("resize", positionMarker);
 
-  // 시뮬레이션 정지 관리 — 초기 배치가 끝나면 멈춰서 그래프를 정적으로 유지.
-  // (계속 움직이면 클릭/줌이 불편하므로. 줌·팬은 카메라라 정지 후에도 동작)
-  let _pauseTimer = 0;
-  function pauseSim() {
-    try {
-      cosmograph.pause();
-    } catch (e) {
-      /* noop */
-    }
-  }
-  function schedulePause(ms) {
-    clearTimeout(_pauseTimer);
-    _pauseTimer = setTimeout(pauseSim, ms);
-  }
-  schedulePause(4500); // 첫 레이아웃 정착 후 정지
+  // 시뮬레이션은 disableSimulation으로 꺼져 있어(사전 계산 좌표 사용) 별도 정지가 필요 없다.
 
   // 선택 노드 + (보이는) 이웃의 이름표를 캔버스에 고정 → 뷰어에서도 설명이 보이게.
   // cosmos.setConfig는 부분 전달 시 나머지를 기본값으로 덮으므로 cfg 전체를 넘긴다.
   function setForcedLabels(nodes) {
     try {
       cosmograph.setConfig({ ...cfg, showLabelsFor: nodes });
-      pauseSim(); // setConfig가 시뮬레이션을 깨울 수 있으니 다시 정지
     } catch (e) {
       /* noop */
     }
@@ -1228,7 +1207,6 @@ window.initGraphViz = function initGraphViz() {
       else activeTypes.delete(cb.dataset.type);
       const v = visibleData();
       cosmograph.setData(v.nodes, v.links);
-      schedulePause(4500); // 새 데이터 재배치 후 정지
     });
   });
 
