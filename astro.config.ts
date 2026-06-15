@@ -79,7 +79,10 @@ export default defineConfig({
       name: "Google Sans Code",
       cssVariable: "--font-google-sans-code",
       provider: fontProviders.google(),
-      fallbacks: ["monospace"],
+      // 라틴/숫자는 Sans Code. 한글은 이 폰트에 글리프가 없어 다음 폰트(Pretendard)로
+      // 넘어간다 → Windows에서 monospace(굴림)로 깨지던 문제 해결.
+      // Pretendard는 Layout.astro에서 CDN(dynamic-subset)으로 로드하며 family명이 "Pretendard".
+      fallbacks: ["Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", "monospace"],
       weights: [400, 500, 600, 700],
       styles: ["normal"],
       formats: ["woff2"],
