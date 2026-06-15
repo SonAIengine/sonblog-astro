@@ -35,8 +35,9 @@ const graphDataUrl = "/assets/graph/graph-data.json";
       <div id="graph-lazy-panel" class="graph-lazy-panel" data-pagefind-ignore>
         <p class="graph-lazy-kicker">{gm.total_posts} posts · {gm.total_tags} tags · {gm.total_categories} categories</p>
         <h1>Knowledge Graph</h1>
-        <button id="graph-load" class="graph-load-btn" type="button">
-          그래프 로드
+        <p id="graph-load-status" class="graph-lazy-status">그래프 로딩 중...</p>
+        <button id="graph-retry" class="graph-load-btn" type="button" hidden>
+          다시 시도
         </button>
       </div>
     </div>
@@ -81,14 +82,18 @@ const graphDataUrl = "/assets/graph/graph-data.json";
   async function loadGraph() {
     const root = document.querySelector<HTMLElement>(".graph-page");
     const panel = document.querySelector<HTMLElement>("#graph-lazy-panel");
-    const button = document.querySelector<HTMLButtonElement>("#graph-load");
+    const status = document.querySelector<HTMLElement>("#graph-load-status");
+    const retryButton = document.querySelector<HTMLButtonElement>("#graph-retry");
     if (!root || root.dataset.graphLoaded === "true") return;
     if (graphLoadPromise) return graphLoadPromise;
 
     root.classList.add("is-loading");
-    if (button) {
-      button.disabled = true;
-      button.textContent = "그래프 로딩...";
+    root.classList.remove("is-load-failed");
+    panel?.setAttribute("aria-busy", "true");
+    if (status) status.textContent = "그래프 로딩 중...";
+    if (retryButton) {
+      retryButton.hidden = true;
+      retryButton.disabled = true;
     }
 
     graphLoadPromise = Promise.resolve()
@@ -113,9 +118,11 @@ const graphDataUrl = "/assets/graph/graph-data.json";
         graphLoadPromise = null;
         root.classList.remove("is-loading");
         root.classList.add("is-load-failed");
-        if (button) {
-          button.disabled = false;
-          button.textContent = "다시 시도";
+        panel?.setAttribute("aria-busy", "false");
+        if (status) status.textContent = "로드 실패. 다시 시도할 수 있습니다.";
+        if (retryButton) {
+          retryButton.hidden = false;
+          retryButton.disabled = false;
         }
       });
 
@@ -124,12 +131,32 @@ const graphDataUrl = "/assets/graph/graph-data.json";
 
   function setupGraphLoader() {
     const root = document.querySelector<HTMLElement>(".graph-page");
-    const button = document.querySelector<HTMLButtonElement>("#graph-load");
-    if (!root || !button || root.dataset.loaderBound === "true") return;
+    const retryButton = document.querySelector<HTMLButtonElement>("#graph-retry");
+    if (!root || root.dataset.loaderBound === "true") return;
     root.dataset.loaderBound = "true";
-    button.addEventListener("click", () => {
+
+    retryButton?.addEventListener("click", () => {
       loadGraph();
     });
+
+    const start = () => {
+      loadGraph();
+    };
+
+    const requestIdle = (
+      window as Window & {
+        requestIdleCallback?: (
+          callback: IdleRequestCallback,
+          options?: IdleRequestOptions
+        ) => number;
+      }
+    ).requestIdleCallback;
+
+    if (requestIdle) {
+      requestIdle(start, { timeout: 900 });
+    } else {
+      setTimeout(start, 120);
+    }
   }
 
   document.addEventListener("astro:page-load", setupGraphLoader);
@@ -460,6 +487,10 @@ const graphDataUrl = "/assets/graph/graph-data.json";
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
+.graph-lazy-status {
+  font-family: var(--md-text-font);
+  font-size: 0.85rem;
+}
 .graph-load-btn {
   display: inline-flex;
   align-items: center;
@@ -480,6 +511,9 @@ const graphDataUrl = "/assets/graph/graph-data.json";
 }
 .graph-load-btn:disabled {
   opacity: 0.7;
+}
+.graph-load-btn[hidden] {
+  display: none;
 }
 [data-md-color-scheme="slate"] #sigma-container {
   background-color: #0a0b0d;
