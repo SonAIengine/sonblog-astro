@@ -35,7 +35,6 @@ const t = useTranslations(locale);
   <Main pageTitle={t.pages.searchTitle}>
     <div
       id="pagefind-search"
-      transition:persist
       data-backurl={backUrl}
       data-bundle-path={pagefindBundlePath}
     >
@@ -43,9 +42,10 @@ const t = useTranslations(locale);
 
     <section
       id="semantic-search"
-      class="semantic-search-panel hidden"
+      class="semantic-search-panel"
       data-search-api="https://search.infoedu.co.kr"
       aria-live="polite"
+      hidden
     >
       <div class="semantic-search-header">
         <h2>시맨틱 추천</h2>
@@ -78,6 +78,12 @@ const t = useTranslations(locale);
 
     const params = new URLSearchParams(window.location.search);
     const trackedEvents = new Set<string>();
+
+    function clearSemanticSearch() {
+      semanticSearch?.setAttribute("hidden", "");
+      semanticResults?.replaceChildren();
+      if (semanticMeta) semanticMeta.textContent = "";
+    }
 
     function goatcounter() {
       return (
@@ -178,6 +184,8 @@ const t = useTranslations(locale);
       const query = params.get("q");
       if (query) {
         search.triggerSearch(query);
+      } else {
+        clearSemanticSearch();
       }
 
       mountSemanticSearchPanel();
@@ -186,13 +194,21 @@ const t = useTranslations(locale);
       const searchInput = document.querySelector(".pagefind-ui__search-input");
       const clearButton = document.querySelector(".pagefind-ui__search-clear");
       searchInput?.addEventListener("input", resetSearchParam);
-      clearButton?.addEventListener("click", resetSearchParam);
+      clearButton?.addEventListener("click", () => {
+        window.setTimeout(() => {
+          if ((searchInput as HTMLInputElement | null)?.value.trim() === "") {
+            history.replaceState(history.state, "", window.location.pathname);
+            clearSemanticSearch();
+          }
+        }, 0);
+      });
       attachSemanticSearch(searchInput as HTMLInputElement | null);
       observePagefindResults(searchInput as HTMLInputElement | null);
 
       function resetSearchParam(e: Event) {
         if ((e.target as HTMLInputElement)?.value.trim() === "") {
           history.replaceState(history.state, "", window.location.pathname);
+          clearSemanticSearch();
         }
       }
     });
@@ -240,7 +256,7 @@ const t = useTranslations(locale);
 
       async function runSemanticSearch(q: string) {
         if (q.length < 2) {
-          searchBox.classList.add("hidden");
+          searchBox.hidden = true;
           resultsList.replaceChildren();
           meta.textContent = "";
           controller?.abort();
@@ -263,7 +279,7 @@ const t = useTranslations(locale);
           renderSemanticResults(data, q);
         } catch (error) {
           if ((error as DOMException).name === "AbortError") return;
-          searchBox.classList.add("hidden");
+          searchBox.hidden = true;
           resultsList.replaceChildren();
           meta.textContent = "";
         }
@@ -318,7 +334,7 @@ const t = useTranslations(locale);
       const results = data.results ?? [];
       trackSearchResults("semantic", query, results.length, data.ms);
       if (results.length === 0) {
-        semanticSearch.classList.add("hidden");
+        semanticSearch.hidden = true;
         semanticResults.replaceChildren();
         semanticMeta.textContent = "";
         return;
@@ -403,7 +419,7 @@ const t = useTranslations(locale);
         semanticResults.append(more);
       }
 
-      semanticSearch.classList.remove("hidden");
+      semanticSearch.hidden = false;
     }
   }
 
@@ -437,11 +453,15 @@ const t = useTranslations(locale);
   }
 
   .semantic-search-panel {
-    margin-block: 0 0.9rem;
+    margin-block: 0.65rem 0.9rem;
     padding: 0.75rem 0.85rem;
     border: 1px solid var(--border);
     border-radius: 0.375rem;
     background: color-mix(in oklab, var(--muted) 26%, transparent);
+  }
+
+  .semantic-search-panel[hidden] {
+    display: none !important;
   }
 
   .semantic-search-header {
