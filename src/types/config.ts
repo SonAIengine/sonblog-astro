@@ -61,6 +61,15 @@ interface FeaturesConfig {
   search?: "pagefind" | false;
 }
 
+interface AnalyticsConfig {
+  /** GoatCounter site code, e.g. "myblog" for https://myblog.goatcounter.com */
+  goatCounter?: {
+    /** Defaults to true when a code is provided. */
+    enabled?: boolean;
+    code: string;
+  };
+}
+
 interface SocialLink {
   /**
    * Must match an SVG filename in src/assets/icons/socials/.
@@ -96,6 +105,8 @@ interface AstroPaperConfig {
   site: SiteConfig;
   posts?: PostsConfig;
   features?: FeaturesConfig;
+  /** Analytics and public counters. */
+  analytics?: AnalyticsConfig;
   /** Social profile links shown in header/footer */
   socials?: SocialLink[];
   /** Share links shown on post detail pages */
@@ -121,6 +132,16 @@ export interface ResolvedAstroPaperConfig {
   site: ResolvedSiteConfig;
   posts: Required<PostsConfig>;
   features: Required<FeaturesConfig>;
+  analytics: {
+    goatCounter:
+      | {
+          enabled: true;
+          code: string;
+          baseUrl: string;
+          countEndpoint: string;
+        }
+      | { enabled: false };
+  };
   socials: SocialLink[];
   shareLinks: ShareLink[];
 }

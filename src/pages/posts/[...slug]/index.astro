@@ -6,6 +6,7 @@ import RelatedPosts from "@/components/RelatedPosts.astro";
 import Header from "@/components/Header.astro";
 import Footer from "@/components/Footer.astro";
 import Datetime from "@/components/Datetime.astro";
+import ViewCounter from "@/components/ViewCounter.astro";
 import Tag from "@/components/Tag.astro";
 import { getPostSlug, getPostUrl } from "@/utils/getPostPaths";
 import { getSortedPosts } from "@/utils/getSortedPosts";
@@ -100,6 +101,10 @@ if (!ogImageUrl && config.features.dynamicOgImage) {
 const ogImage = ogImageUrl
   ? new URL(ogImageUrl, Astro.url.origin).href
   : undefined;
+const postCounterPath = new URL(
+  canonicalURL ?? Astro.url.pathname,
+  Astro.site ?? Astro.url
+).pathname;
 ---
 
 <PostLayout
@@ -132,8 +137,9 @@ const ogImage = ogImageUrl
 
       <p class="post-description">{description}</p>
 
-      <div class="post-meta-row flex items-center gap-2">
+      <div class="post-meta-row flex flex-wrap items-center gap-2">
         <Datetime {pubDatetime} {modDatetime} {timezone} size="lg" />
+        <ViewCounter path={postCounterPath} label="Views" />
         <span
           aria-hidden="true"
           class:list={[

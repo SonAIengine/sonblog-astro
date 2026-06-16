@@ -1,0 +1,185 @@
+---
+import type { HTMLAttributes } from "astro/types";
+import config from "@/config";
+
+type Props = {
+  path?: string;
+  total?: boolean;
+  label?: string;
+  variant?: "post" | "footer";
+} & HTMLAttributes<"span">;
+
+const {
+  path = Astro.url.pathname,
+  total = false,
+  label = total ? "Visits" : "Views",
+  variant = "post",
+  class: className,
+  ...attrs
+} = Astro.props;
+
+const goatCounter = config.analytics.goatCounter;
+const counterPath = total ? "TOTAL" : path;
+const counterUrl = goatCounter.enabled
+  ? `${goatCounter.baseUrl}/counter/${encodeURIComponent(counterPath)}.json`
+  : undefined;
+---
+
+{
+  goatCounter.enabled && counterUrl && (
+    <span
+      class:list={["view-counter", `view-counter--${variant}`, className]}
+      data-view-counter
+      data-counter-url={counterUrl}
+      data-counter-label={label}
+      data-state="loading"
+      aria-label={`${label} loading`}
+      {...attrs}
+    >
+      <span class="view-counter__mark" aria-hidden="true" />
+      <span class="view-counter__label">{label}</span>
+      <span class="view-counter__value" data-counter-value>
+        000
+      </span>
+    </span>
+  )
+}
+
+<script>
+  type ViewCounterWindow = Window & {
+    __sonblogViewCounter?: boolean;
+  };
+
+  const viewCounterWindow = window as ViewCounterWindow;
+
+  if (!viewCounterWindow.__sonblogViewCounter) {
+    viewCounterWindow.__sonblogViewCounter = true;
+
+    const loadCounter = async (counter: HTMLElement) => {
+      const url = counter.dataset.counterUrl;
+      const label = counter.dataset.counterLabel ?? "Views";
+      const value = counter.querySelector<HTMLElement>("[data-counter-value]");
+
+      if (!url || !value) {
+        counter.hidden = true;
+        return;
+      }
+
+      try {
+        const response = await fetch(url, { credentials: "omit" });
+        if (!response.ok) throw new Error(`Counter failed: ${response.status}`);
+
+        const data = (await response.json()) as { count?: unknown };
+        if (typeof data.count !== "string" || data.count.length === 0) {
+          throw new Error("Counter response did not include count");
+        }
+
+        value.textContent = data.count;
+        counter.dataset.state = "ready";
+        counter.setAttribute("aria-label", `${label} ${data.count}`);
+      } catch {
+        counter.hidden = true;
+      }
+    };
+
+    const initCounters = () => {
+      document
+        .querySelectorAll<HTMLElement>(
+          "[data-view-counter]:not([data-counter-bound])"
+        )
+        .forEach(counter => {
+          counter.dataset.counterBound = "true";
+          void loadCounter(counter);
+        });
+    };
+
+    document.addEventListener("astro:page-load", initCounters);
+    initCounters();
+  }
+</script>
+
+<style>
+  .view-counter {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    max-width: 100%;
+    white-space: nowrap;
+    font-family: var(--font-app);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+
+  .view-counter[hidden] {
+    display: none;
+  }
+
+  .view-counter--post {
+    min-height: 2rem;
+    gap: 0.4rem;
+    padding: 0.34rem 0.58rem;
+    border: 1px solid color-mix(in srgb, var(--border) 82%, var(--accent));
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--muted) 58%, var(--background));
+    color: var(--muted-foreground);
+    font-size: 0.86rem;
+  }
+
+  .view-counter--footer {
+    gap: 0.36rem;
+    padding: 0.28rem 0.54rem;
+    border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--muted) 44%, transparent);
+    color: var(--muted-foreground);
+    font-size: 0.78rem;
+  }
+
+  .view-counter__mark {
+    flex: 0 0 auto;
+    width: 0.42rem;
+    height: 0.42rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--accent) 82%, var(--foreground));
+    box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--accent) 12%, transparent);
+  }
+
+  .view-counter__label {
+    color: color-mix(in srgb, var(--muted-foreground) 84%, var(--foreground));
+    font-weight: 650;
+  }
+
+  .view-counter__value {
+    color: var(--foreground);
+    font-weight: 750;
+  }
+
+  .view-counter[data-state="loading"] .view-counter__value {
+    min-width: 2.15rem;
+    border-radius: 999px;
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--muted) 80%, var(--background)),
+      color-mix(in srgb, var(--border) 75%, var(--background)),
+      color-mix(in srgb, var(--muted) 80%, var(--background))
+    );
+    background-size: 200% 100%;
+    color: transparent;
+    animation: view-counter-pulse 1.15s ease-in-out infinite;
+  }
+
+  @keyframes view-counter-pulse {
+    from {
+      background-position: 200% 0;
+    }
+    to {
+      background-position: -200% 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .view-counter[data-state="loading"] .view-counter__value {
+      animation: none;
+    }
+  }
+</style>

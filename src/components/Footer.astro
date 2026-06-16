@@ -1,6 +1,7 @@
 ---
 import type { HTMLAttributes } from "astro/types";
 import Socials from "./Socials.astro";
+import ViewCounter from "./ViewCounter.astro";
 import { useTranslations } from "@/i18n";
 
 type Props = {
@@ -21,10 +22,15 @@ const currentYear = new Date().getFullYear();
     class="border-border flex flex-col items-center justify-between border-t py-6 sm:flex-row-reverse sm:py-4"
   >
     <Socials />
-    <div class="my-2 flex flex-col items-center whitespace-nowrap sm:flex-row">
-      <span>{t.footer.copyright} &#169; {currentYear}</span>
-      <span class="hidden sm:inline">&nbsp;|&nbsp;</span>
-      <span>{t.footer.allRightsReserved}</span>
+    <div
+      class="my-2 flex flex-col items-center gap-2 whitespace-nowrap sm:flex-row sm:gap-3"
+    >
+      <div class="flex flex-col items-center sm:flex-row">
+        <span>{t.footer.copyright} &#169; {currentYear}</span>
+        <span class="hidden sm:inline">&nbsp;|&nbsp;</span>
+        <span>{t.footer.allRightsReserved}</span>
+      </div>
+      <ViewCounter total label="Visits" variant="footer" />
     </div>
   </div>
 </footer>

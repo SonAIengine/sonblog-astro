@@ -85,6 +85,14 @@ src/content/posts/
 - search telemetry는 GoatCounter 이벤트로 기록한다.
 - raw query는 보내지 않고 normalized query hash, query length, result count, latency만 보낸다.
 
+## 방문자/조회수
+
+- 방문자 집계는 GoatCounter `sonblog` 사이트를 사용한다.
+- 기본 page visit은 `src/layouts/Layout.astro`에서 `count.js`로 기록한다.
+- 글별 조회수와 전체 방문수 UI는 `src/components/ViewCounter.astro`가 공개 `/counter/[PATH].json` 엔드포인트를 읽어서 표시한다.
+- GoatCounter의 visitor counter 공개 설정이 꺼져 있거나 404가 반환되면 카운터 UI는 조용히 숨긴다.
+- API token은 클라이언트에 넣지 않는다. 기간별 통계나 인기글 랭킹은 별도 서버/빌드타임 작업으로 처리한다.
+
 ## Knowledge Graph
 
 - graph 원본 산출물은 `public/assets/graph/graph-data.json`이다.

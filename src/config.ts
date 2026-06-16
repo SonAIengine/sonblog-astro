@@ -9,6 +9,7 @@ import type { ResolvedAstroPaperConfig } from "./types/config";
 import { PUBLIC_GOOGLE_SITE_VERIFICATION } from "astro:env/client";
 
 const DEFAULT_OG_IMAGE = "default-og.jpg";
+const goatCounter = userConfig.analytics?.goatCounter;
 
 const config: ResolvedAstroPaperConfig = {
   site: {
@@ -33,6 +34,17 @@ const config: ResolvedAstroPaperConfig = {
     showBackButton: userConfig.features?.showBackButton ?? true,
     editPost: userConfig.features?.editPost ?? { enabled: false },
     search: userConfig.features?.search ?? "pagefind",
+  },
+  analytics: {
+    goatCounter:
+      goatCounter?.code && goatCounter.enabled !== false
+        ? {
+            enabled: true,
+            code: goatCounter.code,
+            baseUrl: `https://${goatCounter.code}.goatcounter.com`,
+            countEndpoint: `https://${goatCounter.code}.goatcounter.com/count`,
+          }
+        : { enabled: false },
   },
   socials: userConfig.socials ?? [],
   shareLinks: userConfig.shareLinks ?? [],

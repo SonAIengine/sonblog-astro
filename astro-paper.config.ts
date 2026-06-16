@@ -25,6 +25,11 @@ export default defineAstroPaperConfig({
     editPost: { enabled: false },
     search: "pagefind",
   },
+  analytics: {
+    goatCounter: {
+      code: "sonblog",
+    },
+  },
   socials: [
     { name: "github", url: "https://github.com/SonAIengine" },
     { name: "mail", url: "mailto:sonsj97@gmail.com" },
