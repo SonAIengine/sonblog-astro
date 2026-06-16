@@ -451,22 +451,17 @@ const recommendedQueries = ["RAG", "Qdrant", "vLLM", "K3s", "MCP", "Tauri"];
 
   @media (max-width: 639px) {
     .search-suggestion-list {
-      flex-wrap: nowrap;
+      flex-wrap: wrap;
       gap: 0.4rem;
-      margin-inline: -0.25rem;
-      padding: 0 0.25rem 0.15rem;
-      overflow-x: auto;
-      scrollbar-width: none;
-    }
-
-    .search-suggestion-list::-webkit-scrollbar {
-      display: none;
     }
   }
 
   .search-suggestion,
   .search-source-badge,
-  #pagefind-search .pagefind-ui__result-title::before {
+  #pagefind-search
+    .pagefind-ui__result
+    > .pagefind-ui__result-inner
+    > .pagefind-ui__result-title::before {
     display: inline-flex;
     align-items: center;
     min-height: 1.75rem;
@@ -538,6 +533,7 @@ const recommendedQueries = ["RAG", "Qdrant", "vLLM", "K3s", "MCP", "Tauri"];
     input {
       font-weight: 400;
       border: 1px solid var(--border);
+      min-width: 0;
     }
 
     @media (max-width: 639px) {
@@ -559,10 +555,59 @@ const recommendedQueries = ["RAG", "Qdrant", "vLLM", "K3s", "MCP", "Tauri"];
       text-underline-offset: 4px;
     }
 
-    .pagefind-ui__result-title::before {
+    .pagefind-ui__result-inner,
+    .pagefind-ui__result-title,
+    .pagefind-ui__result-title a,
+    .pagefind-ui__result-excerpt {
+      min-width: 0;
+      max-width: 100%;
+      overflow-wrap: anywhere;
+    }
+
+    .pagefind-ui__result > .pagefind-ui__result-inner {
+      width: 100%;
+    }
+
+    .pagefind-ui__result
+      > .pagefind-ui__result-inner
+      > .pagefind-ui__result-title::before {
       content: "Pagefind";
       margin-inline-end: 0.5rem;
       vertical-align: text-bottom;
+    }
+
+    @media (max-width: 639px) {
+      .pagefind-ui__result {
+        padding-block: 1.25rem 1.5rem;
+      }
+
+      .pagefind-ui__result-inner {
+        margin-top: 0;
+      }
+
+      .pagefind-ui__result
+        > .pagefind-ui__result-inner
+        > .pagefind-ui__result-title::before {
+        display: flex;
+        width: fit-content;
+        margin: 0 0 0.45rem;
+      }
+
+      .pagefind-ui__result-title {
+        display: block;
+        line-height: 1.45;
+      }
+
+      .pagefind-ui__result-excerpt {
+        min-width: 0;
+        line-height: 1.55;
+      }
+
+      .pagefind-ui__result-nested {
+        margin-top: 0.7rem;
+        border-left: 1px solid var(--border);
+        padding-left: 0.85rem;
+      }
     }
 
     .pagefind-ui__result-title a:focus-visible,
