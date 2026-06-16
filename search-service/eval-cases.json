@@ -1,0 +1,118 @@
+[
+  {
+    "id": "rag_exact",
+    "query": "RAG",
+    "intent": "RAG 관련 대표 글이 상위에 나와야 한다.",
+    "type": "positive",
+    "relevant": [
+      "/posts/ai/xgen/iterative-rag-search-engine-impl/",
+      "/posts/ai/fine-tuning/ojt-refactoring-kotaemon-rag-impl/",
+      "/posts/search-engine/rag/langgraph-use-cases/",
+      "/posts/search-engine/rag/rag-advanced-intro/",
+      "/posts/ai/xgen/rag-service-token-management-context-window-optimization/"
+    ],
+    "minTopScore": 0.75
+  },
+  {
+    "id": "k3s_argocd_gitops",
+    "query": "k3s argocd gitops",
+    "intent": "K3s와 ArgoCD GitOps 배포 글이 1위권에 나와야 한다.",
+    "type": "positive",
+    "relevant": [
+      "/posts/devops/infra/xgen-2-0-infra-k8s-argocd-ops-deploy/",
+      "/posts/devops/infra/xgen-k3s-anatomy-4-cicd-jenkins-argocd/",
+      "/posts/devops/infra/reusable-gha-helm-k3s-generic-deploy-platform-setup/"
+    ],
+    "minTopScore": 0.75
+  },
+  {
+    "id": "qdrant_workflow_hybrid",
+    "query": "워크플로우 엔진 qdrant 하이브리드",
+    "intent": "Qdrant 하이브리드 검색을 워크플로우 엔진에 붙인 글이 최상위여야 한다.",
+    "type": "positive",
+    "relevant": [
+      "/posts/ai/xgen/xgen-1-0-workflow-engine-qdrant-hybrid-search/",
+      "/posts/search-engine/qdrant/hybrid-queries/",
+      "/posts/ai/xgen/qdrant-hybrid-search-sparse-dense-vector-integration/"
+    ],
+    "minTopScore": 0.75
+  },
+  {
+    "id": "deepseek_instruction",
+    "query": "문서 처리 DeepSeek 지시문",
+    "intent": "DeepSeek 지시문 적용 글이 정확히 나와야 한다.",
+    "type": "positive",
+    "relevant": [
+      "/posts/full-stack/backend/document-processing-service-deepseek-apply/"
+    ],
+    "minTopScore": 0.75
+  },
+  {
+    "id": "search_api_llmops_compose",
+    "query": "검색 API LLMOps docker compose",
+    "intent": "Search API와 LLMOps Docker Compose 글이 나와야 한다.",
+    "type": "positive",
+    "relevant": [
+      "/posts/devops/infra/search-api-llmops-docker-compose/"
+    ],
+    "minTopScore": 0.7
+  },
+  {
+    "id": "graph_tool_call_rpc",
+    "query": "graph tool call rpc detection plan execute compiler",
+    "intent": "graph-tool-call v0.20 RPC 탐지 글이 나와야 한다.",
+    "type": "positive",
+    "relevant": [
+      "/posts/ai/agent/graph-tool-call-v020-rpc-detection-plan-execute-compiler/"
+    ],
+    "minTopScore": 0.7
+  },
+  {
+    "id": "deep_learning_korean",
+    "query": "대학원 딥러닝",
+    "intent": "딥러닝 글 묶음이 상위에 나와야 한다.",
+    "type": "positive",
+    "relevant": [
+      "/posts/ai/deep-learning/dropout/",
+      "/posts/ai/deep-learning/tokenization/",
+      "/posts/ai/deep-learning/transformer-query-key-value/",
+      "/posts/ai/deep-learning/gpt-model-from-scratch-1/",
+      "/posts/ai/deep-learning/gpt-model-from-scratch-2/",
+      "/posts/ai/deep-learning/self-attention-step-by-step/"
+    ],
+    "minTopScore": 0.7
+  },
+  {
+    "id": "deep_learning_typo_mixed",
+    "query": "대학원 Deeplearn",
+    "intent": "오타/혼합어 Deeplearn도 딥러닝 글로 보정되어야 한다.",
+    "type": "positive",
+    "relevant": [
+      "/posts/ai/deep-learning/dropout/",
+      "/posts/ai/deep-learning/tokenization/",
+      "/posts/ai/deep-learning/transformer-query-key-value/",
+      "/posts/ai/deep-learning/gpt-model-from-scratch-1/",
+      "/posts/ai/deep-learning/gpt-model-from-scratch-2/",
+      "/posts/ai/deep-learning/self-attention-step-by-step/"
+    ],
+    "minTopScore": 0.65
+  },
+  {
+    "id": "diagram_no_post",
+    "query": "Mermaid D2 다이어그램",
+    "intent": "현재 posts 코퍼스에 Mermaid/D2 전용 글이 없으면 낮은 신뢰도로 처리해야 한다.",
+    "type": "negative",
+    "relevant": [],
+    "maxTopScore": 0.6,
+    "maxResults": 2
+  },
+  {
+    "id": "gibberish_no_result",
+    "query": "아무말 zzzznotfound 외계어",
+    "intent": "무관 질의는 결과를 과신하지 않아야 한다.",
+    "type": "negative",
+    "relevant": [],
+    "maxTopScore": 0.55,
+    "maxResults": 0
+  }
+]
