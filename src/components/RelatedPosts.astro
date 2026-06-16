@@ -42,7 +42,10 @@ const scored = all
       <ul>
         {scored.map(({ p }) => (
           <li>
-            <a href={getPostUrl(p.id, p.filePath, Astro.currentLocale)}>
+            <a
+              href={getPostUrl(p.id, p.filePath, Astro.currentLocale)}
+              data-astro-prefetch="viewport"
+            >
               {p.data.title}
             </a>
             <p>{p.data.description}</p>

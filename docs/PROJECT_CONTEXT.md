@@ -97,6 +97,7 @@ src/content/posts/
 
 ## UI/UX 구조
 
+- 디자인 원칙과 색상 역할은 `docs/DESIGN.md`를 따른다.
 - 공통 글 카드 `src/components/Card.astro`는 `tone`으로 목록 밀도를 나눈다.
 - 홈 대표 글은 `tone="featured"`, 최신 글은 `tone="compact"`를 사용한다.
 - 토픽 학습 경로는 `tone="learning"`으로 단계 안의 글을 compact row로 표시한다.
@@ -104,6 +105,7 @@ src/content/posts/
 - 포스트 상세 페이지는 데스크톱에서 본문 `h2/h3` 기반 sticky TOC를 자동 생성한다.
 - 모바일에서는 390px 폭을 기준으로 horizontal overflow가 없어야 한다.
 - 모바일 그래프는 캔버스가 첫 화면을 과점유하지 않도록 viewport 기반 높이 제한을 둔다.
+- 글 렌더링/이동 성능과 다이어그램 라이브러리 선택 기준은 `docs/PERFORMANCE_AND_DIAGRAMS.md`를 함께 본다.
 
 ## Topic Hub
 

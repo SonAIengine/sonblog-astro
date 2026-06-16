@@ -41,6 +41,7 @@ const tags = data.tags.slice(0, 2);
     <li class="border-border hover:border-accent/70 bg-background group rounded-md border p-4 transition sm:p-5">
       <a
         href={href}
+        data-astro-prefetch="viewport"
         class="block focus-visible:outline-2 focus-visible:outline-offset-4"
       >
         <div class="font-app text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
@@ -73,6 +74,7 @@ const tags = data.tags.slice(0, 2);
     <li class="py-3 sm:py-4">
       <a
         href={href}
+        data-astro-prefetch="viewport"
         class="group grid min-w-0 gap-2 rounded-md py-1 focus-visible:outline-2 focus-visible:outline-offset-4 sm:grid-cols-[minmax(0,1fr)_8rem]"
       >
         <div class="min-w-0">
@@ -101,6 +103,7 @@ const tags = data.tags.slice(0, 2);
       </span>
       <a
         href={href}
+        data-astro-prefetch="viewport"
         class="group rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4"
       >
         <Heading
@@ -119,8 +122,9 @@ const tags = data.tags.slice(0, 2);
     <li class="my-6">
       <a
         href={href}
+        data-astro-prefetch="viewport"
         class:list={[
-          "text-accent inline-block text-lg font-medium",
+          "text-foreground hover:text-accent inline-block text-lg font-semibold transition-colors",
           "decoration-dashed underline-offset-4 hover:underline",
           "focus-visible:no-underline focus-visible:underline-offset-0",
         ]}
@@ -128,7 +132,7 @@ const tags = data.tags.slice(0, 2);
         <Heading transition:name={toTransitionName(title)}>{title}</Heading>
       </a>
       <Datetime {...props} />
-      <p>{description}</p>
+      <p class="text-muted-foreground">{description}</p>
     </li>
   )
 }

@@ -1144,13 +1144,12 @@ window.initGraphViz = function initGraphViz() {
     });
   });
 
-  // ── 첫 포커스 시 검색 서버 가용성 미리 확인(폴백 빠르게 결정) ─────────────────
+  // ── 첫 포커스 시 검색 서버 가용성만 미리 확인(인덱스는 실제 검색 때 로드) ───────
   let _preloaded = false;
   searchInput?.addEventListener("focus", () => {
     if (_preloaded) return;
     _preloaded = true;
     apiAvailable();
-    ensureSearch().catch(() => {}); // BM25 즉시 응답 위해 Orama 인덱스 미리 로드
   });
 
   // ── 검색 입력 (디바운스) ────────────────────────────────────────────────────
@@ -1200,13 +1199,6 @@ window.initGraphViz = function initGraphViz() {
       }
     }
   });
-  // 인덱스 idle 프리페치 → 첫 검색 지연 최소화
-  if ("requestIdleCallback" in window) {
-    requestIdleCallback(() => ensureSearch().catch(() => {}), { timeout: 4000 });
-  } else {
-    setTimeout(() => ensureSearch().catch(() => {}), 2500);
-  }
-
   // ── 초기화 버튼 ───────────────────────────────────────────────────────────
   document.getElementById("graph-reset")?.addEventListener("click", () => {
     clearNode();
