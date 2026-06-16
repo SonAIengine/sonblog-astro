@@ -1,13 +1,10 @@
 ---
 import { getRelativeLocaleUrl } from "astro:i18n";
-import IconUnderline from "@/assets/icons/IconUnderline.svg";
 import IconMenuDeep from "@/assets/icons/IconMenuDeep.svg";
-import IconArchive from "@/assets/icons/IconArchive.svg";
 import IconSunHigh from "@/assets/icons/IconSunHigh.svg";
 import IconSearch from "@/assets/icons/IconSearch.svg";
 import IconMoon from "@/assets/icons/IconMoon.svg";
 import IconX from "@/assets/icons/IconX.svg";
-import LinkButton from "./LinkButton.astro";
 import { stripBase, stripLocale } from "@/utils/withBase";
 import { useTranslations } from "@/i18n";
 import config from "@/config";
@@ -73,7 +70,7 @@ const isActive = (path: string) => {
       </button>
       <ul
         id="menu-items"
-        class="border-border bg-background [&>li>a]:hover:bg-muted/60 [&>li>a]:hover:text-accent absolute top-[calc(100%+0.5rem)] right-0 z-50 hidden w-[min(18rem,calc(100vw-2rem))] grid-cols-2 gap-1 rounded-md border p-2 shadow-lg shadow-black/10 sm:static sm:mt-0 sm:flex sm:w-auto sm:gap-x-5 sm:gap-y-0 sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none sm:[&>li]:h-8 [&>li>a]:block [&>li>a]:rounded-md [&>li>a]:px-3 [&>li>a]:py-3 [&>li>a]:text-left [&>li>a]:font-medium [&>li>a]:transition sm:[&>li>a]:px-2 sm:[&>li>a]:py-1 sm:[&>li>a]:text-center sm:[&>li>a]:hover:bg-transparent"
+        class="border-border bg-background [&>li>a]:hover:bg-muted/60 [&>li>a]:hover:text-accent absolute top-[calc(100%+0.5rem)] right-0 z-50 hidden w-[min(18rem,calc(100vw-2rem))] grid-cols-2 gap-1 rounded-md border p-2 shadow-lg shadow-black/10 sm:static sm:mt-0 sm:flex sm:w-auto sm:gap-x-5 sm:gap-y-0 sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none sm:[&>li]:h-8 [&>li>a]:block [&>li>a]:rounded-md [&>li>a]:px-3 [&>li>a]:py-3 [&>li>a]:text-left [&>li>a]:font-medium [&>li>a]:transition sm:[&>li>a]:px-1.5 sm:[&>li>a]:py-1 sm:[&>li>a]:text-center sm:[&>li>a]:hover:bg-transparent"
       >
         <li class="col-span-2">
           <a
@@ -110,56 +107,42 @@ const isActive = (path: string) => {
         {
           features.showArchives && (
             <li class="col-span-2">
-              <LinkButton
+              <a
                 href={getRelativeLocaleUrl(locale, "archives")}
-                class:list={[
-                  "focus-outline hover:bg-muted/60 flex w-full rounded-md px-3 py-3 font-medium transition sm:relative sm:size-8 sm:justify-center sm:p-0 sm:hover:bg-transparent",
-                  { "active-nav": isActive("/archives") },
-                ]}
-                title={t.nav.archives}
-                aria-label={t.nav.archives}
+                class:list={{ "active-nav": isActive("/archives") }}
               >
-                <IconArchive class="hidden sm:absolute sm:top-1/2 sm:left-1/2 sm:block sm:size-6 sm:-translate-x-1/2 sm:-translate-y-1/2" />
-                <span class="sm:sr-only">{t.nav.archives}</span>
-                {isActive("/archives") && (
-                  <IconUnderline
-                    aria-hidden="true"
-                    class="scale-125 max-sm:hidden sm:absolute sm:bottom-0 sm:w-6"
-                  />
-                )}
-              </LinkButton>
+                {t.nav.archives}
+              </a>
             </li>
           )
         }
         {
           features.search !== false && (
-            <li class="col-span-1 flex items-center justify-center">
-              <LinkButton
+            <li class="col-span-2 flex items-center justify-center sm:ms-1 sm:border-s sm:ps-4">
+              <a
                 href={getRelativeLocaleUrl(locale, "search")}
                 class:list={[
-                  "focus-outline border-border/80 bg-muted/40 hover:border-accent/50 hover:bg-muted/70 flex! h-12 w-full items-center! justify-center! rounded-md border px-2! text-xs font-medium transition sm:relative sm:size-8 sm:border-0 sm:bg-transparent sm:p-0 sm:hover:bg-transparent",
+                  "focus-outline border-border/80 bg-muted/40 hover:border-accent/50 hover:bg-muted/70 sm:hover:bg-muted/60 flex! h-12 w-full items-center! justify-start! gap-2 rounded-md border px-3! text-left text-xs font-medium transition sm:size-8 sm:justify-center! sm:border-0 sm:bg-transparent sm:p-0!",
+                  {
+                    "text-accent bg-muted/70 sm:bg-muted/60":
+                      isActive("/search"),
+                  },
                 ]}
                 title={t.nav.search}
                 aria-label={t.nav.search}
               >
-                <IconSearch class="size-5 sm:absolute sm:top-1/2 sm:left-1/2 sm:size-6 sm:-translate-x-1/2 sm:-translate-y-1/2" />
+                <IconSearch class="size-5 sm:size-6" />
                 <span class="whitespace-nowrap sm:sr-only">{t.nav.search}</span>
-                {isActive("/search") && (
-                  <IconUnderline
-                    aria-hidden="true"
-                    class="absolute bottom-0 w-6 scale-125 max-sm:inset-s-2"
-                  />
-                )}
-              </LinkButton>
+              </a>
             </li>
           )
         }
         {
           features.lightAndDarkMode && (
-            <li class="col-span-1 flex items-center justify-center">
+            <li class="col-span-2 flex items-center justify-center">
               <button
                 id="theme-btn"
-                class="focus-outline hover:border-accent/50 hover:bg-muted/70 border-border/80 bg-muted/40 hover:[&>span>svg]:stroke-accent relative flex h-12 w-full items-center justify-center gap-1 rounded-md border px-2! text-xs font-medium transition sm:size-8 sm:border-0 sm:bg-transparent sm:p-0 sm:hover:bg-transparent"
+                class="focus-outline hover:border-accent/50 hover:bg-muted/70 border-border/80 bg-muted/40 hover:[&>span>svg]:stroke-accent relative flex h-12 w-full items-center justify-start gap-2 rounded-md border px-3! text-left text-xs font-medium transition sm:size-8 sm:justify-center sm:border-0 sm:bg-transparent sm:p-0 sm:hover:bg-transparent"
                 title={t.a11y.toggleTheme}
                 aria-label="auto"
                 aria-live="polite"
