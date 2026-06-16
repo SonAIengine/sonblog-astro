@@ -16,6 +16,7 @@ import remarkCollapse from "remark-collapse";
 import rehypeCallouts from "rehype-callouts";
 import { rehypeAutoInternalLinks } from "./src/utils/rehypeAutoInternalLinks";
 import { remarkContentLinks } from "./src/utils/remarkContentLinks";
+import { remarkD2 } from "./src/utils/remarkD2";
 import { remarkMermaid } from "./src/utils/remarkMermaid";
 import {
   transformerNotationDiff,
@@ -56,6 +57,7 @@ export default defineConfig({
         remarkToc,
         [remarkCollapse, { test: "Table of contents" }],
         remarkContentLinks,
+        remarkD2,
         remarkMermaid,
       ],
       rehypePlugins: [rehypeCallouts, rehypeAutoInternalLinks],

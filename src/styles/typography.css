@@ -113,6 +113,102 @@
     @apply bg-(--shiki-dark-bg) text-(--shiki-dark) [&_span]:text-(--shiki-dark);
   }
 
+  .app-prose .diagram-frame {
+    width: 100%;
+    max-width: 100%;
+    margin: 1.75rem auto;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background:
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--background) 96%, var(--accent)),
+        var(--background)
+      ),
+      var(--background);
+    box-shadow: 0 1px 0 color-mix(in srgb, var(--foreground) 4%, transparent);
+    scrollbar-gutter: stable;
+    contain: inline-size;
+  }
+
+  .app-prose .diagram-frame[aria-busy="true"] {
+    min-height: 12rem;
+  }
+
+  .app-prose .diagram-frame[aria-busy="true"]::before {
+    display: grid;
+    min-height: 12rem;
+    place-items: center;
+    color: var(--muted-foreground);
+    font-family: var(--font-app);
+    font-size: 0.82rem;
+    content: "Rendering diagram...";
+  }
+
+  .app-prose .diagram-canvas {
+    width: max-content;
+    min-width: min(42rem, 100%);
+    margin: 0 auto;
+    padding: 1rem;
+  }
+
+  .app-prose .diagram-canvas svg {
+    display: block;
+    max-width: none;
+    height: auto;
+    margin: 0 auto;
+    overflow: visible;
+  }
+
+  .app-prose pre.mermaid[data-mermaid-src] {
+    display: grid;
+    min-height: 12rem;
+    place-items: center;
+    margin: 1.75rem auto;
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--muted) 48%, var(--background));
+    color: var(--muted-foreground);
+    font-family: var(--font-app);
+    font-size: 0.82rem;
+  }
+
+  .app-prose pre.mermaid[data-mermaid-src]::before {
+    content: "Rendering diagram...";
+  }
+
+  .app-prose .diagram-error-message {
+    margin: 0;
+    padding: 0.85rem 1rem 0;
+    color: var(--muted-foreground);
+    font-family: var(--font-app);
+    font-size: 0.82rem;
+  }
+
+  .app-prose .diagram-error {
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  @media (max-width: 640px) {
+    .app-prose .diagram-frame,
+    .app-prose pre.mermaid[data-mermaid-src] {
+      width: calc(100vw - 1rem);
+      max-width: calc(100vw - 1rem);
+      margin-inline: calc(50% - 50vw + 0.5rem);
+      border-radius: 8px;
+    }
+
+    .app-prose .diagram-canvas {
+      min-width: min(40rem, calc(100vw - 1rem));
+      padding: 0.85rem;
+    }
+  }
+
   /* Styles for Shiki transformers */
   /* https://shiki.style/packages/transformers */
   .astro-code {
