@@ -20,6 +20,8 @@
   --muted: #f1f1f3;
   --muted-foreground: #6b7280;
   --border: #e8e8ea;
+  --font-readable:
+    Pretendard, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
 }
 
 /* Dark theme — Linear 톤 (깊은 무채색 + teal accent + 시그니처 회색) */
@@ -31,4 +33,6 @@
   --muted: #16181d;
   --muted-foreground: #8a8f98;
   --border: #23252b;
+  --font-readable:
+    Pretendard, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
 }

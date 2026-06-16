@@ -15,9 +15,9 @@ const t = useTranslations(locale);
       <LinkButton
         id="back-button"
         href={getRelativeLocaleUrl(locale, "")}
-        class="focus-outline hover:text-foreground/75 -ms-2 mt-8 mb-2"
+        class="focus-outline text-muted-foreground hover:text-foreground/75 -ms-2 mt-6 mb-1 text-sm transition-colors sm:mt-8 sm:mb-2 sm:text-base"
       >
-        <IconChevronLeft class="inline-block size-6 rtl:rotate-180" />
+        <IconChevronLeft class="inline-block size-5 sm:size-6 rtl:rotate-180" />
         <span>{t.post.goBack}</span>
       </LinkButton>
     </div>

@@ -105,51 +105,84 @@ function buildArticleToc(
   signal: AbortSignal,
   onCleanup: (cleanup: () => void) => void
 ): void {
-  const toc = document.getElementById("article-toc");
-  const list = document.getElementById("article-toc-list");
+  const targets = [
+    {
+      toc: document.getElementById("article-toc"),
+      list: document.getElementById("article-toc-list"),
+    },
+    {
+      toc: document.getElementById("article-mobile-toc"),
+      list: document.getElementById("article-mobile-toc-list"),
+    },
+  ].filter(
+    (target): target is { toc: HTMLElement; list: HTMLElement } =>
+      target.toc instanceof HTMLElement && target.list instanceof HTMLElement
+  );
   const headings = Array.from(
     document.querySelectorAll<HTMLElement>("#article h2[id], #article h3[id]")
   );
 
-  if (!toc || !list || headings.length < 2) {
-    toc?.remove();
+  if (targets.length === 0 || headings.length < 2) {
+    for (const target of targets) target.toc.remove();
     return;
   }
 
-  const linksById = new Map<string, HTMLAnchorElement>();
-  const fragment = document.createDocumentFragment();
+  const linksById = new Map<string, HTMLAnchorElement[]>();
 
-  for (const heading of headings) {
-    const id = heading.id;
-    const text = heading.textContent?.replace("#", "").trim();
-    if (!id || !text) continue;
+  for (const { toc, list } of targets) {
+    const fragment = document.createDocumentFragment();
 
-    const item = document.createElement("li");
-    item.className =
-      heading.tagName === "H3"
-        ? "article-toc-item article-toc-item--nested"
-        : "article-toc-item";
+    for (const heading of headings) {
+      const id = heading.id;
+      const text = heading.textContent?.replace("#", "").trim();
+      if (!id || !text) continue;
 
-    const link = document.createElement("a");
-    link.href = `#${id}`;
-    link.textContent = text;
-    linksById.set(id, link);
+      const item = document.createElement("li");
+      item.className =
+        heading.tagName === "H3"
+          ? "article-toc-item article-toc-item--nested"
+          : "article-toc-item";
 
-    item.appendChild(link);
-    fragment.appendChild(item);
+      const link = document.createElement("a");
+      link.href = `#${id}`;
+      link.textContent = text;
+
+      const links = linksById.get(id) ?? [];
+      links.push(link);
+      linksById.set(id, links);
+
+      item.appendChild(link);
+      fragment.appendChild(item);
+    }
+
+    list.replaceChildren(fragment);
+    toc.hidden = false;
   }
 
   if (linksById.size < 2) {
-    toc.remove();
+    for (const target of targets) target.toc.remove();
     return;
   }
 
-  list.replaceChildren(fragment);
-  toc.hidden = false;
+  const mobileToc = document.getElementById("article-mobile-toc");
+  mobileToc?.addEventListener(
+    "click",
+    event => {
+      const target = event.target;
+      if (target instanceof Element && target.closest("a")) {
+        window.setTimeout(() => {
+          if (mobileToc instanceof HTMLDetailsElement) mobileToc.open = false;
+        }, 120);
+      }
+    },
+    { signal }
+  );
 
   const setActive = (id: string) => {
-    for (const link of linksById.values()) {
-      link.classList.toggle("is-active", link.hash === `#${id}`);
+    for (const [linkId, links] of linksById.entries()) {
+      for (const link of links) {
+        link.classList.toggle("is-active", linkId === id);
+      }
     }
   };
 
@@ -187,8 +220,12 @@ function addHeadingLinks(article: HTMLElement): void {
 
     const link = document.createElement("a");
     link.className =
-      "heading-link ms-2 no-underline opacity-75 md:opacity-0 md:group-hover:opacity-100 md:focus:opacity-100";
+      "heading-link ms-2 no-underline opacity-0 transition-opacity group-hover:opacity-70 focus-visible:opacity-100";
     link.href = `#${heading.id}`;
+    link.setAttribute(
+      "aria-label",
+      `Link to ${heading.textContent?.replace("#", "").trim() || "section"}`
+    );
 
     const span = document.createElement("span");
     span.ariaHidden = "true";

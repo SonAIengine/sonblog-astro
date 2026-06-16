@@ -122,28 +122,42 @@ const ogImage = ogImageUrl
     ]}
     data-pagefind-body
   >
-    <h1
-      style={{ viewTransitionName: toTransitionName(title) }}
-      class="text-foreground inline-block text-[1.75rem] leading-tight font-bold break-words sm:text-3xl"
-    >
-      {title}
-    </h1>
-
-    <div class="my-2 flex items-center gap-2">
-      <Datetime {pubDatetime} {modDatetime} {timezone} size="lg" />
-      <span
-        aria-hidden="true"
-        class:list={[
-          "text-muted-foreground max-sm:hidden",
-          { hidden: !config.features.editPost?.enabled || hideEditPost },
-        ]}
+    <header class="post-header">
+      <h1
+        style={{ viewTransitionName: toTransitionName(title) }}
+        class="post-title text-foreground inline-block text-[1.85rem] leading-tight font-bold break-words sm:text-4xl"
       >
-        |
-      </span>
-      <EditPost {hideEditPost} {post} class="max-sm:hidden" />
-    </div>
+        {title}
+      </h1>
+
+      <p class="post-description">{description}</p>
+
+      <div class="post-meta-row flex items-center gap-2">
+        <Datetime {pubDatetime} {modDatetime} {timezone} size="lg" />
+        <span
+          aria-hidden="true"
+          class:list={[
+            "text-muted-foreground max-sm:hidden",
+            { hidden: !config.features.editPost?.enabled || hideEditPost },
+          ]}
+        >
+          |
+        </span>
+        <EditPost {hideEditPost} {post} class="max-sm:hidden" />
+      </div>
+    </header>
 
     <SeriesNav series={post.data.series} currentId={post.id} />
+
+    <details
+      id="article-mobile-toc"
+      class="article-mobile-toc"
+      data-pagefind-ignore
+      hidden
+    >
+      <summary>목차</summary>
+      <ol id="article-mobile-toc-list"></ol>
+    </details>
 
     <div class="article-shell">
       <article
@@ -215,19 +229,185 @@ const ogImage = ogImageUrl
     max-width: min(72rem, calc(100% - 2rem));
   }
 
+  .post-header {
+    max-width: 48rem;
+    margin-inline: auto;
+    padding-block-end: 1.5rem;
+    border-block-end: 1px solid var(--border);
+  }
+
+  .post-title {
+    font-family: var(--font-readable);
+    letter-spacing: 0;
+  }
+
+  .post-description {
+    max-width: 42rem;
+    margin-top: 1rem;
+    color: var(--muted-foreground);
+    font-family: var(--font-readable);
+    font-size: 1.03rem;
+    line-height: 1.72;
+  }
+
+  .post-meta-row {
+    margin-top: 1rem;
+    font-family: var(--font-app);
+  }
+
+  #article.app-prose {
+    font-family: var(--font-readable);
+    font-size: 1.03rem;
+    line-height: 1.86;
+  }
+
+  #article.app-prose :where(p, ul, ol) {
+    margin-block: 1.1rem;
+  }
+
+  #article.app-prose :where(strong, b) {
+    font-weight: 700;
+  }
+
+  #article.app-prose h2,
+  #article.app-prose h3 {
+    position: relative;
+    font-family: var(--font-readable);
+    font-style: normal;
+    letter-spacing: 0;
+  }
+
+  #article.app-prose h2 {
+    margin-top: 3.4rem;
+    padding-top: 1.15rem;
+    border-top: 1px solid var(--border);
+    font-size: 1.6rem;
+    line-height: 1.35;
+  }
+
+  #article.app-prose > h2:first-child {
+    margin-top: 0;
+  }
+
+  #article.app-prose h2::before {
+    content: "";
+    position: absolute;
+    top: -1px;
+    left: 0;
+    width: 2.4rem;
+    height: 2px;
+    background: var(--accent);
+  }
+
+  #article.app-prose h3 {
+    margin-top: 2.3rem;
+    color: color-mix(in srgb, var(--foreground) 88%, var(--accent));
+    font-size: 1.24rem;
+    line-height: 1.45;
+  }
+
+  #article.app-prose :where(code, kbd, pre, pre *) {
+    font-family: var(--font-app);
+  }
+
+  #article.app-prose :not(pre) > code {
+    padding: 0.12rem 0.35rem;
+    border-radius: 0.32rem;
+    background: color-mix(in srgb, var(--muted) 82%, var(--background));
+    color: color-mix(in srgb, var(--foreground) 86%, var(--accent));
+    font-size: 0.9em;
+    font-weight: 650;
+  }
+
+  .article-mobile-toc {
+    margin: 1.5rem auto 0;
+    max-width: 48rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--muted) 45%, var(--background));
+    font-family: var(--font-readable);
+  }
+
+  .article-mobile-toc[hidden] {
+    display: none;
+  }
+
+  .article-mobile-toc summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 2.8rem;
+    padding: 0 0.95rem;
+    color: var(--foreground);
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .article-mobile-toc summary::after {
+    content: "";
+    width: 0.55rem;
+    height: 0.55rem;
+    border-right: 2px solid var(--muted-foreground);
+    border-bottom: 2px solid var(--muted-foreground);
+    transform: rotate(45deg) translateY(-2px);
+    transition: transform 160ms ease;
+  }
+
+  .article-mobile-toc[open] summary::after {
+    transform: rotate(225deg) translate(-2px, -2px);
+  }
+
+  .article-mobile-toc ol {
+    margin: 0;
+    padding: 0.25rem 0 0.75rem;
+    border-top: 1px solid var(--border);
+    list-style: none;
+    max-height: min(52dvh, 24rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .article-mobile-toc a {
+    display: block;
+    padding: 0.5rem 0.95rem;
+    color: var(--muted-foreground);
+    font-size: 0.94rem;
+    line-height: 1.4;
+    text-decoration: none;
+  }
+
+  .article-mobile-toc a.is-active {
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .article-mobile-toc .article-toc-item--nested a {
+    padding-inline-start: 1.6rem;
+    font-size: 0.88rem;
+  }
+
   @media (max-width: 640px) {
     .post-page-main {
       max-width: 100%;
     }
 
+    .post-header {
+      padding-block-end: 1.15rem;
+    }
+
+    .post-description {
+      font-size: 0.98rem;
+      line-height: 1.7;
+    }
+
     #article.app-prose {
-      margin-top: 2rem;
-      font-size: 0.95rem;
-      line-height: 1.75;
+      margin-top: 1.35rem;
+      font-size: 1rem;
+      line-height: 1.82;
     }
 
     #article.app-prose h2 {
-      margin-top: 2rem;
+      margin-top: 2.7rem;
       font-size: 1.35rem;
       line-height: 1.3;
     }
@@ -261,6 +441,10 @@ const ogImage = ogImageUrl
     .article-shell {
       grid-template-columns: minmax(0, 48rem) 15rem;
       justify-content: center;
+    }
+
+    .article-mobile-toc {
+      display: none;
     }
 
     .article-toc {
