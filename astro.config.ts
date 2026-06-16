@@ -18,6 +18,7 @@ import { rehypeAutoInternalLinks } from "./src/utils/rehypeAutoInternalLinks";
 import { remarkContentLinks } from "./src/utils/remarkContentLinks";
 import { remarkD2 } from "./src/utils/remarkD2";
 import { remarkMermaid } from "./src/utils/remarkMermaid";
+import { remarkRecoverStrong } from "./src/utils/remarkRecoverStrong";
 import {
   transformerNotationDiff,
   transformerNotationHighlight,
@@ -57,6 +58,7 @@ export default defineConfig({
         remarkToc,
         [remarkCollapse, { test: "Table of contents" }],
         remarkContentLinks,
+        remarkRecoverStrong,
         remarkD2,
         remarkMermaid,
       ],
