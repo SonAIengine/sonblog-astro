@@ -46,7 +46,7 @@ const isActive = (path: string) => {
   class="app-layout flex flex-col items-center justify-between sm:flex-row"
 >
   <div
-    class="border-border bg-background relative flex w-full items-baseline justify-between border-b py-4 sm:items-center sm:py-6"
+    class="border-border bg-background relative flex w-full items-center justify-between border-b py-4 sm:py-6"
   >
     <a
       href={getRelativeLocaleUrl(locale, "")}
@@ -56,11 +56,12 @@ const isActive = (path: string) => {
     </a>
     <nav
       id="nav-menu"
-      class="flex w-full flex-col items-center sm:ms-2 sm:flex-row sm:justify-end sm:space-x-4 sm:py-0"
+      class="relative flex w-full justify-end sm:ms-2 sm:flex-row sm:items-center sm:justify-end sm:space-x-4 sm:py-0"
+      aria-label="Primary navigation"
     >
       <button
         id="menu-btn"
-        class="focus-outline self-end p-2 sm:hidden"
+        class="focus-outline hover:border-border hover:bg-muted/60 inline-flex size-11 items-center justify-center rounded-md border border-transparent p-2 transition sm:hidden"
         aria-label={t.a11y.openMenu}
         aria-expanded="false"
         aria-controls="menu-items"
@@ -72,7 +73,7 @@ const isActive = (path: string) => {
       </button>
       <ul
         id="menu-items"
-        class="[&>li>a]:hover:text-accent mt-4 hidden w-44 grid-cols-2 place-content-center gap-2 sm:mt-0 sm:flex sm:w-auto sm:gap-x-5 sm:gap-y-0 sm:[&>li]:h-8 [&>li>a]:block [&>li>a]:px-4 [&>li>a]:py-3 [&>li>a]:text-center [&>li>a]:font-medium sm:[&>li>a]:px-2 sm:[&>li>a]:py-1"
+        class="border-border bg-background [&>li>a]:hover:bg-muted/60 [&>li>a]:hover:text-accent absolute top-[calc(100%+0.5rem)] right-0 z-50 hidden w-[min(18rem,calc(100vw-2rem))] grid-cols-2 gap-1 rounded-md border p-2 shadow-lg shadow-black/10 sm:static sm:mt-0 sm:flex sm:w-auto sm:gap-x-5 sm:gap-y-0 sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none sm:[&>li]:h-8 [&>li>a]:block [&>li>a]:rounded-md [&>li>a]:px-3 [&>li>a]:py-3 [&>li>a]:text-left [&>li>a]:font-medium [&>li>a]:transition sm:[&>li>a]:px-2 sm:[&>li>a]:py-1 sm:[&>li>a]:text-center sm:[&>li>a]:hover:bg-transparent"
       >
         <li class="col-span-2">
           <a
@@ -112,7 +113,7 @@ const isActive = (path: string) => {
               <LinkButton
                 href={getRelativeLocaleUrl(locale, "archives")}
                 class:list={[
-                  "focus-outline flex size-full justify-center p-3 sm:relative sm:size-8 sm:p-0",
+                  "focus-outline hover:bg-muted/60 flex w-full rounded-md px-3 py-3 font-medium transition sm:relative sm:size-8 sm:justify-center sm:p-0 sm:hover:bg-transparent",
                   { "active-nav": isActive("/archives") },
                 ]}
                 title={t.nav.archives}
@@ -135,12 +136,14 @@ const isActive = (path: string) => {
             <li class="col-span-1 flex items-center justify-center">
               <LinkButton
                 href={getRelativeLocaleUrl(locale, "search")}
-                class:list={["focus-outline relative size-8"]}
+                class:list={[
+                  "focus-outline border-border/80 bg-muted/40 hover:border-accent/50 hover:bg-muted/70 flex! h-12 w-full items-center! justify-center! rounded-md border px-2! text-xs font-medium transition sm:relative sm:size-8 sm:border-0 sm:bg-transparent sm:p-0 sm:hover:bg-transparent",
+                ]}
                 title={t.nav.search}
                 aria-label={t.nav.search}
               >
-                <IconSearch class="absolute top-1/2 left-1/2 size-6 -translate-x-1/2 -translate-y-1/2" />
-                <span class="sr-only">{t.nav.search}</span>
+                <IconSearch class="size-5 sm:absolute sm:top-1/2 sm:left-1/2 sm:size-6 sm:-translate-x-1/2 sm:-translate-y-1/2" />
+                <span class="whitespace-nowrap sm:sr-only">{t.nav.search}</span>
                 {isActive("/search") && (
                   <IconUnderline
                     aria-hidden="true"
@@ -156,13 +159,16 @@ const isActive = (path: string) => {
             <li class="col-span-1 flex items-center justify-center">
               <button
                 id="theme-btn"
-                class="focus-outline hover:[&>svg]:stroke-accent relative size-12 p-4 sm:size-8"
+                class="focus-outline hover:border-accent/50 hover:bg-muted/70 border-border/80 bg-muted/40 hover:[&>span>svg]:stroke-accent relative flex h-12 w-full items-center justify-center gap-1 rounded-md border px-2! text-xs font-medium transition sm:size-8 sm:border-0 sm:bg-transparent sm:p-0 sm:hover:bg-transparent"
                 title={t.a11y.toggleTheme}
                 aria-label="auto"
                 aria-live="polite"
               >
-                <IconMoon class="absolute top-[50%] left-[50%] translate-[-50%] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
-                <IconSunHigh class="absolute top-[50%] left-[50%] translate-[-50%] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
+                <span class="relative size-5 sm:absolute sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2">
+                  <IconMoon class="absolute inset-0 size-5 scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
+                  <IconSunHigh class="absolute inset-0 size-5 scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
+                </span>
+                <span class="whitespace-nowrap sm:sr-only">Theme</span>
               </button>
             </li>
           )
@@ -173,31 +179,84 @@ const isActive = (path: string) => {
 </header>
 
 <script>
-  function toggleNav() {
+  const navState = window as Window & {
+    __sonBlogNavCleanup?: () => void;
+    __sonBlogNavEventsReady?: boolean;
+  };
+
+  function setupNav() {
+    navState.__sonBlogNavCleanup?.();
+
     const menuBtn = document.querySelector<HTMLButtonElement>("#menu-btn");
-    const menuItems = document.querySelector("#menu-items");
+    const menuItems = document.querySelector<HTMLElement>("#menu-items");
+    const navMenu = document.querySelector<HTMLElement>("#nav-menu");
     const menuIcon = document.querySelector("#menu-icon");
     const closeIcon = document.querySelector("#close-icon");
 
-    if (!menuBtn || !menuItems || !menuIcon || !closeIcon) return;
+    if (!menuBtn || !menuItems || !navMenu || !menuIcon || !closeIcon) return;
 
     const openLabel = menuBtn.dataset.labelOpen ?? "Open menu";
     const closeLabel = menuBtn.dataset.labelClose ?? "Close menu";
+    const abortController = new AbortController();
+    const { signal } = abortController;
 
-    menuBtn.addEventListener("click", () => {
-      const openMenu = menuBtn.getAttribute("aria-expanded") === "true";
+    const setMenu = (open: boolean) => {
+      menuBtn.setAttribute("aria-expanded", String(open));
+      menuBtn.setAttribute("aria-label", open ? closeLabel : openLabel);
+      menuItems.classList.toggle("hidden", !open);
+      menuItems.classList.toggle("grid", open);
+      menuIcon.classList.toggle("hidden", open);
+      closeIcon.classList.toggle("hidden", !open);
+    };
 
-      menuBtn.setAttribute("aria-expanded", openMenu ? "false" : "true");
-      menuBtn.setAttribute("aria-label", openMenu ? openLabel : closeLabel);
+    menuBtn.addEventListener(
+      "click",
+      event => {
+        event.stopPropagation();
+        const openMenu = menuBtn.getAttribute("aria-expanded") === "true";
+        setMenu(!openMenu);
+      },
+      { signal }
+    );
 
-      menuItems.classList.toggle("hidden");
-      menuItems.classList.toggle("grid");
-      menuIcon.classList.toggle("hidden");
-      closeIcon.classList.toggle("hidden");
+    menuItems.querySelectorAll("a").forEach(link => {
+      link.addEventListener("click", () => setMenu(false), { signal });
     });
+
+    document.addEventListener(
+      "click",
+      event => {
+        const openMenu = menuBtn.getAttribute("aria-expanded") === "true";
+        if (!openMenu || navMenu.contains(event.target as Node)) return;
+        setMenu(false);
+      },
+      { signal }
+    );
+
+    document.addEventListener(
+      "keydown",
+      event => {
+        if (event.key !== "Escape") return;
+        setMenu(false);
+        menuBtn.focus();
+      },
+      { signal }
+    );
+
+    window
+      .matchMedia("(min-width: 640px)")
+      .addEventListener("change", () => setMenu(false), { signal });
+
+    navState.__sonBlogNavCleanup = () => abortController.abort();
   }
 
-  toggleNav();
+  setupNav();
 
-  document.addEventListener("astro:after-swap", toggleNav);
+  if (!navState.__sonBlogNavEventsReady) {
+    document.addEventListener("astro:before-swap", () =>
+      navState.__sonBlogNavCleanup?.()
+    );
+    document.addEventListener("astro:after-swap", setupNav);
+    navState.__sonBlogNavEventsReady = true;
+  }
 </script>
