@@ -21,6 +21,13 @@ function routeOf(file) {
   return `/${path.relative(DIST, file).replace(/\\/g, "/").replace(/index\.html$/, "")}`;
 }
 
+function staticFileExists(pathname) {
+  const relative = pathname.replace(/^\/+/, "");
+  if (!relative || relative.includes("..")) return false;
+  const abs = path.join(DIST, relative);
+  return fs.existsSync(abs) && fs.statSync(abs).isFile();
+}
+
 function canonicalOf(html) {
   return html.match(/<link rel="canonical" href="([^"]+)"/i)?.[1] ?? "";
 }
@@ -31,6 +38,12 @@ function isNoindex(html) {
 
 function isRedirectHtml(html) {
   return /http-equiv="refresh"|Redirecting to:/i.test(html);
+}
+
+function anchorHrefs(html) {
+  return [...html.matchAll(/<a\b[^>]*\shref="([^"]+)"/gi)].map(
+    match => match[1]
+  );
 }
 
 function sitemapUrls() {
@@ -54,6 +67,7 @@ const pages = htmlFiles.map(file => {
     canonical: canonicalOf(html),
     noindex: isNoindex(html),
     redirect: isRedirectHtml(html),
+    hrefs: anchorHrefs(html),
   };
 });
 
@@ -109,6 +123,52 @@ if (duplicatedCanonicalContent.length) {
   );
 }
 
+const routeSet = new Set(pages.map(page => page.route));
+const internalHrefFailures = [];
+
+for (const page of pages) {
+  if (page.redirect) continue;
+
+  const baseUrl = new URL(page.route, SITE_ORIGIN);
+  for (const href of page.hrefs) {
+    if (
+      href.startsWith("#") ||
+      href.startsWith("mailto:") ||
+      href.startsWith("tel:")
+    ) {
+      continue;
+    }
+
+    let url;
+    try {
+      url = new URL(href.replace(/&amp;/g, "&"), baseUrl);
+    } catch {
+      continue;
+    }
+
+    if (url.origin !== SITE_ORIGIN) continue;
+
+    const pathname = decodeURIComponent(url.pathname);
+    const normalizedPath = pathname.endsWith("/") ? pathname : `${pathname}/`;
+
+    if (
+      !routeSet.has(pathname) &&
+      !routeSet.has(normalizedPath) &&
+      !staticFileExists(pathname)
+    ) {
+      internalHrefFailures.push(`${page.route} -> ${pathname}`);
+    }
+  }
+}
+
+if (internalHrefFailures.length) {
+  failures.push(
+    `Broken internal anchor hrefs: ${internalHrefFailures
+      .slice(0, 10)
+      .join(", ")}`
+  );
+}
+
 const postRoutes = urls.filter(url => url.startsWith("/posts/")).length;
 const tagRoutes = urls.filter(url => url.startsWith("/tags/")).length;
 const topicRoutes = urls.filter(url => url.startsWith("/topics/")).length;
@@ -125,6 +185,7 @@ console.log(
         topics: topicRoutes,
       },
       canonicalContentDuplicates: duplicatedCanonicalContent.length,
+      brokenInternalHrefs: internalHrefFailures.length,
       redirectRoutes: redirectRoutes.size,
     },
     null,
