@@ -18,6 +18,7 @@ AI Engineer 손성준의 기술 블로그 겸 포트폴리오 사이트입니다
 ## Content
 
 글은 `src/content/posts` 아래에 카테고리/서브카테고리 구조로 저장합니다.
+글 작성 자동화, 참조 리소스 수집, 초안 작성, 다이어그램/스크린샷 기준은 `docs/WRITING_WORKFLOW.md`에 정리되어 있습니다.
 
 ```text
 src/content/posts/
@@ -76,7 +77,7 @@ GitHub Pages 배포는 `.github/workflows/deploy.yml`에서 수행합니다. Nod
 - Node.js `24.x`
 - pnpm `10.29.1`
 
-운영/배포/URL/검색/그래프 관련 유지보수 기준은 `docs/PROJECT_CONTEXT.md`와 `AGENTS.md`에 정리되어 있습니다.
+운영/배포/URL/검색/그래프 관련 유지보수 기준은 `docs/PROJECT_CONTEXT.md`와 `AGENTS.md`에 정리되어 있습니다. 글 작성 작업은 `docs/WRITING_WORKFLOW.md`를 함께 봅니다.
 
 ## License
 

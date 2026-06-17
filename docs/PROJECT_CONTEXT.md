@@ -45,6 +45,7 @@ pagefind --site dist --glob 'posts/**/*.html'
 ## 콘텐츠 구조
 
 글은 `src/content/posts` 아래 카테고리/서브카테고리 구조로 둔다.
+글 기획, 작성 리소스 수집, 초안 자동화, 스크린샷, 발행 전 체크리스트는 `docs/WRITING_WORKFLOW.md`를 따른다.
 
 ```text
 src/content/posts/

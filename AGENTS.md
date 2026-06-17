@@ -3,6 +3,8 @@
 이 저장소에서 작업하는 자동화 에이전트와 유지보수자는 먼저 이 파일을 확인한다.
 
 - 프로젝트 운영 기준과 배포 절차는 `docs/PROJECT_CONTEXT.md`를 따른다.
+- 블로그 글 기획/작성/초안 자동화 기준은 `docs/WRITING_WORKFLOW.md`를 따른다.
+- GitLab 리서치가 필요하면 토큰 값을 출력하지 말고 `~/.claude/.secrets`의 `GITLAB_TOKEN`/`GITLAB_URL`을 먼저 확인한다.
 - Node.js는 `24.x`, pnpm은 `10.29.1`을 기준으로 맞춘다.
 - 배포 전에는 `pnpm run verify`와 `pnpm run build`를 모두 통과시킨다.
 - `pnpm run build`는 graph 데이터, Mermaid lint, Astro build, URL audit, Pagefind 인덱싱을 포함한다.
