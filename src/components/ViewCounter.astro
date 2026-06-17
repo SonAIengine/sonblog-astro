@@ -1,6 +1,7 @@
 ---
 import type { HTMLAttributes } from "astro/types";
 import config from "@/config";
+import IconEye from "@/assets/icons/IconEye.svg";
 
 type Props = {
   path?: string;
@@ -36,7 +37,11 @@ const counterUrl = goatCounter.enabled
       aria-label={`${label} loading`}
       {...attrs}
     >
-      <span class="view-counter__mark" aria-hidden="true" />
+      {variant === "post" ? (
+        <IconEye class="view-counter__icon" aria-hidden="true" />
+      ) : (
+        <span class="view-counter__mark" aria-hidden="true" />
+      )}
       <span class="view-counter__label">{label}</span>
       <span class="view-counter__value" data-counter-value>
         000
@@ -113,14 +118,15 @@ const counterUrl = goatCounter.enabled
   }
 
   .view-counter--post {
-    min-height: 2rem;
-    gap: 0.4rem;
-    padding: 0.34rem 0.58rem;
-    border: 1px solid color-mix(in srgb, var(--border) 82%, var(--accent));
-    border-radius: 8px;
-    background: color-mix(in srgb, var(--muted) 58%, var(--background));
-    color: var(--muted-foreground);
-    font-size: 0.86rem;
+    min-height: 2.25rem;
+    gap: 0.45rem;
+    padding: 0.42rem 0.68rem;
+    border: 1px solid color-mix(in srgb, var(--accent) 34%, var(--border));
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--accent) 8%, var(--background));
+    color: color-mix(in srgb, var(--foreground) 82%, var(--accent));
+    font-size: 0.9rem;
+    box-shadow: 0 1px 0 color-mix(in srgb, var(--accent) 8%, transparent);
   }
 
   .view-counter--footer {
@@ -142,14 +148,22 @@ const counterUrl = goatCounter.enabled
     box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--accent) 12%, transparent);
   }
 
+  .view-counter__icon {
+    width: 1.08rem;
+    height: 1.08rem;
+    flex: 0 0 auto;
+    color: var(--accent);
+    stroke-width: 2.15;
+  }
+
   .view-counter__label {
-    color: color-mix(in srgb, var(--muted-foreground) 84%, var(--foreground));
+    color: currentColor;
     font-weight: 650;
   }
 
   .view-counter__value {
     color: var(--foreground);
-    font-weight: 750;
+    font-weight: 800;
   }
 
   .view-counter[data-state="loading"] .view-counter__value {
