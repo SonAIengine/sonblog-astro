@@ -91,7 +91,7 @@ src/content/posts/
 - 방문자 집계는 GoatCounter `sonblog` 사이트를 사용한다.
 - 기본 page visit은 `src/layouts/Layout.astro`에서 `count.js`로 기록한다.
 - 글별 조회수와 전체 방문수 UI는 `src/components/ViewCounter.astro`가 공개 `/counter/[PATH].json` 엔드포인트를 읽어서 표시한다.
-- GoatCounter의 visitor counter 공개 설정이 꺼져 있거나 404가 반환되면 카운터 UI는 조용히 숨긴다.
+- GoatCounter가 글별 0회 조회를 `404`와 `{"count":"0"}`로 반환할 수 있으므로, HTTP status보다 응답 JSON의 `count` 값을 우선한다. usable count가 없거나 네트워크/JSON 오류가 나면 카운터 UI는 조용히 숨긴다.
 - API token은 클라이언트에 넣지 않는다. 기간별 통계나 인기글 랭킹은 별도 서버/빌드타임 작업으로 처리한다.
 
 ## Knowledge Graph

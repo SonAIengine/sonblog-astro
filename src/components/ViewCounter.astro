@@ -67,8 +67,6 @@ const counterUrl = goatCounter.enabled
 
       try {
         const response = await fetch(url, { credentials: "omit" });
-        if (!response.ok) throw new Error(`Counter failed: ${response.status}`);
-
         const data = (await response.json()) as { count?: unknown };
         if (typeof data.count !== "string" || data.count.length === 0) {
           throw new Error("Counter response did not include count");
