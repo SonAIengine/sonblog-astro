@@ -127,11 +127,22 @@ claude mcp add -s user \
 
 ## 사용자 반응에서 보인 것
 
-만든 뒤 학과 단톡방에 공유했다. 공개 글에는 단톡방 제목, 개인 이름, 시간표 출력 같은 식별 가능한 정보는 빼고, 공유 글과 반응만 남겼다.
+만든 뒤 학과 단톡방에 공유했다. 공개 글에는 개인 이름, 시간표 출력 같은 식별 가능한 정보는 빼고, 공유 글과 반응만 남겼다. 이미지가 본문을 과하게 차지하지 않도록 두 장을 갤러리 형태로 묶었다.
 
-![ku-portal-mcp를 공유한 뒤 받은 사용자 반응](/assets/images/ku-portal-mcp-user-reaction.png)
+<div class="reaction-gallery" aria-label="ku-portal-mcp 사용자 반응 스크린샷">
+  <figure>
+    <img src="/assets/images/ku-portal-mcp-user-reaction.png" alt="ku-portal-mcp를 학과 단톡방에 공유한 뒤 받은 반응" loading="lazy" />
+    <figcaption>처음 공유했을 때는 공지, 과제, 시간표, 강의계획서를 메시지처럼 받을 수 있다는 점에 반응이 왔다.</figcaption>
+  </figure>
+  <figure>
+    <img src="/assets/images/ku-portal-mcp-clawhub-reaction.png" alt="ku-portal-mcp를 OpenClaw skill과 ClawHub로 활용한 사용자 반응" loading="lazy" />
+    <figcaption>이후에는 fork해서 OpenClaw skill로 만들고 ClawHub에 올린 사례까지 나왔다. 단순 Claude Code용 MCP에서 다른 에이전트 런타임으로 옮겨간 셈이다.</figcaption>
+  </figure>
+</div>
 
 반응이 온 지점이 흥미로웠다. 사람들은 "MCP 서버를 만들었다"보다 "공지, 과제, 시간표, 강의계획서를 메시지로 받을 수 있다"는 부분에 반응했다. 한 사용자는 "너무 멋져요"라고 댓글을 달았다. 기술적으로는 FastMCP, SAML, 세션 캐시, HTML 파싱이 들어갔지만, 사용자에게 중요한 건 그런 단어가 아니었다.
+
+추가로 나온 ClawHub 반응은 더 재밌었다. 누군가가 `ku-portal-mcp`를 fork해서 OpenClaw skill 형태로 배포했고, OpenClaw 에이전트에게 "ku-portal 스킬 설치해 줘"라고 말해도 되는 흐름을 만들었다. 이건 MCP 서버를 하나 만든 것보다 더 중요한 신호다. 학교 포털 자동화가 특정 클라이언트 하나에 갇히지 않고, 여러 에이전트 실행 환경으로 옮겨갈 수 있다는 뜻이기 때문이다.
 
 학생 입장에서 핵심은 이거다.
 
