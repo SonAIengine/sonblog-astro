@@ -90,6 +90,7 @@ src/content/posts/
 - 검색 API는 내부/디버깅용으로 `AND`, `OR`, `EQURL:/posts/.../` 연산자를 지원한다.
 - 검색 API 홈서버 배포는 `docs/SEARCH_SERVICE_DEPLOYMENT.md`를 따르며 `pnpm run search:deploy`가 8182 proxy + 8192/8194 backend blue/green 전환을 수행한다.
 - 검색 backend는 `*.db.manifest.json` graph cache가 맞으면 전체 재임베딩을 건너뛰며, 필요할 때만 `FORCE_GRAPH_REBUILD=true pnpm run search:deploy`로 재색인한다.
+- 검색엔진 포트폴리오 품질 기준과 장기 고도화는 `docs/SEARCH_EXCELLENCE_ROADMAP.md`를 따른다.
 - search telemetry는 GoatCounter 이벤트로 기록한다.
 - raw query는 보내지 않고 normalized query hash, query length, result count, latency만 보낸다.
 

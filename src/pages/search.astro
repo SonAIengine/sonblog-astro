@@ -45,9 +45,10 @@ const t = useTranslations(locale);
       hidden
     >
       <div class="semantic-search-header">
-        <h2>시맨틱 추천</h2>
+        <h2>Hybrid Search</h2>
         <span id="semantic-search-meta" class="semantic-search-meta"></span>
       </div>
+      <div id="semantic-search-stages" class="semantic-search-stages"></div>
       <ol id="semantic-search-results" class="semantic-result-list"></ol>
     </section>
   </Main>
@@ -66,6 +67,9 @@ const t = useTranslations(locale);
     );
     const semanticMeta = document.querySelector<HTMLElement>(
       "#semantic-search-meta"
+    );
+    const semanticStages = document.querySelector<HTMLElement>(
+      "#semantic-search-stages"
     );
 
     if (!pageFindSearch) return;
@@ -91,6 +95,7 @@ const t = useTranslations(locale);
       semanticSearch?.setAttribute("hidden", "");
       semanticResults?.replaceChildren();
       if (semanticMeta) semanticMeta.textContent = "";
+      semanticStages?.replaceChildren();
       semanticState.query = "";
       semanticState.ready = false;
       semanticState.ok = false;
@@ -376,6 +381,7 @@ const t = useTranslations(locale);
           searchBox.hidden = true;
           resultsList.replaceChildren();
           meta.textContent = "";
+          semanticStages?.replaceChildren();
           semanticState.query = "";
           semanticState.ready = false;
           semanticState.ok = false;
@@ -414,6 +420,7 @@ const t = useTranslations(locale);
           searchBox.hidden = true;
           resultsList.replaceChildren();
           meta.textContent = "";
+          semanticStages?.replaceChildren();
         }
       }
     }
@@ -458,8 +465,15 @@ const t = useTranslations(locale);
 
     function renderSemanticResults(
       data: {
-        results?: Array<{ url: string; title: string; score?: number }>;
+        results?: Array<{
+          url: string;
+          title: string;
+          score?: number;
+          confidence?: string;
+          sources?: string[];
+        }>;
         ms?: number;
+        stages?: string[];
       },
       query: string
     ) {
@@ -477,6 +491,7 @@ const t = useTranslations(locale);
         semanticSearch.hidden = true;
         semanticResults.replaceChildren();
         semanticMeta.textContent = "";
+        semanticStages?.replaceChildren();
         return;
       }
 
@@ -484,6 +499,7 @@ const t = useTranslations(locale);
         typeof data.ms === "number"
           ? `${results.length} · ${Math.round(data.ms)}ms`
           : `${results.length}`;
+      renderSemanticStages(data.stages ?? []);
 
       const isCompact = window.matchMedia("(max-width: 639px)").matches;
       const visibleLimit = isCompact ? 1 : 3;
@@ -506,12 +522,13 @@ const t = useTranslations(locale);
           });
 
           const score = document.createElement("span");
-          score.className =
-            "semantic-result-score text-muted-foreground font-app";
+          score.className = "semantic-result-score";
           score.textContent =
             typeof result.score === "number" ? result.score.toFixed(3) : "";
 
-          item.append(rank, link, score);
+          const meta = renderResultSignals(result.sources ?? [], score);
+
+          item.append(rank, link, meta);
           return item;
         })
       );
@@ -544,12 +561,13 @@ const t = useTranslations(locale);
             });
 
             const score = document.createElement("span");
-            score.className =
-              "semantic-result-score text-muted-foreground font-app";
+            score.className = "semantic-result-score";
             score.textContent =
               typeof result.score === "number" ? result.score.toFixed(3) : "";
 
-            item.append(rank, link, score);
+            const meta = renderResultSignals(result.sources ?? [], score);
+
+            item.append(rank, link, meta);
             return item;
           })
         );
@@ -560,6 +578,75 @@ const t = useTranslations(locale);
       }
 
       semanticSearch.hidden = false;
+    }
+
+    function renderResultSignals(sources: string[], score: HTMLElement) {
+      const meta = document.createElement("span");
+      meta.className = "semantic-result-signals";
+      meta.append(score);
+
+      for (const source of sources.slice(0, 2)) {
+        const badge = document.createElement("span");
+        badge.className = "semantic-result-source";
+        badge.textContent = sourceLabel(source);
+        meta.append(badge);
+      }
+
+      return meta;
+    }
+
+    function renderSemanticStages(stages: string[]) {
+      if (!semanticStages) return;
+      const preferred = [
+        "fts",
+        "vector",
+        "evidence",
+        "korean_morphology",
+        "query_normalized",
+        "lexical_fallback",
+        "doc_rank",
+        "confidence_gate",
+      ];
+      const ordered = [
+        ...preferred.filter(stage => stages.includes(stage)),
+        ...stages.filter(stage => !preferred.includes(stage)),
+      ].slice(0, 7);
+
+      semanticStages.replaceChildren(
+        ...ordered.map(stage => {
+          const chip = document.createElement("span");
+          chip.className = "semantic-stage-chip";
+          chip.textContent = stageLabel(stage);
+          return chip;
+        })
+      );
+    }
+
+    function sourceLabel(source: string) {
+      const labels: Record<string, string> = {
+        lexical: "Lexical",
+        synaptic: "Graph",
+        equrl: "Exact",
+      };
+      return labels[source] ?? source;
+    }
+
+    function stageLabel(stage: string) {
+      const labels: Record<string, string> = {
+        evidence: "Hybrid",
+        fts: "BM25",
+        vector: "Vector",
+        korean_morphology: "Kiwi",
+        query_normalized: "Alias",
+        lexical_fallback: "Lexical",
+        doc_rank: "Rank",
+        confidence_gate: "Gate",
+        operator_and: "AND",
+        operator_or: "OR",
+        equrl_filter: "EQURL",
+        rerank: "Rerank",
+      };
+      return labels[stage] ?? stage;
     }
   }
 
@@ -613,6 +700,7 @@ const t = useTranslations(locale);
   }
 
   .semantic-search-header h2 {
+    font-family: var(--font-app);
     font-size: 0.875rem;
     font-weight: 700;
     line-height: 1.2;
@@ -623,6 +711,28 @@ const t = useTranslations(locale);
     color: var(--muted-foreground);
     font-family: var(--font-app);
     font-size: 0.75rem;
+    line-height: 1;
+  }
+
+  .semantic-search-stages {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-bottom: 0.55rem;
+  }
+
+  .semantic-stage-chip {
+    display: inline-flex;
+    align-items: center;
+    min-height: 1.45rem;
+    border: 1px solid color-mix(in oklab, var(--accent) 28%, var(--border));
+    border-radius: 999px;
+    padding: 0.18rem 0.48rem;
+    color: color-mix(in oklab, var(--accent) 78%, var(--foreground));
+    background: color-mix(in oklab, var(--accent) 8%, transparent);
+    font-family: var(--font-app);
+    font-size: 0.68rem;
+    font-weight: 600;
     line-height: 1;
   }
 
@@ -665,7 +775,33 @@ const t = useTranslations(locale);
   }
 
   .semantic-result-score {
+    color: var(--muted-foreground);
+    font-family: var(--font-app);
     font-size: 0.75rem;
+    line-height: 1;
+  }
+
+  .semantic-result-signals {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.35rem;
+    min-width: 0;
+    font-family: var(--font-app);
+    white-space: nowrap;
+  }
+
+  .semantic-result-source {
+    display: inline-flex;
+    align-items: center;
+    min-height: 1.35rem;
+    border: 1px solid var(--border);
+    border-radius: 0.375rem;
+    padding: 0.18rem 0.42rem;
+    color: var(--muted-foreground);
+    background: var(--background);
+    font-size: 0.68rem;
+    font-weight: 600;
     line-height: 1;
   }
 
@@ -714,7 +850,19 @@ const t = useTranslations(locale);
       margin-bottom: 0.35rem;
     }
 
+    .semantic-search-stages {
+      gap: 0.3rem;
+      margin-bottom: 0.45rem;
+    }
+
+    .semantic-stage-chip {
+      min-height: 1.35rem;
+      padding-inline: 0.42rem;
+      font-size: 0.64rem;
+    }
+
     .semantic-result-item {
+      grid-template-columns: auto minmax(0, 1fr);
       align-items: start;
     }
 
@@ -728,6 +876,13 @@ const t = useTranslations(locale);
 
     .semantic-result-score {
       padding-top: 0.15rem;
+    }
+
+    .semantic-result-signals {
+      grid-column: 2;
+      justify-content: flex-start;
+      margin-top: 0.35rem;
+      white-space: normal;
     }
 
     .semantic-extra-list .semantic-result-link {
