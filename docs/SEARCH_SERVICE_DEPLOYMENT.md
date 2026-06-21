@@ -40,7 +40,30 @@ systemctl --user status sonblog-search-proxy.service --no-pager
 systemctl --user status 'sonblog-search-backend@*.service' --no-pager
 ```
 
-`/health`에는 backend의 `docs`, `morphology`, `aliases`와 proxy의 active backend 정보가 함께 나온다.
+`/health`에는 backend의 `docs`, `morphology`, `aliases`, `graphCache`, `startupMs`와 proxy의 active backend 정보가 함께 나온다.
+
+## Graph Cache
+
+backend startup에서 가장 오래 걸리던 부분은 `SynapticGraph.from_chunks()`가 매번 전체 노드를 다시 embedding하는 단계였다. 검색 앱은 `search-service/runtime/blog_graph_*.db.manifest.json`에 현재 코퍼스 fingerprint를 기록한다.
+
+manifest가 현재 `dist/search-fulltext.json`, chunk 설정, embedding endpoint/model과 일치하고 DB의 모든 노드가 embedding을 가지고 있으면 startup은 기존 DB를 바로 열고 query-time embedder/reranker만 연결한다.
+
+운영에서 기대하는 cache hit 상태:
+
+```json
+{
+  "graphCache": "hit",
+  "startupMs": 8000
+}
+```
+
+코퍼스를 강제로 재색인해야 할 때는 한 번만 아래처럼 실행한다.
+
+```bash
+FORCE_GRAPH_REBUILD=true pnpm run search:deploy
+```
+
+재색인 후 새 manifest가 기록되므로 다음 배포부터 다시 cache hit 경로를 탄다.
 
 ## 수동 롤백
 
@@ -62,6 +85,6 @@ systemctl --user start sonblog-search.service
 
 ## 남은 개선
 
-- backend readiness 시간 자체는 여전히 synaptic graph 로딩 시간에 좌우된다.
+- cache hit startup은 약 8초 수준이다. 더 줄이려면 synaptic graph open/HNSW warmup 비용을 별도로 줄여야 한다.
 - active backend 두 개를 동시에 오래 유지하면 메모리를 많이 쓴다. 배포 스크립트는 전환 후 비활성 backend를 정리한다.
 - 외부 프록시가 `8182`만 바라보는 전제다. 외부 프록시까지 blue/green을 지원하게 바꾸면 proxy 계층 없이도 운영할 수 있다.

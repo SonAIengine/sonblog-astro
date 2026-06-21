@@ -14,6 +14,9 @@
 import json
 import os
 import re
+import sqlite3
+from hashlib import sha256
+from time import perf_counter
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -42,6 +45,8 @@ QUERY_ALIASES_JSON = os.environ.get(
 CHUNK_SIZE = int(os.environ.get("CHUNK_SIZE", "700"))
 CHUNK_OVERLAP = int(os.environ.get("CHUNK_OVERLAP", "120"))
 GRAPH_DB = os.environ.get("GRAPH_DB", os.path.join(os.path.dirname(__file__), "blog_graph.db"))
+GRAPH_CACHE_VERSION = 1
+FORCE_GRAPH_REBUILD = os.environ.get("FORCE_GRAPH_REBUILD", "false").lower() == "true"
 # 리랭커 점수 노이즈 컷 — 이 값 미만은 무관한 글로 보고 제외(최소 1건은 보장)
 SCORE_FLOOR = float(os.environ.get("SCORE_FLOOR", "0.4"))
 NO_LEXICAL_SCORE_FLOOR = float(os.environ.get("NO_LEXICAL_SCORE_FLOOR", "0.88"))
@@ -79,7 +84,14 @@ GENERIC_QUERY_TERMS = {
     "post",
 }
 
-state: dict = {"graph": None, "docs": [], "docs_by_url": {}}
+state: dict = {
+    "graph": None,
+    "docs": [],
+    "docs_by_url": {},
+    "graph_cache": "unknown",
+    "graph_stats": {},
+    "startup_ms": 0,
+}
 
 
 def load_query_aliases(path: str) -> list[tuple[re.Pattern, str]]:
@@ -168,6 +180,169 @@ def load_chunks(docs: list[dict] | None = None) -> list[dict]:
                 }
             )
     return chunks
+
+
+def corpus_fingerprint(chunks: list[dict]) -> str:
+    digest = sha256()
+    for chunk in chunks:
+        digest.update(
+            json.dumps(
+                chunk,
+                ensure_ascii=False,
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode("utf-8")
+        )
+        digest.update(b"\n")
+    return digest.hexdigest()
+
+
+def graph_manifest_path(db_path: str) -> Path:
+    return Path(f"{db_path}.manifest.json")
+
+
+def expected_graph_manifest(docs: list[dict], chunks: list[dict]) -> dict:
+    return {
+        "version": GRAPH_CACHE_VERSION,
+        "fingerprint": corpus_fingerprint(chunks),
+        "docCount": len(docs),
+        "chunkCount": len(chunks),
+        "chunkSize": CHUNK_SIZE,
+        "chunkOverlap": CHUNK_OVERLAP,
+        "embedUrl": EMBED_URL,
+        "embedModel": EMBED_MODEL,
+    }
+
+
+def read_graph_manifest(db_path: str) -> dict | None:
+    path = graph_manifest_path(db_path)
+    if not path.exists():
+        return None
+    try:
+        with path.open(encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, json.JSONDecodeError):
+        return None
+
+
+def graph_db_stats(db_path: str) -> dict:
+    path = Path(db_path)
+    if not path.exists():
+        return {"exists": False, "nodes": 0, "embeddings": 0}
+    try:
+        with sqlite3.connect(f"file:{path}?mode=ro", uri=True) as conn:
+            row = conn.execute(
+                """
+                SELECT
+                    COUNT(*) AS nodes,
+                    SUM(CASE WHEN embedding_json != '[]' THEN 1 ELSE 0 END) AS embeddings,
+                    COALESCE(MAX(updated_at), 0) AS maxUpdatedAt
+                FROM syn_nodes
+                """
+            ).fetchone()
+    except sqlite3.Error as exc:
+        return {
+            "exists": True,
+            "nodes": 0,
+            "embeddings": 0,
+            "error": str(exc),
+        }
+    return {
+        "exists": True,
+        "nodes": int(row[0] or 0),
+        "embeddings": int(row[1] or 0),
+        "maxUpdatedAt": float(row[2] or 0),
+    }
+
+
+def graph_cache_ready(db_path: str, expected_manifest: dict) -> tuple[bool, str, dict]:
+    if FORCE_GRAPH_REBUILD:
+        return False, "forced", {}
+
+    actual_manifest = read_graph_manifest(db_path)
+    if actual_manifest is None:
+        return False, "manifest_missing", {}
+
+    for key, value in expected_manifest.items():
+        if actual_manifest.get(key) != value:
+            return False, f"manifest_mismatch:{key}", {}
+
+    stats = graph_db_stats(db_path)
+    if not stats.get("exists"):
+        return False, "db_missing", stats
+    if stats.get("nodes", 0) <= 0:
+        return False, "db_empty", stats
+    if stats.get("embeddings", 0) < stats.get("nodes", 0):
+        return False, "embeddings_incomplete", stats
+    if stats.get("error"):
+        return False, "db_unreadable", stats
+
+    return True, "hit", stats
+
+
+def write_graph_manifest(db_path: str, manifest: dict, stats: dict) -> None:
+    path = graph_manifest_path(db_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        **manifest,
+        "stats": stats,
+    }
+    tmp_path = Path(f"{path}.tmp")
+    tmp_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    tmp_path.replace(path)
+
+
+async def open_cached_graph(db_path: str):
+    from synaptic.backends.sqlite_graph import SqliteGraphBackend
+    from synaptic.extensions.embedder import OpenAIEmbeddingProvider
+    from synaptic.extensions.reranker_cross import reranker_from_url
+
+    backend = SqliteGraphBackend(db_path)
+    await backend.connect()
+
+    embedder = (
+        OpenAIEmbeddingProvider(api_base=EMBED_URL, model=EMBED_MODEL)
+        if EMBED_URL
+        else None
+    )
+    reranker = (
+        reranker_from_url(RERANK_URL, backend="tei", model=RERANK_MODEL)
+        if RERANK_URL
+        else None
+    )
+    graph = SynapticGraph(backend, embedder=embedder, reranker=reranker)
+    graph._connected = True
+    return graph
+
+
+async def load_search_graph(docs: list[dict], chunks: list[dict]):
+    manifest = expected_graph_manifest(docs, chunks)
+    ready, reason, stats = graph_cache_ready(GRAPH_DB, manifest)
+    if ready:
+        graph = await open_cached_graph(GRAPH_DB)
+        print(
+            f"[blog-search] graph cache hit: nodes={stats.get('nodes')} "
+            f"embeddings={stats.get('embeddings')}"
+        )
+        return graph, "hit", stats
+
+    print(f"[blog-search] graph cache miss: {reason}")
+    graph = await SynapticGraph.from_chunks(
+        chunks,
+        db=GRAPH_DB,
+        embed_url=EMBED_URL,
+        embed_model=EMBED_MODEL,
+        rerank_url=RERANK_URL,
+        rerank_backend="tei",
+        rerank_model=RERANK_MODEL,
+    )
+    stats = graph_db_stats(GRAPH_DB)
+    write_graph_manifest(GRAPH_DB, manifest, stats)
+    print(
+        f"[blog-search] graph cache rebuilt: nodes={stats.get('nodes')} "
+        f"embeddings={stats.get('embeddings')}"
+    )
+    return graph, f"rebuilt:{reason}", stats
 
 
 def normalize_query(query: str) -> str:
@@ -546,22 +721,21 @@ def public_result(candidate: dict) -> dict:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    started = perf_counter()
     docs = load_documents()
     prepared_docs = prepare_doc_lookup(docs)
     chunks = load_chunks(docs)
-    graph = await SynapticGraph.from_chunks(
-        chunks,
-        db=GRAPH_DB,
-        embed_url=EMBED_URL,
-        embed_model=EMBED_MODEL,
-        rerank_url=RERANK_URL,
-        rerank_backend="tei",
-        rerank_model=RERANK_MODEL,
-    )
+    graph, graph_cache, graph_stats = await load_search_graph(docs, chunks)
     state["graph"] = graph
     state["docs"] = list(prepared_docs.values())
     state["docs_by_url"] = prepared_docs
-    print(f"[blog-search] ready: {len(chunks)} docs indexed")
+    state["graph_cache"] = graph_cache
+    state["graph_stats"] = graph_stats
+    state["startup_ms"] = round((perf_counter() - started) * 1000, 1)
+    print(
+        f"[blog-search] ready: {len(docs)} docs, {len(chunks)} chunks, "
+        f"cache={graph_cache}, startup={state['startup_ms']}ms"
+    )
     # 리랭커/임베더/연결 워밍업 — 첫 사용자 쿼리의 콜드 스타트(수십 초) 제거
     try:
         await graph.search("워밍업 테스트 검색", limit=3, engine="evidence", rerank=False)
@@ -588,6 +762,9 @@ async def health():
         "morphology": "kiwipiepy" if KIWI is not None else "disabled",
         "aliases": len(QUERY_ALIASES),
         "docs": len(state.get("docs", [])),
+        "graphCache": state.get("graph_cache"),
+        "graphStats": state.get("graph_stats"),
+        "startupMs": state.get("startup_ms"),
     }
 
 
