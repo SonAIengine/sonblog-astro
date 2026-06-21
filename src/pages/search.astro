@@ -22,6 +22,8 @@ const backUrl = config.features.showBackButton
   : getRelativeLocaleUrl(locale, "");
 
 const pagefindBundlePath = getAssetPath("pagefind/");
+const searchApiBase =
+  import.meta.env.PUBLIC_SEARCH_API_BASE || "https://search.infoedu.co.kr";
 
 const t = useTranslations(locale);
 ---
@@ -40,7 +42,7 @@ const t = useTranslations(locale);
     <section
       id="semantic-search"
       class="semantic-search-panel"
-      data-search-api="https://search.infoedu.co.kr"
+      data-search-api={searchApiBase}
       aria-live="polite"
       hidden
     >
@@ -58,6 +60,27 @@ const t = useTranslations(locale);
 
 <script>
   function initSearch() {
+    type SemanticExplain = {
+      matchedTerms?: string[];
+      termCount?: number;
+      lexicalRatio?: number;
+      titleRatio?: number;
+      tagRatio?: number;
+      exactPhrase?: boolean;
+      rawScore?: number;
+      boostedScore?: number;
+      signals?: string[];
+    };
+
+    type SemanticResult = {
+      url: string;
+      title: string;
+      score?: number;
+      confidence?: string;
+      sources?: string[];
+      explain?: SemanticExplain;
+    };
+
     const pageFindSearch: HTMLElement | null =
       document.querySelector("#pagefind-search");
     const semanticSearch =
@@ -404,7 +427,7 @@ const t = useTranslations(locale);
           const base = searchBox.dataset.searchApi;
           if (!base) return;
           const response = await fetch(
-            `${base}/search?q=${encodeURIComponent(q)}&limit=5`,
+            `${base}/search?q=${encodeURIComponent(q)}&limit=5&explain=true`,
             { signal: controller.signal }
           );
           if (!response.ok) throw new Error("search failed");
@@ -465,13 +488,7 @@ const t = useTranslations(locale);
 
     function renderSemanticResults(
       data: {
-        results?: Array<{
-          url: string;
-          title: string;
-          score?: number;
-          confidence?: string;
-          sources?: string[];
-        }>;
+        results?: SemanticResult[];
         ms?: number;
         stages?: string[];
       },
@@ -505,32 +522,9 @@ const t = useTranslations(locale);
       const visibleLimit = isCompact ? 1 : 3;
       const visibleResults = results.slice(0, visibleLimit);
       semanticResults.replaceChildren(
-        ...visibleResults.map((result, index) => {
-          const item = document.createElement("li");
-          item.className = "semantic-result-item";
-
-          const rank = document.createElement("span");
-          rank.className = "semantic-result-rank";
-          rank.textContent = String(index + 1);
-
-          const link = document.createElement("a");
-          link.href = result.url;
-          link.className = "semantic-result-link";
-          link.textContent = result.title;
-          link.addEventListener("click", () => {
-            trackSearchClick("semantic", query, result.url);
-          });
-
-          const score = document.createElement("span");
-          score.className = "semantic-result-score";
-          score.textContent =
-            typeof result.score === "number" ? result.score.toFixed(3) : "";
-
-          const meta = renderResultSignals(result.sources ?? [], score);
-
-          item.append(rank, link, meta);
-          return item;
-        })
+        ...visibleResults.map((result, index) =>
+          renderSemanticResultItem(result, index + 1, query)
+        )
       );
 
       if (results.length > visibleResults.length) {
@@ -544,32 +538,15 @@ const t = useTranslations(locale);
         const extraList = document.createElement("ol");
         extraList.className = "semantic-extra-list";
         extraList.replaceChildren(
-          ...results.slice(visibleResults.length).map((result, index) => {
-            const item = document.createElement("li");
-            item.className = "semantic-result-item";
-
-            const rank = document.createElement("span");
-            rank.className = "semantic-result-rank";
-            rank.textContent = String(visibleResults.length + index + 1);
-
-            const link = document.createElement("a");
-            link.href = result.url;
-            link.className = "semantic-result-link";
-            link.textContent = result.title;
-            link.addEventListener("click", () => {
-              trackSearchClick("semantic", query, result.url);
-            });
-
-            const score = document.createElement("span");
-            score.className = "semantic-result-score";
-            score.textContent =
-              typeof result.score === "number" ? result.score.toFixed(3) : "";
-
-            const meta = renderResultSignals(result.sources ?? [], score);
-
-            item.append(rank, link, meta);
-            return item;
-          })
+          ...results
+            .slice(visibleResults.length)
+            .map((result, index) =>
+              renderSemanticResultItem(
+                result,
+                visibleResults.length + index + 1,
+                query
+              )
+            )
         );
 
         details.append(summary, extraList);
@@ -578,6 +555,40 @@ const t = useTranslations(locale);
       }
 
       semanticSearch.hidden = false;
+    }
+
+    function renderSemanticResultItem(
+      result: SemanticResult,
+      rankNumber: number,
+      query: string
+    ) {
+      const item = document.createElement("li");
+      item.className = "semantic-result-item";
+
+      const rank = document.createElement("span");
+      rank.className = "semantic-result-rank";
+      rank.textContent = String(rankNumber);
+
+      const link = document.createElement("a");
+      link.href = result.url;
+      link.className = "semantic-result-link";
+      link.textContent = result.title;
+      link.addEventListener("click", () => {
+        trackSearchClick("semantic", query, result.url);
+      });
+
+      const score = document.createElement("span");
+      score.className = "semantic-result-score";
+      score.textContent =
+        typeof result.score === "number" ? result.score.toFixed(3) : "";
+
+      const meta = renderResultSignals(result.sources ?? [], score);
+      item.append(rank, link, meta);
+
+      const explain = renderResultExplain(result.explain);
+      if (explain) item.append(explain);
+
+      return item;
     }
 
     function renderResultSignals(sources: string[], score: HTMLElement) {
@@ -593,6 +604,68 @@ const t = useTranslations(locale);
       }
 
       return meta;
+    }
+
+    function renderResultExplain(explain: SemanticExplain | undefined) {
+      if (!explain) return null;
+      const details = document.createElement("details");
+      details.className = "semantic-result-explain";
+
+      const summary = document.createElement("summary");
+      summary.textContent = "근거";
+
+      const chips = document.createElement("div");
+      chips.className = "semantic-explain-chips";
+
+      const terms = explain.matchedTerms ?? [];
+      chips.append(
+        explainChip("terms", `${terms.length}/${explain.termCount ?? 0}`),
+        explainChip("lex", ratioLabel(explain.lexicalRatio)),
+        explainChip("title", ratioLabel(explain.titleRatio)),
+        explainChip("tag", ratioLabel(explain.tagRatio))
+      );
+
+      if (typeof explain.rawScore === "number") {
+        chips.append(explainChip("raw", explain.rawScore.toFixed(3)));
+      }
+
+      for (const signal of (explain.signals ?? []).slice(0, 3)) {
+        chips.append(explainChip(signalLabel(signal), "hit"));
+      }
+
+      if (terms.length > 0) {
+        const matched = document.createElement("p");
+        matched.className = "semantic-explain-terms";
+        matched.textContent = terms.join(" · ");
+        details.append(summary, chips, matched);
+      } else {
+        details.append(summary, chips);
+      }
+
+      return details;
+    }
+
+    function explainChip(label: string, value: string) {
+      const chip = document.createElement("span");
+      chip.className = "semantic-explain-chip";
+      chip.textContent = `${label} ${value}`;
+      return chip;
+    }
+
+    function ratioLabel(value: number | undefined) {
+      if (typeof value !== "number") return "0%";
+      return `${Math.round(value * 100)}%`;
+    }
+
+    function signalLabel(signal: string) {
+      const labels: Record<string, string> = {
+        title: "title",
+        tag: "tag",
+        phrase: "phrase",
+        exact_url: "exact",
+        lexical_evidence: "evidence",
+      };
+      return labels[signal] ?? signal;
     }
 
     function renderSemanticStages(stages: string[]) {
@@ -803,6 +876,58 @@ const t = useTranslations(locale);
     font-size: 0.68rem;
     font-weight: 600;
     line-height: 1;
+  }
+
+  .semantic-result-explain {
+    grid-column: 2 / -1;
+    min-width: 0;
+    margin-top: 0.15rem;
+  }
+
+  .semantic-result-explain summary {
+    width: fit-content;
+    cursor: pointer;
+    color: var(--muted-foreground);
+    font-family: var(--font-app);
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1.35;
+    outline-offset: 2px;
+  }
+
+  .semantic-result-explain summary:hover {
+    color: var(--accent);
+  }
+
+  .semantic-explain-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin-top: 0.35rem;
+  }
+
+  .semantic-explain-chip {
+    display: inline-flex;
+    align-items: center;
+    min-height: 1.3rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.16rem 0.42rem;
+    color: var(--muted-foreground);
+    background: var(--background);
+    font-family: var(--font-app);
+    font-size: 0.66rem;
+    font-weight: 600;
+    line-height: 1;
+  }
+
+  .semantic-explain-terms {
+    margin-top: 0.35rem;
+    color: var(--muted-foreground);
+    font-family: var(--font-app);
+    font-size: 0.72rem;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
   }
 
   .semantic-result-link:hover {

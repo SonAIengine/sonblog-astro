@@ -712,14 +712,43 @@ def satisfies_query_plan(candidate: dict, plan: dict) -> bool:
     return True
 
 
-def public_result(candidate: dict) -> dict:
+def explain_candidate(candidate: dict) -> dict:
+    signals: list[str] = []
+    if candidate.get("title_match"):
+        signals.append("title")
+    if candidate.get("tag_match"):
+        signals.append("tag")
+    if candidate.get("exact_phrase"):
+        signals.append("phrase")
+    if candidate.get("exact_url"):
+        signals.append("exact_url")
+    if has_strong_lexical_evidence(candidate):
+        signals.append("lexical_evidence")
+
     return {
+        "matchedTerms": candidate.get("matched_terms", [])[:8],
+        "termCount": candidate.get("term_count", 0),
+        "lexicalRatio": round(candidate.get("lexical_ratio", 0.0), 3),
+        "titleRatio": round(candidate.get("title_ratio", 0.0), 3),
+        "tagRatio": round(candidate.get("tag_ratio", 0.0), 3),
+        "exactPhrase": bool(candidate.get("exact_phrase")),
+        "rawScore": candidate.get("raw_score"),
+        "boostedScore": candidate.get("score"),
+        "signals": signals,
+    }
+
+
+def public_result(candidate: dict, *, explain: bool = False) -> dict:
+    result = {
         "url": candidate["url"] + "/",
         "title": candidate["title"],
         "score": candidate["score"],
         "confidence": candidate["confidence"],
         "sources": candidate["sources"],
     }
+    if explain:
+        result["explain"] = explain_candidate(candidate)
+    return result
 
 
 @asynccontextmanager
@@ -794,6 +823,7 @@ async def health():
 async def search(
     q: str = Query(..., min_length=1),
     limit: int = Query(12, ge=1, le=40),
+    explain: bool = False,
     # 리랭커(bge-reranker, GPU)는 이 코퍼스에서 품질 향상이 미미한데 GPU 경합 시
     # 지연 스파이크(수 초)를 유발 → 기본 끔. dense(bge-m3)+BM25+PPR로 충분.
     # 필요 시 ?rerank=true 로 켤 수 있음.
@@ -860,7 +890,7 @@ async def search(
     second_raw = ranked[1]["raw_score"] if len(ranked) > 1 else 0.0
     no_lexical_margin = top_raw - second_raw
     results = [
-        public_result(candidate)
+        public_result(candidate, explain=explain)
         for candidate in ranked
         if satisfies_query_plan(candidate, plan)
         and is_confident_candidate(candidate, no_lexical_margin)
