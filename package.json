@@ -23,7 +23,8 @@
     "audit:content": "node scripts/audit-content.mjs",
     "check:mermaid": "node scripts/check-mermaid.mjs",
     "search:embed": "node scripts/embed-search.mjs",
-    "search:eval": "node scripts/evaluate-search.mjs"
+    "search:eval": "node scripts/evaluate-search.mjs",
+    "search:eval:strict": "SEARCH_EVAL_STRICT=true node scripts/evaluate-search.mjs"
   },
   "dependencies": {
     "@astrojs/mdx": "^6.0.1",

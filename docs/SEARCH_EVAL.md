@@ -20,10 +20,18 @@ SEARCH_API=http://127.0.0.1:8182 pnpm run search:eval
 SEARCH_EVAL_STRICT=true pnpm run search:eval
 ```
 
+또는 짧게:
+
+```bash
+pnpm run search:eval:strict
+```
+
 ## 산출물
 
 - `reports/search-eval.md`: 사람이 읽는 리포트
 - `reports/search-eval.json`: 전후 비교나 대시보드용 원본 결과
+- `reports/search-eval-history.jsonl`: 실행 이력. 한 줄에 한 번의 summary를 append한다.
+- `reports/search-eval-backlog.md`: 실패 케이스만 모은 다음 작업 후보 목록
 
 `reports/`는 생성 산출물이므로 git에는 올리지 않는다.
 
@@ -35,6 +43,19 @@ SEARCH_EVAL_STRICT=true pnpm run search:eval
 - `sorted`: 결과 점수가 내림차순인가
 - `negative`: 무관 질의에서 결과를 과신하지 않는가
 - `latency`: API가 기본 800ms 안에 응답하는가
+- `stage coverage`: 형태소, alias normalization, lexical fallback, confidence gate 같은 검색 단계가 케이스에서 얼마나 쓰였는가
+
+## Alias Dictionary
+
+쿼리 보정 사전은 `search-service/query-aliases.json`에서 관리한다.
+
+예를 들어 아래 표현은 코드 수정 없이 사전만 늘려서 보정할 수 있다.
+
+- `k8s` → `kubernetes k3s 쿠버네티스`
+- `graph tool call` → `graph-tool-call`
+- `ku portal`, `kupid`, `고려대 포털` → `ku-portal`
+
+검색 서비스 재시작 후 `/health`의 `aliases` 값으로 사전 로드 개수를 확인한다.
 
 ## 현재 관찰된 개선 포인트
 
@@ -54,24 +75,27 @@ SEARCH_EVAL_STRICT=true pnpm run search:eval
 - 한국어 lexical layer에는 `kiwipiepy` 형태소 토큰을 추가한다. 단, `K3s`, `graph-tool-call`, `vLLM` 같은 기술 토큰은 기존 ASCII/code 토큰화가 담당한다.
 - 명시 연산자는 `AND`, `OR`, `EQURL:/posts/.../`를 지원한다. 기본 연산은 OR이며, `EQURL`은 정확한 URL 필터/직접 조회용이다.
 - 형태소 분석으로 `완전무관` 같은 무관 질의가 단어 하나에 걸리지 않도록, 긴 질의의 body-only 1단어 매칭은 강한 lexical evidence로 보지 않는다.
+- alias dictionary를 `search-service/query-aliases.json`으로 분리했다.
+- 평가 리포트에 p95/max latency, stage coverage, 실패 backlog, 실행 history를 추가했다.
 
 1차 반영 후 운영 API 기준 strict 평가:
 
 ```text
-cases: 18
-pass: 18
+cases: 19
+pass: 19
 positive top1: 100%
 positive recall@5: 100%
 negative pass: 100%
 sorted score pass: 100%
-avg latency: 약 243ms
+avg latency: 약 234ms
+p95 latency: 약 281ms
 ```
 
 ## 다음 TODO
 
 - Pagefind, semantic API, graph 검색을 같은 eval runner에서 비교한다.
-- 검색 실패를 사람이 검토한 뒤 `eval-cases.json`으로 승격하는 backlog를 만든다.
-- alias dictionary를 코드 상수에서 별도 JSON/YAML로 분리한다.
+- `reports/search-eval-backlog.md`의 실패 유형을 검토해 `eval-cases.json` 또는 alias 사전으로 승격한다.
+- alias dictionary를 실제 실패 backlog에서 주기적으로 보강한다.
 - 검색 API `/health`에 index source commit/hash, ready 상태를 더 자세히 포함한다.
 - search service 재시작 중 502가 나오지 않도록 readiness 또는 무중단 재색인을 고려한다.
 - graph 검색은 서버가 살아 있을 때 confidence gate가 적용된 서버 결과를 우선하고, 서버 장애 시에만 local Orama fallback을 유지한다.

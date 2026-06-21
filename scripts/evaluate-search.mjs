@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { appendFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -9,6 +9,10 @@ const casesPath = resolve(
   process.env.SEARCH_EVAL_CASES ?? "search-service/eval-cases.json"
 );
 const reportDir = resolve(repoRoot, process.env.SEARCH_EVAL_REPORT_DIR ?? "reports");
+const reportJsonPath = resolve(reportDir, "search-eval.json");
+const reportMdPath = resolve(reportDir, "search-eval.md");
+const historyPath = resolve(reportDir, "search-eval-history.jsonl");
+const backlogPath = resolve(reportDir, "search-eval-backlog.md");
 const apiBase = (process.env.SEARCH_API ?? "https://search.infoedu.co.kr").replace(
   /\/$/,
   ""
@@ -48,6 +52,16 @@ function formatPercent(value) {
   return `${Math.round(value * 1000) / 10}%`;
 }
 
+function percentile(values, percentileValue) {
+  const sorted = values.filter(Number.isFinite).sort((a, b) => a - b);
+  if (sorted.length === 0) return 0;
+  const index = Math.min(
+    sorted.length - 1,
+    Math.max(0, Math.ceil(sorted.length * percentileValue) - 1)
+  );
+  return sorted[index];
+}
+
 async function fetchWithTimeout(url) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -75,6 +89,8 @@ function judgeCase(testCase, response) {
     url: normalizeUrl(result.url),
     title: result.title ?? "",
     score: typeof result.score === "number" ? result.score : Number.NaN,
+    confidence: result.confidence ?? "",
+    sources: Array.isArray(result.sources) ? result.sources : [],
   }));
   const scores = results.map(result => result.score).filter(Number.isFinite);
   const relevant = new Set((testCase.relevant ?? []).map(normalizeUrl));
@@ -123,13 +139,28 @@ function judgeCase(testCase, response) {
     topTitle: top?.title ?? "",
     topUrl: top?.url ?? "",
     topScore,
+    topConfidence: top?.confidence ?? "",
+    topSources: top?.sources ?? [],
     resultCount: results.length,
     results,
   };
 }
 
+function countStages(cases) {
+  const counts = new Map();
+  for (const result of cases) {
+    for (const stage of result.stages) {
+      counts.set(stage, (counts.get(stage) ?? 0) + 1);
+    }
+  }
+  return Object.fromEntries([...counts.entries()].sort(([a], [b]) => a.localeCompare(b)));
+}
+
 function renderMarkdown({ generatedAt, summary, cases }) {
   const failed = cases.filter(result => !result.pass);
+  const stageRows = Object.entries(summary.stageCounts)
+    .map(([stage, count]) => `${stage} | ${count}`)
+    .join("\n");
   const rows = cases
     .map(result =>
       [
@@ -137,6 +168,8 @@ function renderMarkdown({ generatedAt, summary, cases }) {
         result.id,
         result.type,
         formatNumber(result.topScore),
+        result.topConfidence || "-",
+        result.topSources.join("+") || "-",
         result.sorted ? "yes" : "no",
         `${Math.round(result.latencyMs)}ms`,
         result.topTitle.replaceAll("|", "\\|"),
@@ -177,16 +210,72 @@ function renderMarkdown({ generatedAt, summary, cases }) {
 - negative pass: ${formatPercent(summary.negativePass)}
 - sorted score pass: ${formatPercent(summary.sortedPass)}
 - avg latency: ${Math.round(summary.avgLatencyMs)}ms
+- p95 latency: ${Math.round(summary.p95LatencyMs)}ms
+- max latency: ${Math.round(summary.maxLatencyMs)}ms
+
+## Stage Coverage
+
+stage | count
+--- | ---:
+${stageRows || "- | 0"}
 
 ## Cases
 
-status | id | type | topScore | sorted | latency | topTitle | checks
---- | --- | --- | ---: | --- | ---: | --- | ---
+status | id | type | topScore | confidence | sources | sorted | latency | topTitle | checks
+--- | --- | --- | ---: | --- | --- | --- | ---: | --- | ---
 ${rows}
 
 ## Failed Cases
 
 ${failedDetails}
+`;
+}
+
+function renderBacklog({ generatedAt, api, limit, summary, cases }) {
+  const failed = cases.filter(result => !result.pass);
+  if (failed.length === 0) {
+    return `# Search Failure Backlog
+
+- generatedAt: ${generatedAt}
+- api: ${api}
+- cases: ${summary.total}
+
+No failed cases.
+`;
+  }
+
+  const items = failed
+    .map(result => {
+      const observed = result.results
+        .slice(0, limit)
+        .map(
+          (item, index) =>
+            `${index + 1}. ${formatNumber(item.score)} ${item.title} (${item.url}) [${item.sources.join("+") || "-"}]`
+        )
+        .join("\n");
+
+      return `## ${result.id}
+
+- query: \`${result.query}\`
+- type: ${result.type}
+- intent: ${result.intent}
+- checks: ${result.checks.join(", ")}
+- suggested action: alias 보강, confidence gate 조정, 정답 URL 재검토 중 하나로 분류한다.
+
+### Observed
+
+${observed || "No results."}
+`;
+    })
+    .join("\n");
+
+  return `# Search Failure Backlog
+
+- generatedAt: ${generatedAt}
+- api: ${api}
+- fail: ${summary.fail}
+
+${items}
 `;
 }
 
@@ -220,6 +309,8 @@ for (const testCase of cases) {
       topTitle: "",
       topUrl: "",
       topScore: 0,
+      topConfidence: "",
+      topSources: [],
       resultCount: 0,
       results: [],
     });
@@ -251,15 +342,30 @@ const summary = {
   sortedPass: evaluated.filter(result => result.sorted).length / evaluated.length,
   avgLatencyMs:
     evaluated.reduce((sum, result) => sum + result.latencyMs, 0) / evaluated.length,
+  p95LatencyMs: percentile(
+    evaluated.map(result => result.latencyMs),
+    0.95
+  ),
+  maxLatencyMs: Math.max(...evaluated.map(result => result.latencyMs), 0),
+  stageCounts: countStages(evaluated),
 };
 
 const report = { generatedAt, api: apiBase, limit, rerank, summary, cases: evaluated };
 await mkdir(reportDir, { recursive: true });
-await writeFile(
-  resolve(reportDir, "search-eval.json"),
-  `${JSON.stringify(report, null, 2)}\n`
+await writeFile(reportJsonPath, `${JSON.stringify(report, null, 2)}\n`);
+await writeFile(reportMdPath, renderMarkdown(report));
+await writeFile(backlogPath, renderBacklog(report));
+await appendFile(
+  historyPath,
+  `${JSON.stringify({
+    generatedAt,
+    api: apiBase,
+    limit,
+    rerank,
+    summary,
+    failedCaseIds: evaluated.filter(result => !result.pass).map(result => result.id),
+  })}\n`
 );
-await writeFile(resolve(reportDir, "search-eval.md"), renderMarkdown(report));
 
 console.log(JSON.stringify(summary, null, 2));
 if (summary.fail > 0 && process.env.SEARCH_EVAL_STRICT === "true") {

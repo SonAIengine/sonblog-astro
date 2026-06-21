@@ -182,6 +182,16 @@
     "minTopScore": 0.75
   },
   {
+    "id": "ku_portal_kupid_alias",
+    "query": "KUPID MCP",
+    "intent": "KUPID 표현만 입력해도 KU Portal MCP 글로 alias 보정되어야 한다.",
+    "type": "positive",
+    "relevant": [
+      "/posts/ai/agent/ku-portal-mcp-campus-portal-claude-code/"
+    ],
+    "minTopScore": 0.75
+  },
+  {
     "id": "exact_url_operator",
     "query": "EQURL:/posts/ai/agent/ku-portal-mcp-campus-portal-claude-code/ 완전무관",
     "intent": "EQURL 연산자는 URL이 정확히 지정된 글만 반환해야 한다.",

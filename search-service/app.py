@@ -15,6 +15,7 @@ import json
 import os
 import re
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -34,6 +35,10 @@ INDEX_JSON = os.environ.get(
     "INDEX_JSON",
     os.path.join(os.path.dirname(__file__), "..", "dist", "search-fulltext.json"),
 )
+QUERY_ALIASES_JSON = os.environ.get(
+    "QUERY_ALIASES_JSON",
+    os.path.join(os.path.dirname(__file__), "query-aliases.json"),
+)
 CHUNK_SIZE = int(os.environ.get("CHUNK_SIZE", "700"))
 CHUNK_OVERLAP = int(os.environ.get("CHUNK_OVERLAP", "120"))
 GRAPH_DB = os.environ.get("GRAPH_DB", os.path.join(os.path.dirname(__file__), "blog_graph.db"))
@@ -51,15 +56,6 @@ ENABLE_KOREAN_MORPHOLOGY = os.environ.get("ENABLE_KOREAN_MORPHOLOGY", "true").lo
 KIWI = Kiwi() if ENABLE_KOREAN_MORPHOLOGY and Kiwi is not None else None
 KO_MORPH_TAG_PREFIXES = ("NN", "VV", "VA", "XR")
 IMPORTANT_SHORT_KO_TERMS = {"딥"}
-QUERY_ALIASES = [
-    (re.compile(r"\bdeep\s+learn(?:ing)?\b", re.IGNORECASE), "딥러닝 deep-learning"),
-    (re.compile(r"\bdeeplearn(?:ing)?\b", re.IGNORECASE), "딥러닝"),
-    (re.compile(r"\bk8s\b", re.IGNORECASE), "kubernetes k3s 쿠버네티스"),
-    (re.compile(r"\bargo\s+cd\b", re.IGNORECASE), "argocd argo-cd"),
-    (re.compile(r"\bgraph\s+tool\s+call\b", re.IGNORECASE), "graph-tool-call"),
-    (re.compile(r"\bllm\s*ops\b", re.IGNORECASE), "llmops"),
-    (re.compile(r"\bv\s*llm\b", re.IGNORECASE), "vllm"),
-]
 DEEP_LEARNING_QUERY_RE = re.compile(
     r"\bdeep\s+learn(?:ing)?\b|\bdeeplearn(?:ing)?\b", re.IGNORECASE
 )
@@ -84,6 +80,30 @@ GENERIC_QUERY_TERMS = {
 }
 
 state: dict = {"graph": None, "docs": [], "docs_by_url": {}}
+
+
+def load_query_aliases(path: str) -> list[tuple[re.Pattern, str]]:
+    alias_path = Path(path)
+    if not alias_path.exists():
+        print(f"[blog-search] query aliases not found: {alias_path}")
+        return []
+
+    with alias_path.open(encoding="utf-8") as f:
+        rows = json.load(f)
+
+    aliases: list[tuple[re.Pattern, str]] = []
+    for index, row in enumerate(rows):
+        pattern = row.get("pattern")
+        replacement = row.get("replacement")
+        if not pattern or not replacement:
+            raise ValueError(f"Invalid query alias at {alias_path}:{index}")
+
+        flags = re.IGNORECASE if "i" in str(row.get("flags", "i")).lower() else 0
+        aliases.append((re.compile(pattern, flags), replacement))
+    return aliases
+
+
+QUERY_ALIASES = load_query_aliases(QUERY_ALIASES_JSON)
 
 
 def chunk_text(text: str) -> list[str]:
@@ -566,6 +586,7 @@ async def health():
     return {
         "ok": state["graph"] is not None,
         "morphology": "kiwipiepy" if KIWI is not None else "disabled",
+        "aliases": len(QUERY_ALIASES),
         "docs": len(state.get("docs", [])),
     }
 

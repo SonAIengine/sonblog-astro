@@ -84,6 +84,7 @@ src/content/posts/
 - `/search/` 기본 검색은 Pagefind 정적 인덱스를 사용한다.
 - semantic search section은 `https://search.infoedu.co.kr/search`를 fallback/보강 결과로 사용한다.
 - 검색 API는 `search-service/requirements.txt` 기준으로 운영하며 `synaptic-memory`와 `kiwipiepy`를 사용한다.
+- 검색 alias/동의어 사전은 `search-service/query-aliases.json`에서 관리한다.
 - 한국어 lexical evidence는 형태소 토큰을 함께 보지만, 기술 약어/하이픈 토큰은 별도 코드 토큰화로 유지한다.
 - 검색 API는 내부/디버깅용으로 `AND`, `OR`, `EQURL:/posts/.../` 연산자를 지원한다.
 - search telemetry는 GoatCounter 이벤트로 기록한다.

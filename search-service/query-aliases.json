@@ -1,0 +1,65 @@
+[
+  {
+    "id": "deep_learning_phrase",
+    "pattern": "\\bdeep\\s+learn(?:ing)?\\b",
+    "replacement": "딥러닝 deep-learning",
+    "flags": "i",
+    "note": "영문 deep learning 질의를 딥러닝 글 묶음으로 보정"
+  },
+  {
+    "id": "deeplearn_typo",
+    "pattern": "\\bdeeplearn(?:ing)?\\b",
+    "replacement": "딥러닝",
+    "flags": "i",
+    "note": "붙여 쓰거나 줄인 Deeplearn 표현 보정"
+  },
+  {
+    "id": "k8s",
+    "pattern": "\\bk8s\\b",
+    "replacement": "kubernetes k3s 쿠버네티스",
+    "flags": "i",
+    "note": "Kubernetes/K3s 한국어 별칭 확장"
+  },
+  {
+    "id": "argo_cd",
+    "pattern": "\\bargo\\s+cd\\b",
+    "replacement": "argocd argo-cd",
+    "flags": "i",
+    "note": "Argo CD 띄어쓰기 변형 보정"
+  },
+  {
+    "id": "graph_tool_call",
+    "pattern": "\\bgraph\\s+tool\\s+call\\b",
+    "replacement": "graph-tool-call",
+    "flags": "i",
+    "note": "프로젝트명 하이픈 변형 보정"
+  },
+  {
+    "id": "llmops",
+    "pattern": "\\bllm\\s*ops\\b",
+    "replacement": "llmops",
+    "flags": "i",
+    "note": "LLMOps 띄어쓰기 변형 보정"
+  },
+  {
+    "id": "vllm",
+    "pattern": "\\bv\\s*llm\\b",
+    "replacement": "vllm",
+    "flags": "i",
+    "note": "vLLM 띄어쓰기 변형 보정"
+  },
+  {
+    "id": "ku_portal",
+    "pattern": "\\bku\\s+portal\\b|고려대\\s*포털|고대\\s*포털|kupid",
+    "replacement": "ku-portal ku portal kupid 고려대학교 포털",
+    "flags": "i",
+    "note": "KU Portal MCP 글 검색 보정"
+  },
+  {
+    "id": "vector_search",
+    "pattern": "벡터\\s*검색|vector\\s+search",
+    "replacement": "vector-search 벡터검색 qdrant",
+    "flags": "i",
+    "note": "벡터 검색 계열 표현 보정"
+  }
+]
