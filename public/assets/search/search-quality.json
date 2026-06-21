@@ -1,73 +1,73 @@
 {
-  "generatedAt": "2026-06-21T17:57:25.052Z",
+  "generatedAt": "2026-06-21T18:38:42.704Z",
   "source": {
     "report": "reports/search-eval.json",
     "history": "reports/search-eval-history.jsonl",
     "cases": "search-service/eval-cases.json"
   },
-  "historyCount": 11,
+  "historyCount": 14,
   "latest": {
-    "generatedAt": "2026-06-21T17:57:19.702Z",
+    "generatedAt": "2026-06-21T18:38:37.455Z",
     "api": "https://search.infoedu.co.kr",
     "limit": 5,
     "rerank": false,
     "summary": {
-      "total": 19,
-      "pass": 19,
+      "total": 20,
+      "pass": 20,
       "fail": 0,
       "positiveTop1": 1,
       "positiveRecall": 1,
       "positiveMrr": 1,
       "negativePass": 1,
       "sortedPass": 1,
-      "avgLatencyMs": 235.1,
-      "p95LatencyMs": 281.2,
-      "maxLatencyMs": 281.2,
+      "avgLatencyMs": 233.9,
+      "p95LatencyMs": 280.8,
+      "maxLatencyMs": 285,
       "stageCounts": {
-        "confidence_gate": 19,
-        "doc_rank": 19,
+        "confidence_gate": 20,
+        "doc_rank": 20,
         "equrl_filter": 1,
-        "evidence": 19,
-        "fts": 19,
-        "korean_morphology": 19,
-        "lexical_fallback": 16,
+        "evidence": 20,
+        "fts": 20,
+        "korean_morphology": 20,
+        "lexical_fallback": 17,
         "operator_and": 1,
-        "operator_or": 18,
-        "query_normalized": 7,
-        "vector": 19
+        "operator_or": 19,
+        "query_normalized": 8,
+        "vector": 20
       }
     },
     "failedCases": []
   },
   "previous": {
-    "generatedAt": "2026-06-21T16:05:25.412Z",
+    "generatedAt": "2026-06-21T18:37:41.288Z",
     "api": "https://search.infoedu.co.kr",
     "limit": 5,
     "rerank": false,
     "summary": {
-      "total": 19,
-      "pass": 19,
+      "total": 20,
+      "pass": 20,
       "fail": 0,
       "positiveTop1": 1,
       "positiveRecall": 1,
       "positiveMrr": 1,
       "negativePass": 1,
       "sortedPass": 1,
-      "avgLatencyMs": 239.5,
-      "p95LatencyMs": 294.3,
-      "maxLatencyMs": 294.3,
+      "avgLatencyMs": 232.2,
+      "p95LatencyMs": 279.1,
+      "maxLatencyMs": 284.2,
       "stageCounts": {
-        "confidence_gate": 19,
-        "doc_rank": 19,
+        "confidence_gate": 20,
+        "doc_rank": 20,
         "equrl_filter": 1,
-        "evidence": 19,
-        "fts": 19,
-        "korean_morphology": 19,
-        "lexical_fallback": 16,
+        "evidence": 20,
+        "fts": 20,
+        "korean_morphology": 20,
+        "lexical_fallback": 17,
         "operator_and": 1,
-        "operator_or": 18,
-        "query_normalized": 7,
-        "vector": 19
+        "operator_or": 19,
+        "query_normalized": 8,
+        "vector": 20
       }
     },
     "failedCaseIds": []
@@ -77,45 +77,45 @@
     "positiveTop1": 0,
     "positiveRecall": 0,
     "positiveMrr": 0,
-    "p95LatencyMs": -13.1,
-    "avgLatencyMs": -4.4
+    "p95LatencyMs": 1.7,
+    "avgLatencyMs": 1.7
   },
   "stageCoverage": [
     {
       "stage": "confidence_gate",
-      "count": 19
+      "count": 20
     },
     {
       "stage": "doc_rank",
-      "count": 19
+      "count": 20
     },
     {
       "stage": "evidence",
-      "count": 19
+      "count": 20
     },
     {
       "stage": "fts",
-      "count": 19
+      "count": 20
     },
     {
       "stage": "korean_morphology",
-      "count": 19
+      "count": 20
     },
     {
       "stage": "vector",
-      "count": 19
+      "count": 20
     },
     {
       "stage": "operator_or",
-      "count": 18
+      "count": 19
     },
     {
       "stage": "lexical_fallback",
-      "count": 16
+      "count": 17
     },
     {
       "stage": "query_normalized",
-      "count": 7
+      "count": 8
     },
     {
       "stage": "equrl_filter",
@@ -486,6 +486,105 @@
           "operator_or": 18,
           "query_normalized": 7,
           "vector": 19
+        }
+      },
+      "failedCaseIds": []
+    },
+    {
+      "generatedAt": "2026-06-21T18:37:28.444Z",
+      "api": "https://search.infoedu.co.kr",
+      "limit": 5,
+      "rerank": false,
+      "summary": {
+        "total": 20,
+        "pass": 20,
+        "fail": 0,
+        "positiveTop1": 1,
+        "positiveRecall": 1,
+        "positiveMrr": 1,
+        "negativePass": 1,
+        "sortedPass": 1,
+        "avgLatencyMs": 232.8,
+        "p95LatencyMs": 278.8,
+        "maxLatencyMs": 285.8,
+        "stageCounts": {
+          "confidence_gate": 20,
+          "doc_rank": 20,
+          "equrl_filter": 1,
+          "evidence": 20,
+          "fts": 20,
+          "korean_morphology": 20,
+          "lexical_fallback": 17,
+          "operator_and": 1,
+          "operator_or": 19,
+          "query_normalized": 8,
+          "vector": 20
+        }
+      },
+      "failedCaseIds": []
+    },
+    {
+      "generatedAt": "2026-06-21T18:37:41.288Z",
+      "api": "https://search.infoedu.co.kr",
+      "limit": 5,
+      "rerank": false,
+      "summary": {
+        "total": 20,
+        "pass": 20,
+        "fail": 0,
+        "positiveTop1": 1,
+        "positiveRecall": 1,
+        "positiveMrr": 1,
+        "negativePass": 1,
+        "sortedPass": 1,
+        "avgLatencyMs": 232.2,
+        "p95LatencyMs": 279.1,
+        "maxLatencyMs": 284.2,
+        "stageCounts": {
+          "confidence_gate": 20,
+          "doc_rank": 20,
+          "equrl_filter": 1,
+          "evidence": 20,
+          "fts": 20,
+          "korean_morphology": 20,
+          "lexical_fallback": 17,
+          "operator_and": 1,
+          "operator_or": 19,
+          "query_normalized": 8,
+          "vector": 20
+        }
+      },
+      "failedCaseIds": []
+    },
+    {
+      "generatedAt": "2026-06-21T18:38:37.455Z",
+      "api": "https://search.infoedu.co.kr",
+      "limit": 5,
+      "rerank": false,
+      "summary": {
+        "total": 20,
+        "pass": 20,
+        "fail": 0,
+        "positiveTop1": 1,
+        "positiveRecall": 1,
+        "positiveMrr": 1,
+        "negativePass": 1,
+        "sortedPass": 1,
+        "avgLatencyMs": 233.9,
+        "p95LatencyMs": 280.8,
+        "maxLatencyMs": 285,
+        "stageCounts": {
+          "confidence_gate": 20,
+          "doc_rank": 20,
+          "equrl_filter": 1,
+          "evidence": 20,
+          "fts": 20,
+          "korean_morphology": 20,
+          "lexical_fallback": 17,
+          "operator_and": 1,
+          "operator_or": 19,
+          "query_normalized": 8,
+          "vector": 20
         }
       },
       "failedCaseIds": []

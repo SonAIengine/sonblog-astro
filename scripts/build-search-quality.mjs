@@ -98,7 +98,11 @@ function latestFailures(report) {
 }
 
 const latestReport = await readJson(reportJsonPath);
-const history = (await readJsonl(historyPath)).map(compactHistory);
+const apiFilter = process.env.SEARCH_QUALITY_API_FILTER ?? latestReport?.api ?? "";
+const allHistory = (await readJsonl(historyPath)).map(compactHistory);
+const history = apiFilter
+  ? allHistory.filter(entry => entry.api === apiFilter)
+  : allHistory;
 
 if (history.length === 0 && latestReport) {
   history.push(
