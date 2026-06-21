@@ -13,6 +13,7 @@
 """
 import json
 import os
+import re
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Query
@@ -33,8 +34,41 @@ CHUNK_OVERLAP = int(os.environ.get("CHUNK_OVERLAP", "120"))
 GRAPH_DB = os.environ.get("GRAPH_DB", os.path.join(os.path.dirname(__file__), "blog_graph.db"))
 # 리랭커 점수 노이즈 컷 — 이 값 미만은 무관한 글로 보고 제외(최소 1건은 보장)
 SCORE_FLOOR = float(os.environ.get("SCORE_FLOOR", "0.4"))
+NO_LEXICAL_SCORE_FLOOR = float(os.environ.get("NO_LEXICAL_SCORE_FLOOR", "0.88"))
+NO_LEXICAL_MARGIN_FLOOR = float(os.environ.get("NO_LEXICAL_MARGIN_FLOOR", "0.08"))
 
-state: dict = {"graph": None}
+TOKEN_RE = re.compile(r"[가-힣]{2,}|[a-z0-9][a-z0-9.+#-]*", re.IGNORECASE)
+ASCII_RE = re.compile(r"^[a-z0-9][a-z0-9.+#-]*$")
+QUERY_ALIASES = [
+    (re.compile(r"\bdeep\s+learn(?:ing)?\b", re.IGNORECASE), "딥러닝 deep-learning"),
+    (re.compile(r"\bdeeplearn(?:ing)?\b", re.IGNORECASE), "딥러닝"),
+    (re.compile(r"\bk8s\b", re.IGNORECASE), "kubernetes k3s 쿠버네티스"),
+    (re.compile(r"\bargo\s+cd\b", re.IGNORECASE), "argocd argo-cd"),
+    (re.compile(r"\bgraph\s+tool\s+call\b", re.IGNORECASE), "graph-tool-call"),
+    (re.compile(r"\bllm\s*ops\b", re.IGNORECASE), "llmops"),
+    (re.compile(r"\bv\s*llm\b", re.IGNORECASE), "vllm"),
+]
+GENERIC_QUERY_TERMS = {
+    "글",
+    "관련",
+    "검색",
+    "기술",
+    "방법",
+    "다이어그램",
+    "문서",
+    "문서를",
+    "서비스",
+    "소개",
+    "정리",
+    "프로젝트",
+    "대학원",
+    "article",
+    "blog",
+    "diagram",
+    "post",
+}
+
+state: dict = {"graph": None, "docs": [], "docs_by_url": {}}
 
 
 def chunk_text(text: str) -> list[str]:
@@ -68,11 +102,15 @@ def chunk_text(text: str) -> list[str]:
     return chunks
 
 
-def load_chunks() -> list[dict]:
+def load_documents() -> list[dict]:
+    with open(INDEX_JSON, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def load_chunks(docs: list[dict] | None = None) -> list[dict]:
     """글당 전체 본문을 청크로 분할해 ingest. 같은 글의 청크는 doc_id(=url)로
     묶여 synaptic이 NEXT_CHUNK 그래프를 구성한다. 검색결과는 source=url로 글에 매핑."""
-    with open(INDEX_JSON, encoding="utf-8") as f:
-        docs = json.load(f)
+    docs = docs if docs is not None else load_documents()
     chunks = []
     for d in docs:
         url = d["url"]
@@ -97,9 +135,207 @@ def load_chunks() -> list[dict]:
     return chunks
 
 
+def normalize_query(query: str) -> str:
+    """오타/띄어쓰기 변형을 검색어 뒤에 보강한다.
+
+    원문을 제거하지 않고 alias를 append하는 방식이라 정확 질의의 의미를 망가뜨리지 않는다.
+    """
+    normalized = (query or "").strip()
+    additions: list[str] = []
+    for pattern, replacement in QUERY_ALIASES:
+        if pattern.search(normalized):
+            additions.append(replacement)
+    return " ".join([normalized, *additions]).strip()
+
+
+def extract_terms(text: str) -> list[str]:
+    terms: list[str] = []
+    seen: set[str] = set()
+    for raw in TOKEN_RE.findall(text or ""):
+        term = raw.strip("-_.").lower()
+        if len(term) < 2 or term in GENERIC_QUERY_TERMS or term in seen:
+            continue
+        seen.add(term)
+        terms.append(term)
+    return terms
+
+
+def searchable_text(doc: dict) -> str:
+    return "\n".join(
+        [
+            str(doc.get("title", "")),
+            str(doc.get("description", "")),
+            " ".join(doc.get("tags", []) or []),
+            str(doc.get("category", "")),
+            str(doc.get("body", "")),
+        ]
+    ).lower()
+
+
+def prepare_doc_lookup(docs: list[dict]) -> dict[str, dict]:
+    prepared: dict[str, dict] = {}
+    for doc in docs:
+        url = str(doc.get("url", "")).rstrip("/")
+        if not url:
+            continue
+        text = searchable_text(doc)
+        prepared[url] = {
+            **doc,
+            "_search_text": text,
+            "_title_text": str(doc.get("title", "")).lower(),
+            "_tag_text": " ".join(doc.get("tags", []) or []).lower(),
+            "_tokens": set(extract_terms(text)),
+        }
+    return prepared
+
+
+def term_matches(term: str, doc: dict, field: str = "_search_text") -> bool:
+    text = doc.get(field, "")
+    if ASCII_RE.match(term):
+        if field != "_search_text":
+            return term in set(extract_terms(text))
+        return term in doc.get("_tokens", set())
+    return term in text
+
+
+def evidence_features(doc: dict | None, terms: list[str], normalized_query: str) -> dict:
+    if not doc or not terms:
+        return {
+            "matched_terms": [],
+            "lexical_ratio": 0.0,
+            "title_match": False,
+            "tag_match": False,
+            "exact_phrase": False,
+        }
+
+    matched = [term for term in terms if term_matches(term, doc)]
+    title_match = any(term_matches(term, doc, "_title_text") for term in terms)
+    tag_match = any(term_matches(term, doc, "_tag_text") for term in terms)
+    phrase = (normalized_query or "").strip().lower()
+    exact_phrase = bool(len(phrase) >= 4 and phrase in doc.get("_search_text", ""))
+    return {
+        "matched_terms": matched,
+        "lexical_ratio": len(matched) / max(1, len(terms)),
+        "title_match": title_match,
+        "tag_match": tag_match,
+        "exact_phrase": exact_phrase,
+    }
+
+
+def rank_score(raw_score: float, features: dict) -> float:
+    score = raw_score
+    ratio = features["lexical_ratio"]
+    if ratio:
+        score += min(0.08, ratio * 0.08)
+    if features["title_match"]:
+        score += 0.04
+    if features["tag_match"]:
+        score += 0.03
+    if features["exact_phrase"]:
+        score += 0.04
+    return round(min(score, 0.99), 4)
+
+
+def has_strong_lexical_evidence(features: dict) -> bool:
+    matched = features["matched_terms"]
+    if not matched:
+        return False
+    if features["title_match"] or features["tag_match"] or features["exact_phrase"]:
+        return True
+    return any(not (ASCII_RE.match(term) and len(term) <= 2) for term in matched)
+
+
+def make_candidate(
+    *,
+    url: str,
+    title: str,
+    raw_score: float,
+    doc: dict | None,
+    terms: list[str],
+    normalized_query: str,
+    source: str,
+) -> dict:
+    features = evidence_features(doc, terms, normalized_query)
+    return {
+        "url": url,
+        "title": title,
+        "score": rank_score(raw_score, features),
+        "raw_score": round(raw_score, 4),
+        "confidence": "high" if features["matched_terms"] else "semantic",
+        "sources": [source],
+        **features,
+    }
+
+
+def upsert_candidate(candidates: dict[str, dict], candidate: dict) -> None:
+    current = candidates.get(candidate["url"])
+    if current is None:
+        candidates[candidate["url"]] = candidate
+        return
+
+    current["sources"] = sorted(set(current.get("sources", [])) | set(candidate.get("sources", [])))
+    if (candidate["score"], candidate["raw_score"]) > (current["score"], current["raw_score"]):
+        candidate["sources"] = current["sources"]
+        candidates[candidate["url"]] = candidate
+
+
+def add_lexical_fallback_candidates(
+    *,
+    candidates: dict[str, dict],
+    docs: list[dict],
+    terms: list[str],
+    normalized_query: str,
+) -> None:
+    if not terms:
+        return
+    for doc in docs:
+        features = evidence_features(doc, terms, normalized_query)
+        ratio = features["lexical_ratio"]
+        if ratio <= 0:
+            continue
+        if not has_strong_lexical_evidence(features):
+            continue
+        if ratio < 0.5 and not (features["title_match"] or features["tag_match"]):
+            continue
+        raw_score = 0.56 + min(0.22, ratio * 0.18)
+        candidate = make_candidate(
+            url=str(doc["url"]).rstrip("/"),
+            title=doc.get("title", ""),
+            raw_score=raw_score,
+            doc=doc,
+            terms=terms,
+            normalized_query=normalized_query,
+            source="lexical",
+        )
+        upsert_candidate(candidates, candidate)
+
+
+def is_confident_candidate(candidate: dict, no_lexical_margin: float) -> bool:
+    if candidate["score"] < SCORE_FLOOR:
+        return False
+    if has_strong_lexical_evidence(candidate):
+        return True
+    return (
+        candidate["raw_score"] >= NO_LEXICAL_SCORE_FLOOR
+        and no_lexical_margin >= NO_LEXICAL_MARGIN_FLOOR
+    )
+
+
+def public_result(candidate: dict) -> dict:
+    return {
+        "url": candidate["url"] + "/",
+        "title": candidate["title"],
+        "score": candidate["score"],
+        "confidence": candidate["confidence"],
+        "sources": candidate["sources"],
+    }
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    chunks = load_chunks()
+    docs = load_documents()
+    prepared_docs = prepare_doc_lookup(docs)
+    chunks = load_chunks(docs)
     graph = await SynapticGraph.from_chunks(
         chunks,
         db=GRAPH_DB,
@@ -110,6 +346,8 @@ async def lifespan(app: FastAPI):
         rerank_model=RERANK_MODEL,
     )
     state["graph"] = graph
+    state["docs"] = list(prepared_docs.values())
+    state["docs_by_url"] = prepared_docs
     print(f"[blog-search] ready: {len(chunks)} docs indexed")
     # 리랭커/임베더/연결 워밍업 — 첫 사용자 쿼리의 콜드 스타트(수십 초) 제거
     try:
@@ -147,31 +385,68 @@ async def search(
     graph = state["graph"]
     if graph is None:
         return {"query": q, "results": [], "error": "not ready"}
+    normalized_q = normalize_query(q)
+    terms = extract_terms(normalized_q)
+    docs = state.get("docs", [])
+    docs_by_url = state.get("docs_by_url", {})
     # 청크 단위로 더 받아서 글(url) 단위로 합침
-    r = await graph.search(q, limit=limit * 3, engine="evidence", rerank=rerank)
-    seen: set[str] = set()
-    results = []
+    r = await graph.search(normalized_q, limit=limit * 4, engine="evidence", rerank=rerank)
+    candidates: dict[str, dict] = {}
     for an in r.nodes:
         n = an.node
-        url = n.source or (n.properties or {}).get("url")
-        if not url or url in seen:
+        url = str(n.source or (n.properties or {}).get("url") or "").rstrip("/")
+        if not url:
             continue
-        # 점수 내림차순 — FLOOR 미만이 나오면 (최소 1건 확보 후) 이하 전부 노이즈로 컷
-        if float(an.activation) < SCORE_FLOOR and results:
-            break
-        seen.add(url)
-        results.append(
-            {
-                "url": url,
-                "title": (n.properties or {}).get("title") or n.title,
-                "score": round(float(an.activation), 4),
-            }
+        doc = docs_by_url.get(url)
+        candidate = make_candidate(
+            url=url,
+            title=(n.properties or {}).get("title") or n.title,
+            raw_score=float(an.activation),
+            doc=doc,
+            terms=terms,
+            normalized_query=normalized_q,
+            source="synaptic",
         )
-        if len(results) >= limit:
-            break
+        upsert_candidate(candidates, candidate)
+
+    add_lexical_fallback_candidates(
+        candidates=candidates,
+        docs=docs,
+        terms=terms,
+        normalized_query=normalized_q,
+    )
+
+    ranked = sorted(
+        candidates.values(),
+        key=lambda item: (
+            item["score"],
+            item["raw_score"],
+            item["lexical_ratio"],
+            item["title"],
+        ),
+        reverse=True,
+    )
+    top_raw = ranked[0]["raw_score"] if ranked else 0.0
+    second_raw = ranked[1]["raw_score"] if len(ranked) > 1 else 0.0
+    no_lexical_margin = top_raw - second_raw
+    results = [
+        public_result(candidate)
+        for candidate in ranked
+        if is_confident_candidate(candidate, no_lexical_margin)
+    ][:limit]
+
+    stages = list(r.stages_used)
+    if normalized_q != q.strip():
+        stages.append("query_normalized")
+    if any("lexical" in result.get("sources", []) for result in results):
+        stages.append("lexical_fallback")
+    stages.append("doc_rank")
+    stages.append("confidence_gate")
+
     return {
         "query": q,
+        "normalizedQuery": normalized_q,
         "results": results,
-        "stages": r.stages_used,
+        "stages": stages,
         "ms": round(r.search_time_ms, 1),
     }

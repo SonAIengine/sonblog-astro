@@ -38,8 +38,32 @@ SEARCH_EVAL_STRICT=true pnpm run search:eval
 
 ## 현재 관찰된 개선 포인트
 
-- 문서 단위로 합친 결과를 점수 기준으로 다시 정렬해야 한다.
-- 무관 질의에 높은 점수를 주는 overconfidence를 줄여야 한다.
-- `딥러닝`, `deep learning`, `Deeplearn` 같은 동의어/오타 정규화가 필요하다.
-- rerank 적용 여부가 응답 stage와 점수에서 관측 가능해야 한다.
-- 검색 서비스 재시작 중 502가 나오지 않도록 readiness 또는 무중단 재색인을 고려한다.
+2026-06-21 기준 1차 고도화에서 아래 항목은 `search-service/app.py` 후처리 레이어로 반영했다.
+
+- 문서 단위 dedupe 이후 최종 점수 기준으로 다시 정렬한다.
+- `Deeplearn`, `graph tool call`, `argo cd`, `v llm`, `llm ops` 같은 작은 alias/오타 정규화를 적용한다.
+- raw semantic score만 믿지 않고 title/tag/body의 lexical evidence를 함께 본다.
+- lexical evidence가 없는 고점 결과는 top score와 margin이 모두 충분할 때만 살린다.
+- `D2`처럼 짧은 토큰 하나만 본문 어딘가에 맞은 경우는 강한 근거로 보지 않는다.
+- 검색 응답에 `normalizedQuery`, `confidence`, `sources`, `doc_rank`, `confidence_gate` stage를 노출한다.
+
+1차 반영 후 운영 API 기준 strict 평가:
+
+```text
+cases: 12
+pass: 12
+positive top1: 100%
+positive recall@5: 100%
+negative pass: 100%
+sorted score pass: 100%
+avg latency: 약 250ms
+```
+
+## 다음 TODO
+
+- Pagefind, semantic API, graph 검색을 같은 eval runner에서 비교한다.
+- 검색 실패를 사람이 검토한 뒤 `eval-cases.json`으로 승격하는 backlog를 만든다.
+- alias dictionary를 코드 상수에서 별도 JSON/YAML로 분리한다.
+- 검색 API `/health`에 index source commit/hash, indexed document count, ready 상태를 포함한다.
+- search service 재시작 중 502가 나오지 않도록 readiness 또는 무중단 재색인을 고려한다.
+- graph 검색은 서버가 살아 있을 때 confidence gate가 적용된 서버 결과를 우선하고, 서버 장애 시에만 local Orama fallback을 유지한다.

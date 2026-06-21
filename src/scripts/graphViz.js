@@ -1121,11 +1121,13 @@ window.initGraphViz = function initGraphViz() {
     }
     commit("local", null);
 
-    // 2) 업그레이드: synaptic 서버 결과가 오면 더 좋은 의미검색으로 교체
+    // 2) 업그레이드: synaptic 서버가 응답하면 confidence gate가 적용된 결과로 교체.
+    // 서버가 빈 결과를 반환한 경우에도 로컬 BM25 노이즈를 남기지 않는다.
+    // 서버가 내려간 경우에만 위 local 결과를 fallback으로 유지한다.
     if (await apiAvailable()) {
       const api = await synapticSearch(q);
       if (reqQuery !== currentQuery || seq !== renderSeq) return;
-      if (api && api.results.length) {
+      if (api) {
         seen.clear();
         postEntries.length = 0;
         api.results.forEach(pushApiHit);
