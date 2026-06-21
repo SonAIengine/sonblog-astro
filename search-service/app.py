@@ -91,6 +91,8 @@ state: dict = {
     "graph_cache": "unknown",
     "graph_stats": {},
     "startup_ms": 0,
+    "startup_profile": {},
+    "warmup_status": "unknown",
 }
 
 
@@ -408,8 +410,9 @@ def merge_terms(*groups: list[str]) -> list[str]:
     return merged
 
 
-def lexical_terms(text: str) -> set[str]:
-    return set(merge_terms(extract_terms(text), extract_morph_terms(text)))
+def fulltext_index_terms(text: str) -> set[str]:
+    """Startup-hot path: keep stored document tokens cheap; analyze queries at runtime."""
+    return set(extract_terms(text))
 
 
 def should_drop_compound_query_term(term: str, morph_terms: list[str]) -> bool:
@@ -512,9 +515,9 @@ def prepare_doc_lookup(docs: list[dict]) -> dict[str, dict]:
             "_search_text": text,
             "_title_text": title_text,
             "_tag_text": tag_text,
-            "_tokens": lexical_terms(text),
-            "_title_tokens": lexical_terms(title_text),
-            "_tag_tokens": lexical_terms(tag_text),
+            "_tokens": fulltext_index_terms(text),
+            "_title_tokens": fulltext_index_terms(title_text),
+            "_tag_tokens": fulltext_index_terms(tag_text),
         }
     return prepared
 
@@ -527,7 +530,7 @@ def term_matches(term: str, doc: dict, field: str = "_search_text") -> bool:
         "_tag_text": "_tag_tokens",
     }.get(field, "_tokens")
     token_match = term in doc.get(token_key, set())
-    if ASCII_RE.match(term) or field != "_search_text":
+    if ASCII_RE.match(term):
         return token_match
     return token_match or term in text
 
@@ -722,26 +725,43 @@ def public_result(candidate: dict) -> dict:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     started = perf_counter()
+    last_mark = started
+    startup_profile: dict[str, float] = {}
+
+    def mark_startup_step(name: str) -> None:
+        nonlocal last_mark
+        now = perf_counter()
+        startup_profile[name] = round((now - last_mark) * 1000, 1)
+        last_mark = now
+
     docs = load_documents()
+    mark_startup_step("loadDocuments")
     prepared_docs = prepare_doc_lookup(docs)
+    mark_startup_step("prepareDocLookup")
     chunks = load_chunks(docs)
+    mark_startup_step("loadChunks")
     graph, graph_cache, graph_stats = await load_search_graph(docs, chunks)
+    mark_startup_step("loadGraph")
     state["graph"] = graph
     state["docs"] = list(prepared_docs.values())
     state["docs_by_url"] = prepared_docs
     state["graph_cache"] = graph_cache
     state["graph_stats"] = graph_stats
-    state["startup_ms"] = round((perf_counter() - started) * 1000, 1)
-    print(
-        f"[blog-search] ready: {len(docs)} docs, {len(chunks)} chunks, "
-        f"cache={graph_cache}, startup={state['startup_ms']}ms"
-    )
     # 리랭커/임베더/연결 워밍업 — 첫 사용자 쿼리의 콜드 스타트(수십 초) 제거
     try:
         await graph.search("워밍업 테스트 검색", limit=3, engine="evidence", rerank=False)
-        print("[blog-search] warmup done")
+        state["warmup_status"] = "done"
     except Exception as e:
+        state["warmup_status"] = f"skipped:{type(e).__name__}"
         print(f"[blog-search] warmup skipped: {e}")
+    mark_startup_step("warmup")
+    state["startup_ms"] = round((perf_counter() - started) * 1000, 1)
+    state["startup_profile"] = startup_profile
+    print(
+        f"[blog-search] ready: {len(docs)} docs, {len(chunks)} chunks, "
+        f"cache={graph_cache}, warmup={state['warmup_status']}, "
+        f"startup={state['startup_ms']}ms, profile={startup_profile}"
+    )
     yield
     await graph.close()
 
@@ -765,6 +785,8 @@ async def health():
         "graphCache": state.get("graph_cache"),
         "graphStats": state.get("graph_stats"),
         "startupMs": state.get("startup_ms"),
+        "startupProfile": state.get("startup_profile"),
+        "warmupStatus": state.get("warmup_status"),
     }
 
 

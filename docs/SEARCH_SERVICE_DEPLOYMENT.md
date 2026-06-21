@@ -40,7 +40,7 @@ systemctl --user status sonblog-search-proxy.service --no-pager
 systemctl --user status 'sonblog-search-backend@*.service' --no-pager
 ```
 
-`/health`에는 backend의 `docs`, `morphology`, `aliases`, `graphCache`, `startupMs`와 proxy의 active backend 정보가 함께 나온다.
+`/health`에는 backend의 `docs`, `morphology`, `aliases`, `graphCache`, `startupMs`, `startupProfile`, `warmupStatus`와 proxy의 active backend 정보가 함께 나온다.
 
 ## Graph Cache
 
@@ -53,7 +53,15 @@ manifest가 현재 `dist/search-fulltext.json`, chunk 설정, embedding endpoint
 ```json
 {
   "graphCache": "hit",
-  "startupMs": 8000
+  "startupMs": 1700,
+  "startupProfile": {
+    "loadDocuments": 10,
+    "prepareDocLookup": 85,
+    "loadChunks": 22,
+    "loadGraph": 28,
+    "warmup": 1540
+  },
+  "warmupStatus": "done"
 }
 ```
 
@@ -64,6 +72,12 @@ FORCE_GRAPH_REBUILD=true pnpm run search:deploy
 ```
 
 재색인 후 새 manifest가 기록되므로 다음 배포부터 다시 cache hit 경로를 탄다.
+
+## Startup Fast Path
+
+graph cache 이후에도 startup이 약 8초 걸리던 원인은 SQLite/HNSW open이 아니라 `prepare_doc_lookup()`에서 모든 글 본문을 Kiwi로 형태소 분석하던 비용이었다.
+
+현재는 저장된 문서 쪽 lookup을 정규식 기반 토큰과 substring evidence로 처리하고, Kiwi 형태소 분석은 쿼리 분석에만 사용한다. 이 경로는 strict search eval을 통과하면서 warmup 전 startup profile을 약 130-150ms 수준으로 줄인다.
 
 ## 수동 롤백
 
@@ -85,6 +99,6 @@ systemctl --user start sonblog-search.service
 
 ## 남은 개선
 
-- cache hit startup은 약 8초 수준이다. 더 줄이려면 synaptic graph open/HNSW warmup 비용을 별도로 줄여야 한다.
+- cache hit startup profile은 warmup 전 약 150ms 수준이고, 첫 쿼리 cold-start 방지 warmup까지 포함하면 보통 1-2초 수준이다. 사용자가 체감하는 backend 전환 시간은 Python import, uvicorn, systemd start 비용이 더해진다.
 - active backend 두 개를 동시에 오래 유지하면 메모리를 많이 쓴다. 배포 스크립트는 전환 후 비활성 backend를 정리한다.
 - 외부 프록시가 `8182`만 바라보는 전제다. 외부 프록시까지 blue/green을 지원하게 바꾸면 proxy 계층 없이도 운영할 수 있다.

@@ -86,6 +86,7 @@ src/content/posts/
 - 검색 API는 `search-service/requirements.txt` 기준으로 운영하며 `synaptic-memory`와 `kiwipiepy`를 사용한다.
 - 검색 alias/동의어 사전은 `search-service/query-aliases.json`에서 관리한다.
 - 한국어 lexical evidence는 형태소 토큰을 함께 보지만, 기술 약어/하이픈 토큰은 별도 코드 토큰화로 유지한다.
+- startup 비용을 줄이기 위해 저장된 문서는 정규식 토큰 + substring evidence로 처리하고, Kiwi 형태소 분석은 쿼리 분석 중심으로 사용한다.
 - 검색 API는 내부/디버깅용으로 `AND`, `OR`, `EQURL:/posts/.../` 연산자를 지원한다.
 - 검색 API 홈서버 배포는 `docs/SEARCH_SERVICE_DEPLOYMENT.md`를 따르며 `pnpm run search:deploy`가 8182 proxy + 8192/8194 backend blue/green 전환을 수행한다.
 - 검색 backend는 `*.db.manifest.json` graph cache가 맞으면 전체 재임베딩을 건너뛰며, 필요할 때만 `FORCE_GRAPH_REBUILD=true pnpm run search:deploy`로 재색인한다.
