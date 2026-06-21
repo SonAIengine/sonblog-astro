@@ -63,6 +63,10 @@ alias 사전을 수동 보정에서 운영 자산으로 키운다.
 
 `reports/search-eval.json`과 `history.jsonl`을 사람이 보는 문서에서 검색 품질 대시보드로 올린다.
 
+- route: `/search-quality/`
+- public data: `public/assets/search/search-quality.json`
+- update command: `pnpm run search:quality`
+
 - top1/recall/MRR trend
 - p95/max latency trend
 - failing query backlog
@@ -94,7 +98,7 @@ Pagefind excerpt와 semantic result를 통합해, 왜 해당 글이 걸렸는지
 - [x] strict eval 19/19 통과
 - [x] `/search/`에 hybrid ranking signals 노출
 - [x] explain mode API/UI
-- [ ] eval history dashboard
+- [x] eval history dashboard
 - [ ] failure case에서 alias 후보 생성
 - [ ] semantic result snippet/highlight
 - [ ] query operator UI affordance

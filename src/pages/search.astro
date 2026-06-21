@@ -24,6 +24,7 @@ const backUrl = config.features.showBackButton
 const pagefindBundlePath = getAssetPath("pagefind/");
 const searchApiBase =
   import.meta.env.PUBLIC_SEARCH_API_BASE || "https://search.infoedu.co.kr";
+const searchQualityPath = getRelativeLocaleUrl(locale, "search-quality");
 
 const t = useTranslations(locale);
 ---
@@ -47,7 +48,10 @@ const t = useTranslations(locale);
       hidden
     >
       <div class="semantic-search-header">
-        <h2>Hybrid Search</h2>
+        <div class="semantic-search-title">
+          <h2>Hybrid Search</h2>
+          <a href={searchQualityPath} class="semantic-quality-link">Quality</a>
+        </div>
         <span id="semantic-search-meta" class="semantic-search-meta"></span>
       </div>
       <div id="semantic-search-stages" class="semantic-search-stages"></div>
@@ -777,6 +781,31 @@ const t = useTranslations(locale);
     font-size: 0.875rem;
     font-weight: 700;
     line-height: 1.2;
+  }
+
+  .semantic-search-title {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .semantic-quality-link {
+    flex: 0 0 auto;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.14rem 0.44rem;
+    color: var(--muted-foreground);
+    font-family: var(--font-app);
+    font-size: 0.66rem;
+    font-weight: 700;
+    line-height: 1.2;
+    text-decoration: none;
+  }
+
+  .semantic-quality-link:hover {
+    border-color: color-mix(in oklab, var(--accent) 45%, var(--border));
+    color: var(--accent);
   }
 
   .semantic-search-meta {

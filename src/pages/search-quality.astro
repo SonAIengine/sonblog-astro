@@ -1,0 +1,616 @@
+---
+import fs from "node:fs";
+import { getRelativeLocaleUrl } from "astro:i18n";
+import Layout from "@/layouts/Layout.astro";
+import Header from "@/components/Header.astro";
+import Main from "@/components/Main.astro";
+import Footer from "@/components/Footer.astro";
+import { getAssetPath } from "@/utils/withBase";
+import config from "@/config";
+
+type EvalSummary = {
+  total: number;
+  pass: number;
+  fail: number;
+  positiveTop1: number;
+  positiveRecall: number;
+  positiveMrr: number;
+  negativePass: number;
+  sortedPass: number;
+  avgLatencyMs: number;
+  p95LatencyMs: number;
+  maxLatencyMs: number;
+  stageCounts: Record<string, number>;
+};
+
+type EvalHistoryEntry = {
+  generatedAt: string;
+  api: string;
+  limit: number;
+  rerank: boolean;
+  summary: EvalSummary;
+  failedCaseIds: string[];
+};
+
+type SearchQualityData = {
+  generatedAt: string;
+  historyCount: number;
+  latest: EvalHistoryEntry & {
+    failedCases?: Array<{
+      id: string;
+      query: string;
+      intent?: string;
+      checks: string[];
+      topTitle?: string;
+      topUrl?: string;
+      topScore?: number;
+      topSources?: string[];
+    }>;
+  };
+  deltas: Record<string, number>;
+  stageCoverage: Array<{ stage: string; count: number }>;
+  history: EvalHistoryEntry[];
+};
+
+const locale = Astro.currentLocale ?? config.site.lang;
+const dataPath = "public/assets/search/search-quality.json";
+const data = JSON.parse(fs.readFileSync(dataPath, "utf8")) as SearchQualityData;
+const latest = data.latest;
+const summary = latest.summary;
+const history = data.history ?? [];
+const passRate = summary.total ? summary.pass / summary.total : 0;
+const failRate = summary.total ? summary.fail / summary.total : 0;
+const failedCases = latest.failedCases ?? [];
+const recentHistory = history.slice(-10).reverse();
+const maxStageCount = Math.max(
+  ...data.stageCoverage.map(item => item.count),
+  1
+);
+const dataUrl = getAssetPath("assets/search/search-quality.json");
+
+function formatPercent(value: number) {
+  return `${Math.round(value * 1000) / 10}%`;
+}
+
+function formatMs(value: number) {
+  return `${Math.round(value)}ms`;
+}
+
+function formatNumber(value: number, digits = 3) {
+  return Number.isFinite(value) ? value.toFixed(digits) : "-";
+}
+
+function formatDate(value: string) {
+  return new Intl.DateTimeFormat("ko-KR", {
+    timeZone: "Asia/Seoul",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
+}
+
+function formatDelta(value: number, unit = "") {
+  if (!Number.isFinite(value) || value === 0) return `0${unit}`;
+  const sign = value > 0 ? "+" : "";
+  return `${sign}${unit === "%" ? Math.round(value * 1000) / 10 : Math.round(value * 10) / 10}${unit}`;
+}
+
+function sparkline(
+  values: number[],
+  options: { min?: number; max?: number } = {}
+) {
+  const width = 320;
+  const height = 88;
+  const pad = 8;
+  const valid = values.filter(Number.isFinite);
+  if (valid.length === 0) return "";
+  const min = options.min ?? Math.min(...valid);
+  const max = options.max ?? Math.max(...valid);
+  const range = max - min || 1;
+  const innerWidth = width - pad * 2;
+  const innerHeight = height - pad * 2;
+
+  return valid
+    .map((value, index) => {
+      const x =
+        valid.length === 1
+          ? width / 2
+          : pad + (index / (valid.length - 1)) * innerWidth;
+      const y = pad + (1 - (value - min) / range) * innerHeight;
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(" ");
+}
+
+function stageLabel(stage: string) {
+  const labels: Record<string, string> = {
+    confidence_gate: "Confidence Gate",
+    doc_rank: "Document Rank",
+    equrl_filter: "EQURL Filter",
+    evidence: "Evidence",
+    fts: "FTS/BM25",
+    korean_morphology: "Korean Morphology",
+    lexical_fallback: "Lexical Fallback",
+    operator_and: "AND Operator",
+    operator_or: "OR Operator",
+    query_normalized: "Query Normalized",
+    vector: "Vector",
+  };
+  return labels[stage] ?? stage;
+}
+
+const passPoints = sparkline(
+  history.map(entry => entry.summary.pass / Math.max(entry.summary.total, 1)),
+  { min: 0, max: 1 }
+);
+const latencyPoints = sparkline(
+  history.map(entry => entry.summary.p95LatencyMs)
+);
+---
+
+<Layout
+  title={`Search Quality | ${config.site.title}`}
+  description="SON BLOG 검색엔진의 평가셋, 통과율, latency, ranking stage coverage를 추적하는 품질 대시보드"
+>
+  <Header />
+
+  <Main
+    pageTitle="Search Quality"
+    pageDesc="블로그 검색을 감으로 고치지 않기 위한 평가 히스토리입니다."
+    class="search-quality-page mt-8 sm:mt-10"
+  >
+    <section class="quality-hero">
+      <div>
+        <p class="quality-kicker">Hybrid Search Eval</p>
+        <h2>검색엔진을 계속 채점하는 작은 계기판</h2>
+        <p>
+          운영 검색 API를 대상으로 고정 문제지를 반복 실행하고, top1/recall/MRR,
+          negative query, latency, stage coverage를 기록합니다.
+        </p>
+      </div>
+      <div
+        class="quality-status"
+        data-state={summary.fail === 0 ? "ok" : "fail"}
+      >
+        <span class="quality-status-dot"></span>
+        <strong>{summary.fail === 0 ? "Stable" : "Needs Work"}</strong>
+        <span>{formatDate(latest.generatedAt)} KST</span>
+      </div>
+    </section>
+
+    <section class="quality-metrics" aria-label="검색 품질 핵심 지표">
+      <article class="quality-metric">
+        <span>Pass Rate</span>
+        <strong>{formatPercent(passRate)}</strong>
+        <em>{summary.pass}/{summary.total} cases</em>
+      </article>
+      <article class="quality-metric">
+        <span>Top1</span>
+        <strong>{formatPercent(summary.positiveTop1)}</strong>
+        <em>{formatDelta(data.deltas.positiveTop1 ?? 0, "%")}</em>
+      </article>
+      <article class="quality-metric">
+        <span>Recall@{latest.limit}</span>
+        <strong>{formatPercent(summary.positiveRecall)}</strong>
+        <em>MRR {formatNumber(summary.positiveMrr)}</em>
+      </article>
+      <article class="quality-metric">
+        <span>P95 Latency</span>
+        <strong>{formatMs(summary.p95LatencyMs)}</strong>
+        <em>{formatDelta(data.deltas.p95LatencyMs ?? 0, "ms")}</em>
+      </article>
+    </section>
+
+    <section class="quality-split">
+      <article class="quality-panel">
+        <div class="quality-panel-head">
+          <div>
+            <p class="quality-kicker">Trend</p>
+            <h2>Pass Rate</h2>
+          </div>
+          <span>{data.historyCount} runs</span>
+        </div>
+        <svg
+          class="quality-chart"
+          viewBox="0 0 320 88"
+          role="img"
+          aria-label="pass rate trend"
+        >
+          <line x1="8" x2="312" y1="8" y2="8"></line>
+          <line x1="8" x2="312" y1="80" y2="80"></line>
+          <polyline points={passPoints}></polyline>
+        </svg>
+      </article>
+
+      <article class="quality-panel">
+        <div class="quality-panel-head">
+          <div>
+            <p class="quality-kicker">Trend</p>
+            <h2>P95 Latency</h2>
+          </div>
+          <span>{formatMs(summary.avgLatencyMs)} avg</span>
+        </div>
+        <svg
+          class="quality-chart"
+          viewBox="0 0 320 88"
+          role="img"
+          aria-label="p95 latency trend"
+        >
+          <line x1="8" x2="312" y1="8" y2="8"></line>
+          <line x1="8" x2="312" y1="80" y2="80"></line>
+          <polyline points={latencyPoints}></polyline>
+        </svg>
+      </article>
+    </section>
+
+    <section class="quality-section">
+      <div class="quality-section-head">
+        <div>
+          <p class="quality-kicker">Stage Coverage</p>
+          <h2>이번 평가에서 실제로 탄 검색 경로</h2>
+        </div>
+        <a href={getRelativeLocaleUrl(locale, "search")} class="quality-link">
+          검색 화면으로
+        </a>
+      </div>
+      <div class="stage-list">
+        {
+          data.stageCoverage.map(item => (
+            <div
+              class="stage-row"
+              style={`--coverage:${(item.count / maxStageCount) * 100}%`}
+            >
+              <span>{stageLabel(item.stage)}</span>
+              <strong>{item.count}</strong>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <section class="quality-section">
+      <div class="quality-section-head">
+        <div>
+          <p class="quality-kicker">Failure Backlog</p>
+          <h2>지금 깨진 검색 케이스</h2>
+        </div>
+        <span class="quality-muted">fail rate {formatPercent(failRate)}</span>
+      </div>
+      {
+        failedCases.length === 0 ? (
+          <p class="quality-empty">현재 실패 케이스는 없습니다.</p>
+        ) : (
+          <div class="failure-list">
+            {failedCases.map(item => (
+              <article class="failure-item">
+                <h3>{item.id}</h3>
+                <p>{item.query}</p>
+                <span>{item.checks.join(", ")}</span>
+              </article>
+            ))}
+          </div>
+        )
+      }
+    </section>
+
+    <section class="quality-section">
+      <div class="quality-section-head">
+        <div>
+          <p class="quality-kicker">Recent Runs</p>
+          <h2>최근 평가 이력</h2>
+        </div>
+        <a href={dataUrl} class="quality-link">JSON</a>
+      </div>
+      <div class="history-table-wrap">
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>time</th>
+              <th>pass</th>
+              <th>top1</th>
+              <th>recall</th>
+              <th>p95</th>
+              <th>fail</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              recentHistory.map(entry => (
+                <tr>
+                  <td>{formatDate(entry.generatedAt)}</td>
+                  <td>
+                    {entry.summary.pass}/{entry.summary.total}
+                  </td>
+                  <td>{formatPercent(entry.summary.positiveTop1)}</td>
+                  <td>{formatPercent(entry.summary.positiveRecall)}</td>
+                  <td>{formatMs(entry.summary.p95LatencyMs)}</td>
+                  <td>{entry.summary.fail}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </Main>
+
+  <Footer />
+</Layout>
+
+<style>
+  .search-quality-page {
+    --quality-soft: color-mix(in oklab, var(--muted) 34%, transparent);
+    --quality-line: color-mix(in oklab, var(--accent) 30%, var(--border));
+  }
+
+  .quality-hero {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 1rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 1.5rem;
+  }
+
+  .quality-hero h2,
+  .quality-panel h2,
+  .quality-section h2 {
+    margin-top: 0.25rem;
+    font-size: 1.15rem;
+    line-height: 1.35;
+    font-weight: 700;
+  }
+
+  .quality-hero p {
+    max-width: 42rem;
+    margin-top: 0.7rem;
+    color: var(--muted-foreground);
+    font-size: 0.92rem;
+    line-height: 1.75;
+  }
+
+  .quality-kicker {
+    color: var(--accent);
+    font-family: var(--font-app);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    line-height: 1.2;
+    text-transform: uppercase;
+  }
+
+  .quality-status {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 0.45rem;
+    border: 1px solid var(--quality-line);
+    border-radius: 999px;
+    padding: 0.45rem 0.65rem;
+    background: var(--quality-soft);
+    font-family: var(--font-app);
+    font-size: 0.78rem;
+    line-height: 1;
+  }
+
+  .quality-status-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 999px;
+    background: var(--accent);
+  }
+
+  .quality-status[data-state="fail"] .quality-status-dot {
+    background: #c2410c;
+  }
+
+  .quality-metrics {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+
+  .quality-metric,
+  .quality-panel,
+  .quality-section {
+    border: 1px solid var(--border);
+    border-radius: 0.45rem;
+    background: var(--quality-soft);
+  }
+
+  .quality-metric {
+    padding: 0.85rem;
+  }
+
+  .quality-metric span,
+  .quality-metric em,
+  .quality-panel-head span,
+  .quality-muted {
+    color: var(--muted-foreground);
+    font-family: var(--font-app);
+    font-size: 0.75rem;
+    line-height: 1.4;
+  }
+
+  .quality-metric strong {
+    display: block;
+    margin-top: 0.35rem;
+    font-family: var(--font-app);
+    font-size: 1.5rem;
+    line-height: 1.1;
+  }
+
+  .quality-metric em {
+    display: block;
+    margin-top: 0.4rem;
+    font-style: normal;
+  }
+
+  .quality-split {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+  }
+
+  .quality-panel,
+  .quality-section {
+    padding: 1rem;
+  }
+
+  .quality-panel-head,
+  .quality-section-head {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .quality-chart {
+    width: 100%;
+    height: 7rem;
+    margin-top: 0.75rem;
+    overflow: visible;
+  }
+
+  .quality-chart line {
+    stroke: var(--border);
+    stroke-width: 1;
+  }
+
+  .quality-chart polyline {
+    fill: none;
+    stroke: var(--accent);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 3;
+  }
+
+  .quality-section {
+    margin-top: 0.75rem;
+  }
+
+  .quality-link {
+    flex: 0 0 auto;
+    color: var(--accent);
+    font-family: var(--font-app);
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-decoration-line: underline;
+    text-decoration-style: dashed;
+    text-underline-offset: 0.25rem;
+  }
+
+  .stage-list {
+    display: grid;
+    gap: 0.45rem;
+    margin-top: 0.9rem;
+  }
+
+  .stage-row {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.75rem;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 0.35rem;
+    padding: 0.45rem 0.6rem;
+    background:
+      linear-gradient(
+        90deg,
+        color-mix(in oklab, var(--accent) 16%, transparent) var(--coverage),
+        transparent var(--coverage)
+      ),
+      var(--background);
+    font-family: var(--font-app);
+    font-size: 0.78rem;
+    line-height: 1.35;
+  }
+
+  .stage-row span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .stage-row strong {
+    color: var(--accent);
+  }
+
+  .quality-empty {
+    margin-top: 0.9rem;
+    color: var(--muted-foreground);
+    font-size: 0.92rem;
+  }
+
+  .failure-list {
+    display: grid;
+    gap: 0.6rem;
+    margin-top: 0.9rem;
+  }
+
+  .failure-item {
+    border-top: 1px solid var(--border);
+    padding-top: 0.7rem;
+  }
+
+  .failure-item h3 {
+    font-family: var(--font-app);
+    font-size: 0.9rem;
+  }
+
+  .failure-item p,
+  .failure-item span {
+    display: block;
+    margin-top: 0.25rem;
+    color: var(--muted-foreground);
+    font-size: 0.85rem;
+    line-height: 1.6;
+  }
+
+  .history-table-wrap {
+    margin-top: 0.9rem;
+    overflow-x: auto;
+  }
+
+  .history-table {
+    width: 100%;
+    min-width: 36rem;
+    border-collapse: collapse;
+    font-family: var(--font-app);
+    font-size: 0.78rem;
+  }
+
+  .history-table th,
+  .history-table td {
+    border-bottom: 1px solid var(--border);
+    padding: 0.55rem 0.45rem;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  .history-table th {
+    color: var(--muted-foreground);
+    font-weight: 700;
+  }
+
+  @media (max-width: 760px) {
+    .quality-hero {
+      align-items: start;
+      flex-direction: column;
+    }
+
+    .quality-status {
+      border-radius: 0.45rem;
+    }
+
+    .quality-metrics,
+    .quality-split {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

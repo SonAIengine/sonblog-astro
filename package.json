@@ -25,6 +25,8 @@
     "search:embed": "node scripts/embed-search.mjs",
     "search:eval": "node scripts/evaluate-search.mjs",
     "search:eval:strict": "SEARCH_EVAL_STRICT=true node scripts/evaluate-search.mjs",
+    "search:quality:data": "node scripts/build-search-quality.mjs",
+    "search:quality": "pnpm run search:eval:strict && pnpm run search:quality:data",
     "search:deploy": "node scripts/deploy-search-service.mjs"
   },
   "dependencies": {

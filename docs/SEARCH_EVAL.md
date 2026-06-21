@@ -26,14 +26,21 @@ SEARCH_EVAL_STRICT=true pnpm run search:eval
 pnpm run search:eval:strict
 ```
 
+운영 API를 평가하고 공개 대시보드 데이터를 갱신하려면:
+
+```bash
+pnpm run search:quality
+```
+
 ## 산출물
 
 - `reports/search-eval.md`: 사람이 읽는 리포트
 - `reports/search-eval.json`: 전후 비교나 대시보드용 원본 결과
 - `reports/search-eval-history.jsonl`: 실행 이력. 한 줄에 한 번의 summary를 append한다.
 - `reports/search-eval-backlog.md`: 실패 케이스만 모은 다음 작업 후보 목록
+- `public/assets/search/search-quality.json`: `/search-quality/`가 읽는 공개용 축약 데이터
 
-`reports/`는 생성 산출물이므로 git에는 올리지 않는다.
+`reports/`는 생성 산출물이므로 git에는 올리지 않는다. 공개 대시보드에 반영할 스냅샷만 `public/assets/search/search-quality.json`으로 승격해 커밋한다.
 
 ## 채점 기준
 
@@ -93,6 +100,7 @@ p95 latency: 약 281ms
 
 ## 다음 TODO
 
+- `/search-quality/` 히스토리를 보고 latency regression이나 실패 케이스가 생겼는지 먼저 확인한다.
 - Pagefind, semantic API, graph 검색을 같은 eval runner에서 비교한다.
 - `reports/search-eval-backlog.md`의 실패 유형을 검토해 `eval-cases.json` 또는 alias 사전으로 승격한다.
 - alias dictionary를 실제 실패 backlog에서 주기적으로 보강한다.
