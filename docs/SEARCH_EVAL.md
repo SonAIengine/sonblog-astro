@@ -49,6 +49,8 @@ SEARCH_EVAL_STRICT=true pnpm run search:eval
 - `/search?q=...` 초기 진입 시 Pagefind 입력값 주입 타이밍 때문에 시맨틱 추천이 호출되지 않던 문제를 수정했다.
 - `Deep learning`처럼 영문 구가 `Learning to Rank` 같은 단일 단어 글로 끌려가지 않도록 query term을 보정했다.
 - 동점에 가까운 결과는 제목/태그 근거 비율을 tie-breaker로 써서 짧은 제품형 질의의 제목 일치도를 우선한다.
+- `/search` 화면의 Pagefind 결과는 시맨틱 API가 정상 응답한 경우 confidence gate 결과와 URL이 맞는 항목만 보조 결과로 노출한다.
+- 시맨틱 API가 0건을 반환하면 Pagefind의 약한 키워드 매칭 결과도 숨기고, API 장애 때만 Pagefind fallback을 그대로 둔다.
 
 1차 반영 후 운영 API 기준 strict 평가:
 

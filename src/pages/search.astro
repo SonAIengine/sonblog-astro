@@ -75,11 +75,27 @@ const t = useTranslations(locale);
 
     const params = new URLSearchParams(window.location.search);
     const trackedEvents = new Set<string>();
+    const semanticState: {
+      query: string;
+      ready: boolean;
+      ok: boolean;
+      urls: Set<string>;
+    } = {
+      query: "",
+      ready: false,
+      ok: false,
+      urls: new Set(),
+    };
 
     function clearSemanticSearch() {
       semanticSearch?.setAttribute("hidden", "");
       semanticResults?.replaceChildren();
       if (semanticMeta) semanticMeta.textContent = "";
+      semanticState.query = "";
+      semanticState.ready = false;
+      semanticState.ok = false;
+      semanticState.urls = new Set();
+      applyPagefindConfidenceGate("");
     }
 
     function goatcounter() {
@@ -215,12 +231,109 @@ const t = useTranslations(locale);
       const drawer = pageFindSearch.querySelector(".pagefind-ui__drawer");
       if (drawer && drawer.previousElementSibling !== semanticSearch) {
         drawer.insertAdjacentElement("beforebegin", semanticSearch);
+        ensurePagefindGateMessage();
         return;
       }
 
       const form = pageFindSearch.querySelector(".pagefind-ui__form");
       if (!form || form.nextElementSibling === semanticSearch) return;
       form.insertAdjacentElement("afterend", semanticSearch);
+      ensurePagefindGateMessage();
+    }
+
+    function ensurePagefindGateMessage() {
+      if (!pageFindSearch) return null;
+      let message = pageFindSearch.querySelector<HTMLElement>(
+        "#pagefind-confidence-empty"
+      );
+      if (!message) {
+        message = document.createElement("p");
+        message.id = "pagefind-confidence-empty";
+        message.className = "pagefind-confidence-empty";
+        message.setAttribute("hidden", "");
+        message.textContent = "검색 결과가 없습니다.";
+      }
+
+      const anchor =
+        semanticSearch?.parentElement === pageFindSearch
+          ? semanticSearch
+          : pageFindSearch.querySelector(".pagefind-ui__form");
+      if (anchor && message.previousElementSibling !== anchor) {
+        anchor.insertAdjacentElement("afterend", message);
+      }
+      return message;
+    }
+
+    function canonicalPath(href: string | null | undefined) {
+      if (!href) return "";
+      try {
+        const url = new URL(href, window.location.origin);
+        const path = url.pathname.replace(/\/$/, "");
+        return path ? `${path}/` : "/";
+      } catch {
+        return href.split("#")[0].replace(/\/$/, "") + "/";
+      }
+    }
+
+    function resetPagefindResults(drawer: Element | null) {
+      drawer?.removeAttribute("hidden");
+      pageFindSearch
+        ?.querySelectorAll<HTMLElement>(".pagefind-ui__result")
+        .forEach(result => {
+          result.hidden = false;
+          delete result.dataset.semanticFiltered;
+        });
+    }
+
+    function applyPagefindConfidenceGate(query: string) {
+      if (!pageFindSearch) return;
+      const q = query.trim();
+      const drawer = pageFindSearch.querySelector(".pagefind-ui__drawer");
+      const emptyMessage = ensurePagefindGateMessage();
+
+      if (!q || !semanticState.ready || semanticState.query !== q) {
+        resetPagefindResults(drawer);
+        emptyMessage?.setAttribute("hidden", "");
+        return;
+      }
+
+      if (!semanticState.ok) {
+        resetPagefindResults(drawer);
+        emptyMessage?.setAttribute("hidden", "");
+        return;
+      }
+
+      const results = pageFindSearch.querySelectorAll<HTMLElement>(
+        ".pagefind-ui__result"
+      );
+
+      if (semanticState.urls.size === 0) {
+        drawer?.setAttribute("hidden", "");
+        results.forEach(result => {
+          result.hidden = true;
+          result.dataset.semanticFiltered = "true";
+        });
+        emptyMessage?.removeAttribute("hidden");
+        return;
+      }
+
+      emptyMessage?.setAttribute("hidden", "");
+      let visibleCount = 0;
+      results.forEach(result => {
+        const href = result.querySelector<HTMLAnchorElement>(
+          ".pagefind-ui__result-title a"
+        )?.href;
+        const visible = semanticState.urls.has(canonicalPath(href));
+        result.hidden = !visible;
+        result.dataset.semanticFiltered = visible ? "false" : "true";
+        if (visible) visibleCount += 1;
+      });
+
+      if (results.length > 0 && visibleCount === 0) {
+        drawer?.setAttribute("hidden", "");
+      } else {
+        drawer?.removeAttribute("hidden");
+      }
     }
 
     function attachSemanticSearch(
@@ -263,12 +376,22 @@ const t = useTranslations(locale);
           searchBox.hidden = true;
           resultsList.replaceChildren();
           meta.textContent = "";
+          semanticState.query = "";
+          semanticState.ready = false;
+          semanticState.ok = false;
+          semanticState.urls = new Set();
+          applyPagefindConfidenceGate("");
           controller?.abort();
           return;
         }
 
         controller?.abort();
         controller = new AbortController();
+        semanticState.query = q;
+        semanticState.ready = false;
+        semanticState.ok = false;
+        semanticState.urls = new Set();
+        applyPagefindConfidenceGate(q);
 
         try {
           trackSearchQuery("semantic", q);
@@ -283,6 +406,11 @@ const t = useTranslations(locale);
           renderSemanticResults(data, q);
         } catch (error) {
           if ((error as DOMException).name === "AbortError") return;
+          semanticState.query = q;
+          semanticState.ready = true;
+          semanticState.ok = false;
+          semanticState.urls = new Set();
+          applyPagefindConfidenceGate(q);
           searchBox.hidden = true;
           resultsList.replaceChildren();
           meta.textContent = "";
@@ -307,8 +435,9 @@ const t = useTranslations(locale);
         timer = window.setTimeout(() => {
           const q = searchInput.value.trim();
           if (q.length < 2) return;
+          applyPagefindConfidenceGate(q);
           const count = pageFindSearch.querySelectorAll(
-            ".pagefind-ui__result"
+            ".pagefind-ui__result:not([hidden])"
           ).length;
           trackSearchResults("pagefind", q, count);
         }, 500);
@@ -336,6 +465,13 @@ const t = useTranslations(locale);
     ) {
       if (!semanticSearch || !semanticResults || !semanticMeta) return;
       const results = data.results ?? [];
+      semanticState.query = query;
+      semanticState.ready = true;
+      semanticState.ok = true;
+      semanticState.urls = new Set(
+        results.map(result => canonicalPath(result.url))
+      );
+      applyPagefindConfidenceGate(query);
       trackSearchResults("semantic", query, results.length, data.ms);
       if (results.length === 0) {
         semanticSearch.hidden = true;
@@ -557,6 +693,15 @@ const t = useTranslations(locale);
     margin-top: 0.45rem;
     padding-top: 0.45rem;
     border-top: 1px solid var(--border);
+  }
+
+  .pagefind-confidence-empty {
+    margin-block: 1.2rem 0;
+    color: var(--muted-foreground);
+    font-family: var(--font-app);
+    font-size: 0.95rem;
+    font-weight: 600;
+    line-height: 1.5;
   }
 
   @media (max-width: 639px) {
