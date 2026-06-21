@@ -192,6 +192,16 @@
     "minTopScore": 0.75
   },
   {
+    "id": "graduate_school_standalone",
+    "query": "대학원",
+    "intent": "대학원 단독 질의는 노이즈 토큰으로 사라지지 않고 대학/포털 계열 글을 찾아야 한다.",
+    "type": "positive",
+    "relevant": [
+      "/posts/ai/agent/ku-portal-mcp-campus-portal-claude-code/"
+    ],
+    "minTopScore": 0.75
+  },
+  {
     "id": "exact_url_operator",
     "query": "EQURL:/posts/ai/agent/ku-portal-mcp-campus-portal-claude-code/ 완전무관",
     "intent": "EQURL 연산자는 URL이 정확히 지정된 글만 반환해야 한다.",

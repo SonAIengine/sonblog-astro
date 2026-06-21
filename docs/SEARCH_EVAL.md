@@ -84,18 +84,19 @@ pnpm run search:quality
 - 형태소 분석으로 `완전무관` 같은 무관 질의가 단어 하나에 걸리지 않도록, 긴 질의의 body-only 1단어 매칭은 강한 lexical evidence로 보지 않는다.
 - alias dictionary를 `search-service/query-aliases.json`으로 분리했다.
 - 평가 리포트에 p95/max latency, stage coverage, 실패 backlog, 실행 history를 추가했다.
+- `대학원` 단독 질의는 노이즈 토큰으로 제거되면 0건이 되므로, 정확히 단독 입력일 때만 대학/포털/학사 계열 alias로 확장한다.
 
 1차 반영 후 운영 API 기준 strict 평가:
 
 ```text
-cases: 19
-pass: 19
+cases: 20
+pass: 20
 positive top1: 100%
 positive recall@5: 100%
 negative pass: 100%
 sorted score pass: 100%
-avg latency: 약 234ms
-p95 latency: 약 281ms
+avg latency: 약 247ms
+p95 latency: 약 287ms
 ```
 
 ## 다음 TODO

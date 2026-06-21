@@ -95,7 +95,7 @@ Pagefind excerpt와 semantic result를 통합해, 왜 해당 글이 걸렸는지
 - [x] graph cache로 전체 재임베딩 제거
 - [x] startup hot path에서 본문 Kiwi 선분석 제거
 - [x] blue/green search backend deploy
-- [x] strict eval 19/19 통과
+- [x] strict eval 20/20 통과
 - [x] `/search/`에 hybrid ranking signals 노출
 - [x] explain mode API/UI
 - [x] eval history dashboard

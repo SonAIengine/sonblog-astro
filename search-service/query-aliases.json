@@ -56,6 +56,13 @@
     "note": "KU Portal MCP 글 검색 보정"
   },
   {
+    "id": "graduate_school_standalone",
+    "pattern": "^\\s*대학원\\s*$",
+    "replacement": "대학 대학교 고려대학교 포털 학사 ku-portal kupid",
+    "flags": "i",
+    "note": "대학원 단독 질의는 대학/포털/학사 계열 탐색 의도로 확장"
+  },
+  {
     "id": "vector_search",
     "pattern": "벡터\\s*검색|vector\\s+search",
     "replacement": "vector-search 벡터검색 qdrant",
