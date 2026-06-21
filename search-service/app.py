@@ -21,6 +21,11 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from synaptic import SynapticGraph
 
+try:
+    from kiwipiepy import Kiwi
+except Exception:  # pragma: no cover - 운영에서는 설치되어 있지만 로컬 fallback을 허용
+    Kiwi = None
+
 EMBED_URL = os.environ.get("EMBED_URL", "http://localhost:8181/v1")
 EMBED_MODEL = os.environ.get("EMBED_MODEL", "bge-m3")
 RERANK_URL = os.environ.get("RERANK_URL", "http://localhost:8180")
@@ -39,6 +44,13 @@ NO_LEXICAL_MARGIN_FLOOR = float(os.environ.get("NO_LEXICAL_MARGIN_FLOOR", "0.08"
 
 TOKEN_RE = re.compile(r"[가-힣]{2,}|[a-z0-9][a-z0-9.+#-]*", re.IGNORECASE)
 ASCII_RE = re.compile(r"^[a-z0-9][a-z0-9.+#-]*$")
+HANGUL_RE = re.compile(r"[가-힣]")
+OPERATOR_TOKEN_RE = re.compile(r"\b(AND|OR)\b", re.IGNORECASE)
+EQURL_RE = re.compile(r"\bEQURL\s*:\s*(\"[^\"]+\"|'[^']+'|[^\s]+)", re.IGNORECASE)
+ENABLE_KOREAN_MORPHOLOGY = os.environ.get("ENABLE_KOREAN_MORPHOLOGY", "true").lower() != "false"
+KIWI = Kiwi() if ENABLE_KOREAN_MORPHOLOGY and Kiwi is not None else None
+KO_MORPH_TAG_PREFIXES = ("NN", "VV", "VA", "XR")
+IMPORTANT_SHORT_KO_TERMS = {"딥"}
 QUERY_ALIASES = [
     (re.compile(r"\bdeep\s+learn(?:ing)?\b", re.IGNORECASE), "딥러닝 deep-learning"),
     (re.compile(r"\bdeeplearn(?:ing)?\b", re.IGNORECASE), "딥러닝"),
@@ -151,11 +163,15 @@ def normalize_query(query: str) -> str:
     return " ".join([normalized, *additions]).strip()
 
 
+def normalize_term(raw: str) -> str:
+    return (raw or "").strip("-_.").lower()
+
+
 def extract_terms(text: str) -> list[str]:
     terms: list[str] = []
     seen: set[str] = set()
     for raw in TOKEN_RE.findall(text or ""):
-        term = raw.strip("-_.").lower()
+        term = normalize_term(raw)
         if len(term) < 2 or term in GENERIC_QUERY_TERMS or term in seen:
             continue
         seen.add(term)
@@ -163,15 +179,116 @@ def extract_terms(text: str) -> list[str]:
     return terms
 
 
+def extract_morph_terms(text: str) -> list[str]:
+    if KIWI is None or not text:
+        return []
+
+    terms: list[str] = []
+    seen: set[str] = set()
+    for token in KIWI.tokenize(text):
+        tag = getattr(token, "tag", "")
+        form = normalize_term(getattr(token, "form", ""))
+        if not form or form in seen or form in GENERIC_QUERY_TERMS:
+            continue
+        if not HANGUL_RE.search(form):
+            continue
+        if not tag.startswith(KO_MORPH_TAG_PREFIXES):
+            continue
+        if len(form) < 2 and form not in IMPORTANT_SHORT_KO_TERMS:
+            continue
+        seen.add(form)
+        terms.append(form)
+    return terms
+
+
+def merge_terms(*groups: list[str]) -> list[str]:
+    merged: list[str] = []
+    seen: set[str] = set()
+    for group in groups:
+        for term in group:
+            if not term or term in seen:
+                continue
+            seen.add(term)
+            merged.append(term)
+    return merged
+
+
+def lexical_terms(text: str) -> set[str]:
+    return set(merge_terms(extract_terms(text), extract_morph_terms(text)))
+
+
+def should_drop_compound_query_term(term: str, morph_terms: list[str]) -> bool:
+    return bool(HANGUL_RE.search(term) and len(term) > 4 and len(morph_terms) >= 2)
+
+
 def query_terms(query: str, normalized_query: str) -> list[str]:
-    terms = extract_terms(normalized_query)
+    regex_terms = extract_terms(normalized_query)
+    morph_terms = extract_morph_terms(normalized_query)
+    if morph_terms:
+        regex_terms = [
+            term
+            for term in regex_terms
+            if not should_drop_compound_query_term(term, morph_terms)
+        ]
+    terms = merge_terms(regex_terms, morph_terms)
     if DEEP_LEARNING_QUERY_RE.search(query):
         terms = [
             term
             for term in terms
-            if term not in {"deep", "learn", "learning", "deeplearn", "deeplearning"}
+            if term
+            not in {
+                "deep",
+                "learn",
+                "learning",
+                "deeplearn",
+                "deeplearning",
+                "딥",
+                "러닝",
+            }
         ]
+        terms = merge_terms(terms, ["딥러닝", "deep-learning"])
     return terms
+
+
+def canonical_url(value: str) -> str:
+    raw = (value or "").strip().strip("\"'")
+    if not raw:
+        return ""
+    raw = raw.split("#", 1)[0].split("?", 1)[0]
+    if raw.startswith("http://") or raw.startswith("https://"):
+        try:
+            raw = "/" + raw.split("://", 1)[1].split("/", 1)[1]
+        except IndexError:
+            raw = "/"
+    if not raw.startswith("/"):
+        raw = f"/{raw}"
+    path = raw.rstrip("/")
+    return f"{path}/" if path else "/"
+
+
+def parse_query(query: str) -> dict:
+    raw = (query or "").strip()
+    equrls: list[str] = []
+
+    def capture_equrl(match: re.Match) -> str:
+        equrls.append(canonical_url(match.group(1)))
+        return " "
+
+    without_equrl = EQURL_RE.sub(capture_equrl, raw)
+    operator = "and" if re.search(r"\bAND\b", without_equrl, re.IGNORECASE) else "or"
+    semantic_query = OPERATOR_TOKEN_RE.sub(" ", without_equrl)
+    semantic_query = re.sub(r"\s+", " ", semantic_query).strip()
+    normalized_query = normalize_query(semantic_query)
+    terms = query_terms(semantic_query, normalized_query)
+
+    return {
+        "raw": raw,
+        "operator": operator,
+        "equrls": sorted({url for url in equrls if url}),
+        "semantic_query": semantic_query,
+        "normalized_query": normalized_query,
+        "terms": terms,
+    }
 
 
 def searchable_text(doc: dict) -> str:
@@ -193,29 +310,38 @@ def prepare_doc_lookup(docs: list[dict]) -> dict[str, dict]:
         if not url:
             continue
         text = searchable_text(doc)
+        title_text = str(doc.get("title", "")).lower()
+        tag_text = " ".join(doc.get("tags", []) or []).lower()
         prepared[url] = {
             **doc,
             "_search_text": text,
-            "_title_text": str(doc.get("title", "")).lower(),
-            "_tag_text": " ".join(doc.get("tags", []) or []).lower(),
-            "_tokens": set(extract_terms(text)),
+            "_title_text": title_text,
+            "_tag_text": tag_text,
+            "_tokens": lexical_terms(text),
+            "_title_tokens": lexical_terms(title_text),
+            "_tag_tokens": lexical_terms(tag_text),
         }
     return prepared
 
 
 def term_matches(term: str, doc: dict, field: str = "_search_text") -> bool:
     text = doc.get(field, "")
-    if ASCII_RE.match(term):
-        if field != "_search_text":
-            return term in set(extract_terms(text))
-        return term in doc.get("_tokens", set())
-    return term in text
+    token_key = {
+        "_search_text": "_tokens",
+        "_title_text": "_title_tokens",
+        "_tag_text": "_tag_tokens",
+    }.get(field, "_tokens")
+    token_match = term in doc.get(token_key, set())
+    if ASCII_RE.match(term) or field != "_search_text":
+        return token_match
+    return token_match or term in text
 
 
 def evidence_features(doc: dict | None, terms: list[str], normalized_query: str) -> dict:
     if not doc or not terms:
         return {
             "matched_terms": [],
+            "term_count": len(terms),
             "lexical_ratio": 0.0,
             "title_ratio": 0.0,
             "tag_ratio": 0.0,
@@ -233,6 +359,7 @@ def evidence_features(doc: dict | None, terms: list[str], normalized_query: str)
     exact_phrase = bool(len(phrase) >= 4 and phrase in doc.get("_search_text", ""))
     return {
         "matched_terms": matched,
+        "term_count": len(terms),
         "lexical_ratio": len(matched) / max(1, len(terms)),
         "title_ratio": len(title_matched) / max(1, len(terms)),
         "tag_ratio": len(tag_matched) / max(1, len(terms)),
@@ -262,6 +389,8 @@ def has_strong_lexical_evidence(features: dict) -> bool:
         return False
     if features["title_match"] or features["tag_match"] or features["exact_phrase"]:
         return True
+    if features.get("term_count", 0) >= 3:
+        return len(matched) >= 2 and features["lexical_ratio"] >= 0.34
     return any(not (ASCII_RE.match(term) and len(term) <= 2) for term in matched)
 
 
@@ -287,6 +416,22 @@ def make_candidate(
     }
 
 
+def make_equrl_candidate(doc: dict, terms: list[str], normalized_query: str) -> dict:
+    candidate = make_candidate(
+        url=str(doc["url"]).rstrip("/"),
+        title=doc.get("title", ""),
+        raw_score=0.99,
+        doc=doc,
+        terms=terms,
+        normalized_query=normalized_query,
+        source="equrl",
+    )
+    candidate["score"] = 0.99
+    candidate["confidence"] = "high"
+    candidate["exact_url"] = True
+    return candidate
+
+
 def upsert_candidate(candidates: dict[str, dict], candidate: dict) -> None:
     current = candidates.get(candidate["url"])
     if current is None:
@@ -297,6 +442,21 @@ def upsert_candidate(candidates: dict[str, dict], candidate: dict) -> None:
     if (candidate["score"], candidate["raw_score"]) > (current["score"], current["raw_score"]):
         candidate["sources"] = current["sources"]
         candidates[candidate["url"]] = candidate
+
+
+def add_equrl_candidates(
+    *,
+    candidates: dict[str, dict],
+    docs_by_url: dict[str, dict],
+    plan: dict,
+) -> None:
+    for url in plan["equrls"]:
+        doc = docs_by_url.get(url.rstrip("/"))
+        if doc:
+            upsert_candidate(
+                candidates,
+                make_equrl_candidate(doc, plan["terms"], plan["normalized_query"]),
+            )
 
 
 def add_lexical_fallback_candidates(
@@ -331,6 +491,8 @@ def add_lexical_fallback_candidates(
 
 
 def is_confident_candidate(candidate: dict, no_lexical_margin: float) -> bool:
+    if candidate.get("exact_url") or "equrl" in candidate.get("sources", []):
+        return True
     if candidate["score"] < SCORE_FLOOR:
         return False
     if has_strong_lexical_evidence(candidate):
@@ -339,6 +501,17 @@ def is_confident_candidate(candidate: dict, no_lexical_margin: float) -> bool:
         candidate["raw_score"] >= NO_LEXICAL_SCORE_FLOOR
         and no_lexical_margin >= NO_LEXICAL_MARGIN_FLOOR
     )
+
+
+def satisfies_query_plan(candidate: dict, plan: dict) -> bool:
+    candidate_url = canonical_url(candidate.get("url", ""))
+    if plan["equrls"] and candidate_url not in plan["equrls"]:
+        return False
+
+    if plan["operator"] == "and" and plan["terms"] and "equrl" not in candidate.get("sources", []):
+        return set(plan["terms"]).issubset(set(candidate.get("matched_terms", [])))
+
+    return True
 
 
 def public_result(candidate: dict) -> dict:
@@ -390,7 +563,11 @@ app.add_middleware(
 
 @app.get("/health")
 async def health():
-    return {"ok": state["graph"] is not None}
+    return {
+        "ok": state["graph"] is not None,
+        "morphology": "kiwipiepy" if KIWI is not None else "disabled",
+        "docs": len(state.get("docs", [])),
+    }
 
 
 @app.get("/search")
@@ -405,36 +582,46 @@ async def search(
     graph = state["graph"]
     if graph is None:
         return {"query": q, "results": [], "error": "not ready"}
-    normalized_q = normalize_query(q)
-    terms = query_terms(q, normalized_q)
+    plan = parse_query(q)
+    normalized_q = plan["normalized_query"]
+    terms = plan["terms"]
     docs = state.get("docs", [])
     docs_by_url = state.get("docs_by_url", {})
     # 청크 단위로 더 받아서 글(url) 단위로 합침
-    r = await graph.search(normalized_q, limit=limit * 4, engine="evidence", rerank=rerank)
+    r = None
     candidates: dict[str, dict] = {}
-    for an in r.nodes:
-        n = an.node
-        url = str(n.source or (n.properties or {}).get("url") or "").rstrip("/")
-        if not url:
-            continue
-        doc = docs_by_url.get(url)
-        candidate = make_candidate(
-            url=url,
-            title=(n.properties or {}).get("title") or n.title,
-            raw_score=float(an.activation),
-            doc=doc,
+    if normalized_q:
+        r = await graph.search(normalized_q, limit=limit * 4, engine="evidence", rerank=rerank)
+        for an in r.nodes:
+            n = an.node
+            url = str(n.source or (n.properties or {}).get("url") or "").rstrip("/")
+            if not url:
+                continue
+            doc = docs_by_url.get(url)
+            candidate = make_candidate(
+                url=url,
+                title=(n.properties or {}).get("title") or n.title,
+                raw_score=float(an.activation),
+                doc=doc,
+                terms=terms,
+                normalized_query=normalized_q,
+                source="synaptic",
+            )
+            upsert_candidate(candidates, candidate)
+
+    add_equrl_candidates(
+        candidates=candidates,
+        docs_by_url=docs_by_url,
+        plan=plan,
+    )
+
+    if normalized_q:
+        add_lexical_fallback_candidates(
+            candidates=candidates,
+            docs=docs,
             terms=terms,
             normalized_query=normalized_q,
-            source="synaptic",
         )
-        upsert_candidate(candidates, candidate)
-
-    add_lexical_fallback_candidates(
-        candidates=candidates,
-        docs=docs,
-        terms=terms,
-        normalized_query=normalized_q,
-    )
 
     ranked = sorted(
         candidates.values(),
@@ -455,12 +642,21 @@ async def search(
     results = [
         public_result(candidate)
         for candidate in ranked
-        if is_confident_candidate(candidate, no_lexical_margin)
+        if satisfies_query_plan(candidate, plan)
+        and is_confident_candidate(candidate, no_lexical_margin)
     ][:limit]
 
-    stages = list(r.stages_used)
-    if normalized_q != q.strip():
+    stages = list(r.stages_used) if r is not None else []
+    if normalized_q and normalized_q != plan["semantic_query"]:
         stages.append("query_normalized")
+    if KIWI is not None and terms:
+        stages.append("korean_morphology")
+    if plan["operator"] == "and":
+        stages.append("operator_and")
+    else:
+        stages.append("operator_or")
+    if plan["equrls"]:
+        stages.append("equrl_filter")
     if any("lexical" in result.get("sources", []) for result in results):
         stages.append("lexical_fallback")
     stages.append("doc_rank")
@@ -469,7 +665,9 @@ async def search(
     return {
         "query": q,
         "normalizedQuery": normalized_q,
+        "operator": plan["operator"],
+        "equrls": plan["equrls"],
         "results": results,
         "stages": stages,
-        "ms": round(r.search_time_ms, 1),
+        "ms": round(r.search_time_ms if r is not None else 0, 1),
     }

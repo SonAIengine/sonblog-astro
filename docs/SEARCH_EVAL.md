@@ -51,17 +51,20 @@ SEARCH_EVAL_STRICT=true pnpm run search:eval
 - 동점에 가까운 결과는 제목/태그 근거 비율을 tie-breaker로 써서 짧은 제품형 질의의 제목 일치도를 우선한다.
 - `/search` 화면의 Pagefind 결과는 시맨틱 API가 정상 응답한 경우 confidence gate 결과와 URL이 맞는 항목만 보조 결과로 노출한다.
 - 시맨틱 API가 0건을 반환하면 Pagefind의 약한 키워드 매칭 결과도 숨기고, API 장애 때만 Pagefind fallback을 그대로 둔다.
+- 한국어 lexical layer에는 `kiwipiepy` 형태소 토큰을 추가한다. 단, `K3s`, `graph-tool-call`, `vLLM` 같은 기술 토큰은 기존 ASCII/code 토큰화가 담당한다.
+- 명시 연산자는 `AND`, `OR`, `EQURL:/posts/.../`를 지원한다. 기본 연산은 OR이며, `EQURL`은 정확한 URL 필터/직접 조회용이다.
+- 형태소 분석으로 `완전무관` 같은 무관 질의가 단어 하나에 걸리지 않도록, 긴 질의의 body-only 1단어 매칭은 강한 lexical evidence로 보지 않는다.
 
 1차 반영 후 운영 API 기준 strict 평가:
 
 ```text
-cases: 14
-pass: 14
+cases: 18
+pass: 18
 positive top1: 100%
 positive recall@5: 100%
 negative pass: 100%
 sorted score pass: 100%
-avg latency: 약 312ms
+avg latency: 약 243ms
 ```
 
 ## 다음 TODO
@@ -69,6 +72,6 @@ avg latency: 약 312ms
 - Pagefind, semantic API, graph 검색을 같은 eval runner에서 비교한다.
 - 검색 실패를 사람이 검토한 뒤 `eval-cases.json`으로 승격하는 backlog를 만든다.
 - alias dictionary를 코드 상수에서 별도 JSON/YAML로 분리한다.
-- 검색 API `/health`에 index source commit/hash, indexed document count, ready 상태를 포함한다.
+- 검색 API `/health`에 index source commit/hash, ready 상태를 더 자세히 포함한다.
 - search service 재시작 중 502가 나오지 않도록 readiness 또는 무중단 재색인을 고려한다.
 - graph 검색은 서버가 살아 있을 때 confidence gate가 적용된 서버 결과를 우선하고, 서버 장애 시에만 local Orama fallback을 유지한다.
