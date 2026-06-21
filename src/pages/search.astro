@@ -199,7 +199,7 @@ const t = useTranslations(locale);
           }
         }, 0);
       });
-      attachSemanticSearch(searchInput as HTMLInputElement | null);
+      attachSemanticSearch(searchInput as HTMLInputElement | null, query);
       observePagefindResults(searchInput as HTMLInputElement | null);
 
       function resetSearchParam(e: Event) {
@@ -223,7 +223,10 @@ const t = useTranslations(locale);
       form.insertAdjacentElement("afterend", semanticSearch);
     }
 
-    function attachSemanticSearch(searchInput: HTMLInputElement | null) {
+    function attachSemanticSearch(
+      searchInput: HTMLInputElement | null,
+      initialQuery: string | null
+    ) {
       if (
         !searchInput ||
         !semanticSearch ||
@@ -249,7 +252,11 @@ const t = useTranslations(locale);
       };
 
       searchInput.addEventListener("input", searchFromInput);
-      if (searchInput.value.trim()) searchFromInput();
+      if (searchInput.value.trim()) {
+        searchFromInput();
+      } else if (initialQuery?.trim()) {
+        runSemanticSearch(initialQuery.trim());
+      }
 
       async function runSemanticSearch(q: string) {
         if (q.length < 2) {

@@ -104,6 +104,34 @@
     "minTopScore": 0.65
   },
   {
+    "id": "deep_learning_english_phrase",
+    "query": "대학원 Deep learning",
+    "intent": "영문 deep learning 표현도 OpenSearch LTR 같은 learning 단어 매칭에 끌려가지 않고 딥러닝 글로 보정되어야 한다.",
+    "type": "positive",
+    "relevant": [
+      "/posts/ai/deep-learning/dropout/",
+      "/posts/ai/deep-learning/kobert/",
+      "/posts/ai/deep-learning/scaled-dot-product-attention/",
+      "/posts/ai/deep-learning/self-attention-step-by-step/",
+      "/posts/ai/deep-learning/thompson-sampling/",
+      "/posts/ai/deep-learning/tokenization/",
+      "/posts/ai/deep-learning/transformer-query-key-value/",
+      "/posts/ai/deep-learning/gpt-model-from-scratch-1/",
+      "/posts/ai/deep-learning/gpt-model-from-scratch-2/"
+    ],
+    "minTopScore": 0.65
+  },
+  {
+    "id": "xgen_hybrid_search_short",
+    "query": "XGEN 하이브리드 검색",
+    "intent": "짧은 제품형 질의에서는 제목에 XGEN과 하이브리드 검색이 함께 있는 소개 글이 우선되어야 한다.",
+    "type": "positive",
+    "relevant": [
+      "/posts/ai/xgen/xgen-hybrid-knowledge-search-product-intro/"
+    ],
+    "minTopScore": 0.75
+  },
+  {
     "id": "xgen_hybrid_search_intro",
     "query": "XGEN 하이브리드 검색 소개",
     "intent": "최근 작성한 XGEN 하이브리드 검색 소개 글이 최상위에 나와야 한다.",

@@ -48,6 +48,9 @@ QUERY_ALIASES = [
     (re.compile(r"\bllm\s*ops\b", re.IGNORECASE), "llmops"),
     (re.compile(r"\bv\s*llm\b", re.IGNORECASE), "vllm"),
 ]
+DEEP_LEARNING_QUERY_RE = re.compile(
+    r"\bdeep\s+learn(?:ing)?\b|\bdeeplearn(?:ing)?\b", re.IGNORECASE
+)
 GENERIC_QUERY_TERMS = {
     "글",
     "관련",
@@ -160,6 +163,17 @@ def extract_terms(text: str) -> list[str]:
     return terms
 
 
+def query_terms(query: str, normalized_query: str) -> list[str]:
+    terms = extract_terms(normalized_query)
+    if DEEP_LEARNING_QUERY_RE.search(query):
+        terms = [
+            term
+            for term in terms
+            if term not in {"deep", "learn", "learning", "deeplearn", "deeplearning"}
+        ]
+    return terms
+
+
 def searchable_text(doc: dict) -> str:
     return "\n".join(
         [
@@ -203,19 +217,25 @@ def evidence_features(doc: dict | None, terms: list[str], normalized_query: str)
         return {
             "matched_terms": [],
             "lexical_ratio": 0.0,
+            "title_ratio": 0.0,
+            "tag_ratio": 0.0,
             "title_match": False,
             "tag_match": False,
             "exact_phrase": False,
         }
 
     matched = [term for term in terms if term_matches(term, doc)]
-    title_match = any(term_matches(term, doc, "_title_text") for term in terms)
-    tag_match = any(term_matches(term, doc, "_tag_text") for term in terms)
+    title_matched = [term for term in terms if term_matches(term, doc, "_title_text")]
+    tag_matched = [term for term in terms if term_matches(term, doc, "_tag_text")]
+    title_match = bool(title_matched)
+    tag_match = bool(tag_matched)
     phrase = (normalized_query or "").strip().lower()
     exact_phrase = bool(len(phrase) >= 4 and phrase in doc.get("_search_text", ""))
     return {
         "matched_terms": matched,
         "lexical_ratio": len(matched) / max(1, len(terms)),
+        "title_ratio": len(title_matched) / max(1, len(terms)),
+        "tag_ratio": len(tag_matched) / max(1, len(terms)),
         "title_match": title_match,
         "tag_match": tag_match,
         "exact_phrase": exact_phrase,
@@ -386,7 +406,7 @@ async def search(
     if graph is None:
         return {"query": q, "results": [], "error": "not ready"}
     normalized_q = normalize_query(q)
-    terms = extract_terms(normalized_q)
+    terms = query_terms(q, normalized_q)
     docs = state.get("docs", [])
     docs_by_url = state.get("docs_by_url", {})
     # 청크 단위로 더 받아서 글(url) 단위로 합침
@@ -420,6 +440,9 @@ async def search(
         candidates.values(),
         key=lambda item: (
             item["score"],
+            item["title_ratio"],
+            item["tag_ratio"],
+            item["exact_phrase"],
             item["raw_score"],
             item["lexical_ratio"],
             item["title"],

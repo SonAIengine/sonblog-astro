@@ -46,17 +46,20 @@ SEARCH_EVAL_STRICT=true pnpm run search:eval
 - lexical evidence가 없는 고점 결과는 top score와 margin이 모두 충분할 때만 살린다.
 - `D2`처럼 짧은 토큰 하나만 본문 어딘가에 맞은 경우는 강한 근거로 보지 않는다.
 - 검색 응답에 `normalizedQuery`, `confidence`, `sources`, `doc_rank`, `confidence_gate` stage를 노출한다.
+- `/search?q=...` 초기 진입 시 Pagefind 입력값 주입 타이밍 때문에 시맨틱 추천이 호출되지 않던 문제를 수정했다.
+- `Deep learning`처럼 영문 구가 `Learning to Rank` 같은 단일 단어 글로 끌려가지 않도록 query term을 보정했다.
+- 동점에 가까운 결과는 제목/태그 근거 비율을 tie-breaker로 써서 짧은 제품형 질의의 제목 일치도를 우선한다.
 
 1차 반영 후 운영 API 기준 strict 평가:
 
 ```text
-cases: 12
-pass: 12
+cases: 14
+pass: 14
 positive top1: 100%
 positive recall@5: 100%
 negative pass: 100%
 sorted score pass: 100%
-avg latency: 약 250ms
+avg latency: 약 312ms
 ```
 
 ## 다음 TODO
