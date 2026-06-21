@@ -87,6 +87,7 @@ src/content/posts/
 - 검색 alias/동의어 사전은 `search-service/query-aliases.json`에서 관리한다.
 - 한국어 lexical evidence는 형태소 토큰을 함께 보지만, 기술 약어/하이픈 토큰은 별도 코드 토큰화로 유지한다.
 - 검색 API는 내부/디버깅용으로 `AND`, `OR`, `EQURL:/posts/.../` 연산자를 지원한다.
+- 검색 API 홈서버 배포는 `docs/SEARCH_SERVICE_DEPLOYMENT.md`를 따르며 `pnpm run search:deploy`가 8182 proxy + 8192/8194 backend blue/green 전환을 수행한다.
 - search telemetry는 GoatCounter 이벤트로 기록한다.
 - raw query는 보내지 않고 normalized query hash, query length, result count, latency만 보낸다.
 

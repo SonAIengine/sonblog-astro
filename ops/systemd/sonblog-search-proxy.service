@@ -1,0 +1,18 @@
+[Unit]
+Description=SON BLOG search proxy (blue/green router)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/projects/blog/sonblog-astro/search-service
+Environment=SEARCH_PROXY_STATE=%h/projects/blog/sonblog-astro/search-service/runtime/active-backend.json
+Environment=SEARCH_PROXY_DEFAULT_BACKEND=http://127.0.0.1:8192
+Environment=SEARCH_PROXY_TIMEOUT_SECONDS=20
+ExecStartPre=/usr/bin/mkdir -p %h/projects/blog/sonblog-astro/search-service/runtime
+ExecStart=%h/projects/blog/sonblog-astro/search-service/.venv/bin/uvicorn proxy:app --host 0.0.0.0 --port 8182
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=default.target

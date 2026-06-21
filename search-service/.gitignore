@@ -3,3 +3,4 @@
 *.db-*
 blog_graph.db*
 __pycache__/
+runtime/

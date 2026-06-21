@@ -1,0 +1,21 @@
+[Unit]
+Description=SON BLOG search backend on port %i
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/projects/blog/sonblog-astro/search-service
+Environment=EMBED_URL=http://localhost:8181/v1
+Environment=EMBED_MODEL=bge-m3
+Environment=RERANK_URL=http://localhost:8180
+Environment=RERANK_MODEL=BAAI/bge-reranker-v2-m3
+Environment=INDEX_JSON=%h/projects/blog/sonblog-astro/dist/search-fulltext.json
+Environment=GRAPH_DB=%h/projects/blog/sonblog-astro/search-service/runtime/blog_graph_%i.db
+ExecStartPre=/usr/bin/mkdir -p %h/projects/blog/sonblog-astro/search-service/runtime
+ExecStart=%h/projects/blog/sonblog-astro/search-service/.venv/bin/uvicorn app:app --host 127.0.0.1 --port %i
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,67 @@
+# Search Service Deployment
+
+검색 API는 정적 GitHub Pages와 별도로 홈서버에서 운영한다.
+
+## 구조
+
+공개 포트는 계속 `8182`를 사용한다. 단, 무거운 synaptic backend를 직접 `8182`에 띄우지 않고 얇은 proxy를 둔다.
+
+```text
+search.infoedu.co.kr
+  -> 8182 sonblog-search-proxy.service
+    -> 8192 sonblog-search-backend@8192.service
+    -> 8194 sonblog-search-backend@8194.service
+```
+
+현재 active backend는 `search-service/runtime/active-backend.json`에 기록된다. proxy는 요청마다 이 파일을 읽기 때문에 새 backend가 준비된 뒤 파일을 원자적으로 교체하면 트래픽이 바로 넘어간다.
+
+## 배포
+
+```bash
+pnpm run search:deploy
+```
+
+이 스크립트는 다음 순서로 동작한다.
+
+1. `ops/systemd/*.service`를 `~/.config/systemd/user`로 복사한다.
+2. 비활성 backend port를 고른다. 기본값은 `8192,8194`다.
+3. 새 backend를 시작하고 `/health`와 smoke search가 성공할 때까지 기다린다.
+4. `runtime/active-backend.json`을 새 backend로 바꾼다.
+5. proxy가 꺼져 있으면 시작한다.
+6. 이전 backend를 끄고 새 backend/proxy를 enable한다.
+
+기존 단일 서비스 `sonblog-search.service`가 아직 떠 있는 첫 전환에서는 새 backend를 먼저 준비한 뒤, 마지막에 기존 서비스를 멈추고 proxy를 `8182`에 붙인다.
+
+## 상태 확인
+
+```bash
+curl -sS https://search.infoedu.co.kr/health | jq .
+systemctl --user status sonblog-search-proxy.service --no-pager
+systemctl --user status 'sonblog-search-backend@*.service' --no-pager
+```
+
+`/health`에는 backend의 `docs`, `morphology`, `aliases`와 proxy의 active backend 정보가 함께 나온다.
+
+## 수동 롤백
+
+이전 backend가 아직 살아 있다면 `runtime/active-backend.json`의 `port`와 `backend`를 이전 값으로 바꾸면 proxy가 즉시 이전 backend로 라우팅한다.
+
+```json
+{
+  "port": 8192,
+  "backend": "http://127.0.0.1:8192"
+}
+```
+
+proxy 자체가 실패하면 기존 단일 서비스를 임시로 다시 시작할 수 있다.
+
+```bash
+systemctl --user stop sonblog-search-proxy.service
+systemctl --user start sonblog-search.service
+```
+
+## 남은 개선
+
+- backend readiness 시간 자체는 여전히 synaptic graph 로딩 시간에 좌우된다.
+- active backend 두 개를 동시에 오래 유지하면 메모리를 많이 쓴다. 배포 스크립트는 전환 후 비활성 backend를 정리한다.
+- 외부 프록시가 `8182`만 바라보는 전제다. 외부 프록시까지 blue/green을 지원하게 바꾸면 proxy 계층 없이도 운영할 수 있다.
