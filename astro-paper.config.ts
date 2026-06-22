@@ -4,7 +4,7 @@ export default defineAstroPaperConfig({
   site: {
     url: "https://infoedu.co.kr/",
     title: "SON BLOG",
-    description: "AI Engineer 손성준 · LLM Serving, RAG, Rust, K8s — 검색엔진/AI/DevOps 기술 블로그",
+    description: "손성준의 개인 기술 블로그. 검색엔진, AI 에이전트, LLM 서빙, DevOps를 직접 만들고 운영하며 배운 점을 기록합니다.",
     author: "손성준",
     profile: "https://github.com/SonAIengine",
     ogImage: "default-og.jpg",

@@ -1,0 +1,121 @@
+---
+import { getCollection } from "astro:content";
+import IconArrowRight from "@/assets/icons/IconArrowRight.svg";
+import Layout from "@/layouts/Layout.astro";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
+import Card from "@/components/Card.astro";
+import LinkButton from "@/components/LinkButton.astro";
+import { getSortedPosts } from "@/utils/getSortedPosts";
+import config from "@/config";
+
+const posts = await getCollection("posts");
+const recentPosts = getSortedPosts(posts).slice(0, config.posts.perIndex);
+const description =
+  "Personal engineering notes by Sungjun Son on search engines, AI agents, LLM serving, RAG, MCP, and DevOps.";
+---
+
+<Layout
+  title={`Sungjun Son's Engineering Notes | ${config.site.title}`}
+  description={description}
+  canonicalURL={new URL("/en/", Astro.site).href}
+>
+  <Header />
+  <main id="main-content" class="app-layout">
+    <section class="border-border border-b pt-6 pb-8 sm:pt-8 sm:pb-10">
+      <p
+        class="font-app text-accent text-xs font-semibold tracking-[0.2em] uppercase"
+      >
+        Personal Engineering Blog
+      </p>
+      <h1 class="mt-2 mb-3 text-3xl font-bold sm:text-5xl">Sungjun Son</h1>
+      <p class="font-app text-muted-foreground text-sm leading-6 sm:text-base">
+        Search Engines · AI Agents · LLM Serving · DevOps
+      </p>
+      <p class="mt-5 max-w-2xl text-sm leading-7 sm:text-base sm:leading-8">
+        I write about systems I build and operate: commerce search engines,
+        hybrid retrieval, MCP agents, LLM serving infrastructure, and the
+        practical decisions behind production AI platforms.
+      </p>
+      <p class="text-muted-foreground mt-3 max-w-2xl text-sm leading-7">
+        Most long-form posts are currently written in Korean. This English entry
+        page is the first step toward gradual multilingual support, with
+        translated articles added selectively as they are reviewed.
+      </p>
+      <div class="mt-6 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap">
+        <a
+          href="/posts/"
+          class="bg-accent text-accent-foreground rounded-md px-4 py-2 text-center text-sm font-medium transition hover:opacity-90"
+        >
+          Read Posts
+        </a>
+        <a
+          href="/portfolio-en/"
+          class="border-border hover:border-accent hover:text-accent rounded-md border px-4 py-2 text-center text-sm font-medium transition"
+        >
+          Portfolio
+        </a>
+        <a
+          href="/topics/search-engine/"
+          class="border-border hover:border-accent hover:text-accent rounded-md border px-4 py-2 text-center text-sm font-medium transition"
+        >
+          Search Engine
+        </a>
+        <a
+          href="https://github.com/SonAIengine"
+          target="_blank"
+          rel="noopener"
+          class="border-border hover:border-accent hover:text-accent rounded-md border px-4 py-2 text-center text-sm font-medium transition"
+        >
+          GitHub
+        </a>
+      </div>
+    </section>
+
+    <section class="border-border border-b py-8">
+      <div class="grid gap-4 sm:grid-cols-3">
+        <article>
+          <h2 class="text-base font-semibold">Search</h2>
+          <p class="text-muted-foreground mt-2 text-sm leading-6">
+            OpenSearch, Qdrant, Korean morphology, hybrid ranking, and search
+            quality evaluation loops.
+          </p>
+        </article>
+        <article>
+          <h2 class="text-base font-semibold">Agents</h2>
+          <p class="text-muted-foreground mt-2 text-sm leading-6">
+            MCP tools, graph-based tool retrieval, workflow execution, and
+            human-in-the-loop agent systems.
+          </p>
+        </article>
+        <article>
+          <h2 class="text-base font-semibold">Infrastructure</h2>
+          <p class="text-muted-foreground mt-2 text-sm leading-6">
+            LLM serving, Kubernetes, GitOps, GPU operations, and pragmatic
+            production deployment notes.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section class="pt-8 pb-6 sm:pt-10">
+      <h2 class="text-xl font-semibold tracking-wide sm:text-2xl">
+        Recent Posts
+      </h2>
+      <ul class="border-border mt-3 divide-y border-y">
+        {
+          recentPosts.map(data => (
+            <Card variant="h3" tone="compact" {...data} />
+          ))
+        }
+      </ul>
+      <div class="my-8 text-center">
+        <LinkButton href="/posts/">
+          All Posts
+          <IconArrowRight class="inline-block rtl:-rotate-180" />
+        </LinkButton>
+      </div>
+    </section>
+  </main>
+  <Footer />
+</Layout>

@@ -10,7 +10,11 @@ type Props = {
 
 const { noMarginTop = false, class: className, ...attrs } = Astro.props;
 
-const t = useTranslations(Astro.currentLocale);
+const routeLocale =
+  Astro.url.pathname === "/en/" || Astro.url.pathname.startsWith("/en/")
+    ? "en"
+    : Astro.currentLocale;
+const t = useTranslations(routeLocale);
 const currentYear = new Date().getFullYear();
 ---
 

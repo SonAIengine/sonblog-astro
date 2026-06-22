@@ -27,12 +27,18 @@ const {
 
 const socialImageURL = new URL(ogImage, Astro.site ?? Astro.url);
 const rssHref = getAssetPath("rss.xml");
+const pathname = Astro.url.pathname.replace(/\/+$/, "") || "/";
+const routeLocale =
+  pathname === "/en" || pathname.startsWith("/en/") ? "en" : site.lang;
+const pageLocale =
+  routeLocale === "en" ? routeLocale : (Astro.currentLocale ?? site.lang);
+const isLocalizedHome = pathname === "/" || pathname === "/en";
 ---
 
 <!doctype html>
 <html
   dir={site.dir ?? "ltr"}
-  lang={Astro.currentLocale ?? site.lang}
+  lang={pageLocale}
   class="overflow-y-scroll scroll-smooth"
 >
   <head>
@@ -41,6 +47,23 @@ const rssHref = getAssetPath("rss.xml");
     <link rel="icon" type="image/svg+xml" href={getAssetPath("favicon.svg")} />
     <link rel="icon" href={getAssetPath("favicon.ico")} />
     <link rel="canonical" href={canonicalURL} />
+    {
+      isLocalizedHome && (
+        <>
+          <link rel="alternate" hreflang="ko" href={new URL("/", Astro.site)} />
+          <link
+            rel="alternate"
+            hreflang="en"
+            href={new URL("/en/", Astro.site)}
+          />
+          <link
+            rel="alternate"
+            hreflang="x-default"
+            href={new URL("/", Astro.site)}
+          />
+        </>
+      )
+    }
     <meta name="generator" content={Astro.generator} />
 
     <!-- Font -->
@@ -136,6 +159,24 @@ const rssHref = getAssetPath("rss.xml");
     -->
     <script is:inline>
       (function () {
+        try {
+          var languageKey = "sonblog:locale";
+          var normalizedPath = location.pathname.replace(/\/+$/, "") || "/";
+          var storedLanguage = localStorage.getItem(languageKey);
+          if (normalizedPath === "/" && !storedLanguage) {
+            var languages =
+              navigator.languages && navigator.languages.length
+                ? navigator.languages
+                : [navigator.language || ""];
+            var primaryLanguage = String(languages[0] || "").toLowerCase();
+            if (primaryLanguage && !primaryLanguage.startsWith("ko")) {
+              localStorage.setItem(languageKey, "en-auto");
+              location.replace("/en/");
+              return;
+            }
+          }
+        } catch (_) {}
+
         const stored = localStorage.getItem("theme");
         const theme =
           stored === "dark" || stored === "light" ? stored : "light";
