@@ -1,7 +1,7 @@
 ---
 title: "sontrader 자동매매로 가는 순서: 주문보다 신호 증명이 먼저다"
 description: "한국 주식 자동매매 프로젝트 sontrader의 최종 목표는 자동화다. 다만 주문 봇을 먼저 만드는 대신, 자동매매에 맡겨도 되는 신호를 PIT, OOS, DSR/PBO, 비용, MDD 게이트로 먼저 증명하는 흐름을 정리한다."
-pubDatetime: 2026-06-17
+pubDatetime: 2026-06-17T14:45:52+09:00
 tags:
   - sontrader
   - Auto Trading

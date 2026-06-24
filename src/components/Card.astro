@@ -75,7 +75,7 @@ const tags = data.tags.slice(0, 2);
       <a
         href={href}
         data-astro-prefetch="viewport"
-        class="group grid min-w-0 gap-2 rounded-md py-1 focus-visible:outline-2 focus-visible:outline-offset-4 sm:grid-cols-[minmax(0,1fr)_11rem]"
+        class="group block min-w-0 rounded-md py-1 focus-visible:outline-2 focus-visible:outline-offset-4"
       >
         <div class="min-w-0">
           <Heading
@@ -84,16 +84,11 @@ const tags = data.tags.slice(0, 2);
           >
             {title}
           </Heading>
+          {showMeta && <Datetime {...props} class="font-app mt-1 text-xs" />}
           <p class="post-card-desc post-card-desc--mobile-short text-muted-foreground mt-1 text-sm leading-6">
             {description}
           </p>
         </div>
-        {showMeta && (
-          <Datetime
-            {...props}
-            class="font-app min-w-0 justify-start text-xs sm:mt-0 sm:justify-end"
-          />
-        )}
       </a>
     </li>
   ) : tone === "learning" ? (
