@@ -1,7 +1,7 @@
 ---
 title: "graph-tool-call은 검색엔진에서 실행 계획 컴파일러로 진화하고 있다"
 description: "LLM에게 수많은 도구를 그대로 던지는 방식의 한계를 넘어, graph-tool-call이 도구 검색엔진에서 실행 가능한 계획을 만드는 컴파일러 계층으로 확장되는 흐름을 정리한다."
-pubDatetime: 2026-06-23
+pubDatetime: 2026-06-23T10:45:50+09:00
 tags:
   - graph-tool-call
   - AI Agent

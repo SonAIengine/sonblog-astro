@@ -29,15 +29,27 @@ const t = useTranslations(Astro.currentLocale);
 
 const isModified = modDatetime && modDatetime > pubDatetime;
 
-const datetime = dayjs(isModified ? modDatetime : pubDatetime).tz(
-  postTimezone ?? config.site.timezone
-);
+const rawDatetime = isModified ? modDatetime : pubDatetime;
+const datetime = dayjs(rawDatetime).tz(postTimezone ?? config.site.timezone);
 
 const date = datetime.format("D MMM, YYYY");
+const sourceDate =
+  rawDatetime instanceof Date ? rawDatetime : new Date(rawDatetime);
+const hasExplicitTime =
+  sourceDate.getUTCHours() !== 0 ||
+  sourceDate.getUTCMinutes() !== 0 ||
+  sourceDate.getUTCSeconds() !== 0 ||
+  sourceDate.getUTCMilliseconds() !== 0;
+const displayDate = hasExplicitTime
+  ? `${date} · ${datetime.format("HH:mm")}`
+  : date;
 ---
 
 <div
-  class:list={["text-muted-foreground flex items-center gap-x-2", className]}
+  class:list={[
+    "text-muted-foreground flex items-center gap-x-2 whitespace-nowrap",
+    className,
+  ]}
 >
   <IconCalendar
     class:list={[
@@ -56,6 +68,6 @@ const date = datetime.format("D MMM, YYYY");
     class:list={["text-sm", { "sm:text-base": size === "lg" }]}
     datetime={datetime.toISOString()}
   >
-    {date}
+    {displayDate}
   </time>
 </div>

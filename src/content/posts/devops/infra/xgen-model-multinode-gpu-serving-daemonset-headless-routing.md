@@ -1,7 +1,7 @@
 ---
 title: "xgen-model 멀티노드 GPU 서빙 구조: DaemonSet, Headless Service, 서버 타겟 라우팅"
 description: "xgen-model을 단일 GPU Pod에서 GPU 노드 전체로 확장하기 위해 DaemonSet, Headless Service, cluster-aware API, 서버 타겟 라우팅, gpu_ids 기반 슬롯 분리를 적용한 과정을 정리한다."
-pubDatetime: 2026-06-23
+pubDatetime: 2026-06-23T19:27:07+09:00
 tags:
   - XGEN
   - xgen-model
