@@ -1,7 +1,7 @@
 ---
 title: "문서를 외우지 않아도 찾을 수 있게: XGEN 하이브리드 검색 소개"
 description: "XGEN에서 키워드 검색과 의미 기반 추천을 함께 사용해 정확한 문서명을 몰라도 필요한 지식과 관련 문서를 찾는 검색 경험을 소개한다."
-pubDatetime: 2026-06-20T23:14:11+09:00
+pubDatetime: 2026-06-20
 tags:
   - XGEN
   - Search UX

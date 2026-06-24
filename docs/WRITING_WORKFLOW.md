@@ -61,7 +61,11 @@ draft: true
 ---
 ```
 
-같은 날짜에 여러 글을 발행하면 정렬이 흔들릴 수 있으므로, 새 글은 가능하면 KST 시간까지 넣는다.
+frontmatter에는 날짜만 적어도 된다. 빌드 시 `pnpm run post-times`가 Git 최초 추가 시간을 읽어
+`src/generated/post-times.json`을 만들고, frontmatter 날짜와 Git 최초 추가 날짜가 같은 글만 KST 시간까지
+자동 표시한다. 이 파일은 카드, 글 상세, RSS, 검색 인덱스, 아카이브 정렬에서 공통으로 사용한다.
+
+특정 발행 시간이 꼭 필요하고 Git 이력으로 판단하면 안 되는 예외 글만 KST 시간까지 직접 넣는다.
 
 ```yaml
 pubDatetime: 2026-06-17T14:30:00+09:00

@@ -5,6 +5,10 @@ import type { APIRoute } from "astro";
 import { getCollection } from "astro:content";
 import { getSortedPosts } from "@/utils/getSortedPosts";
 import { getPostUrl } from "@/utils/getPostPaths";
+import {
+  formatDateInSiteTimeZone,
+  getPostSortDatetime,
+} from "@/utils/postDatetime";
 
 // 마크다운 → 평문 (코드블록/링크/이미지/기호 제거). 단락 구분(\n\n)은 보존해
 // 서버가 단락 경계로 청크를 나눌 수 있게 한다.
@@ -37,14 +41,14 @@ export const GET: APIRoute = async () => {
 
   const docs = posts.map(p => {
     const url = getPostUrl(p.id, p.filePath);
-    const d = p.data.modDatetime ?? p.data.pubDatetime;
+    const d = getPostSortDatetime(p);
     return {
       url,
       title: p.data.title,
       description: p.data.description ?? "",
       tags: p.data.tags ?? [],
       category: categoryFromPath(p.filePath),
-      date: d ? new Date(d).toISOString().slice(0, 10) : "",
+      date: formatDateInSiteTimeZone(d),
       // 전체 본문 (극단 케이스만 상한)
       body: toPlainText((p as { body?: string }).body ?? "").slice(0, 30000),
     };

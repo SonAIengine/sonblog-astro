@@ -1,0 +1,42 @@
+{
+  "timezone": "Asia/Seoul",
+  "strategy": "Use Git first-author time only when it falls on the same KST date as date-only pubDatetime.",
+  "posts": {
+    "devops/infra/xgen-model-multinode-gpu-serving-daemonset-headless-routing": {
+      "datetime": "2026-06-23T19:27:07+09:00",
+      "source": "git-first-author-date",
+      "frontmatterDate": "2026-06-23",
+      "firstAddedAt": "2026-06-23T19:27:07+09:00"
+    },
+    "ai/agent/graph-tool-call-search-engine-to-plan-compiler": {
+      "datetime": "2026-06-23T10:45:50+09:00",
+      "source": "git-first-author-date",
+      "frontmatterDate": "2026-06-23",
+      "firstAddedAt": "2026-06-23T10:45:50+09:00"
+    },
+    "ai/xgen/xgen-hybrid-knowledge-search-product-intro": {
+      "datetime": "2026-06-20T23:14:11+09:00",
+      "source": "git-first-author-date",
+      "frontmatterDate": "2026-06-20",
+      "firstAddedAt": "2026-06-20T23:14:11+09:00"
+    },
+    "ai/agent/ku-portal-mcp-campus-portal-claude-code": {
+      "datetime": "2026-06-18T16:01:20+09:00",
+      "source": "git-first-author-date",
+      "frontmatterDate": "2026-06-18",
+      "firstAddedAt": "2026-06-18T16:01:20+09:00"
+    },
+    "ai/agent/synaptic-memory-search-eval-loop": {
+      "datetime": "2026-06-17T16:30:54+09:00",
+      "source": "git-first-author-date",
+      "frontmatterDate": "2026-06-17",
+      "firstAddedAt": "2026-06-17T16:30:54+09:00"
+    },
+    "full-stack/poc/sontrader-autotrading-signal-validation-before-orders": {
+      "datetime": "2026-06-17T14:45:52+09:00",
+      "source": "git-first-author-date",
+      "frontmatterDate": "2026-06-17",
+      "firstAddedAt": "2026-06-17T14:45:52+09:00"
+    }
+  }
+}

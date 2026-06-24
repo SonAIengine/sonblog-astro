@@ -48,7 +48,7 @@ const tags = data.tags.slice(0, 2);
           {categoryLabel && (
             <span class="text-accent font-semibold">{categoryLabel}</span>
           )}
-          {showMeta && <Datetime {...props} class="text-xs" />}
+          {showMeta && <Datetime {...props} postId={id} class="text-xs" />}
         </div>
         <Heading
           transition:name={toTransitionName(title)}
@@ -84,7 +84,9 @@ const tags = data.tags.slice(0, 2);
           >
             {title}
           </Heading>
-          {showMeta && <Datetime {...props} class="font-app mt-1 text-xs" />}
+          {showMeta && (
+            <Datetime {...props} postId={id} class="font-app mt-1 text-xs" />
+          )}
           <p class="post-card-desc post-card-desc--mobile-short text-muted-foreground mt-1 text-sm leading-6">
             {description}
           </p>
@@ -110,7 +112,7 @@ const tags = data.tags.slice(0, 2);
         <p class="post-card-desc post-card-desc--short text-muted-foreground mt-1 text-sm leading-6">
           {description}
         </p>
-        {showMeta && <Datetime {...props} class="mt-2 text-xs" />}
+        {showMeta && <Datetime {...props} postId={id} class="mt-2 text-xs" />}
       </a>
     </li>
   ) : (
@@ -126,7 +128,7 @@ const tags = data.tags.slice(0, 2);
       >
         <Heading transition:name={toTransitionName(title)}>{title}</Heading>
       </a>
-      <Datetime {...props} />
+      <Datetime {...props} postId={id} />
       <p class="text-muted-foreground">{description}</p>
     </li>
   )

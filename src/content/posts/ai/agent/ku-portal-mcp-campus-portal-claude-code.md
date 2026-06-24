@@ -1,7 +1,7 @@
 ---
 title: "대학 포털을 MCP 서버로 묶으면 생기는 일: KUPID와 Canvas를 Claude에서 조회하기"
 description: 고려대학교 KUPID 포털과 Canvas LMS를 Claude Code에서 바로 조회할 수 있게 만든 ku-portal-mcp의 설계, 인증 흐름, 사용자 반응, 그리고 자동화의 선을 정리한다.
-pubDatetime: 2026-06-18T16:01:20+09:00
+pubDatetime: 2026-06-18
 tags:
 - MCP
 - Claude Code

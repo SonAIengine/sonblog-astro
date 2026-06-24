@@ -2,6 +2,7 @@
 import { getCollection } from "astro:content";
 import { getPostUrl } from "@/utils/getPostPaths";
 import { getSortedPosts } from "@/utils/getSortedPosts";
+import { getPostSortDatetime } from "@/utils/postDatetime";
 import { postFilter } from "@/utils/postFilter";
 import { slugifyAll } from "@/utils/slugify";
 
@@ -30,7 +31,7 @@ const scored = all
   .sort(
     (a, b) =>
       b.score - a.score ||
-      +new Date(b.p.data.pubDatetime) - +new Date(a.p.data.pubDatetime)
+      getPostSortDatetime(b.p).getTime() - getPostSortDatetime(a.p).getTime()
   )
   .slice(0, 4);
 ---

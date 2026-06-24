@@ -1,7 +1,7 @@
 ---
 title: "검색 품질은 감으로 고치면 끝이 없다: synaptic-memory 평가 루프 만들기"
 description: "블로그 semantic search를 감으로 고치지 않기 위해 검색 문제지, 정답 URL, top1/recall/MRR/latency 지표, 실패 유형 backlog를 만든 과정을 정리한다."
-pubDatetime: 2026-06-17T16:30:54+09:00
+pubDatetime: 2026-06-17
 tags:
   - synaptic-memory
   - Search Evaluation

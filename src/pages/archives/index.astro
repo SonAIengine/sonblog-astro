@@ -8,6 +8,11 @@ import Main from "@/components/Main.astro";
 import Footer from "@/components/Footer.astro";
 import Card from "@/components/Card.astro";
 import { postFilter } from "@/utils/postFilter";
+import {
+  getDatePartsInSiteTimeZone,
+  getPostPublishedDatetime,
+  getPostSortDatetime,
+} from "@/utils/postDatetime";
 import { getPostsByGroupCondition } from "./_utils/getPostsByGroupCondition";
 import { useTranslations } from "@/i18n";
 import config from "@/config";
@@ -35,8 +40,10 @@ const monthFormatter = new Intl.DateTimeFormat(locale, { month: "long" });
   <Main pageTitle={t.pages.archivesTitle} pageDesc={t.pages.archivesDesc}>
     {
       Object.entries(
-        getPostsByGroupCondition(filteredPosts, post =>
-          post.data.pubDatetime.getFullYear()
+        getPostsByGroupCondition(
+          filteredPosts,
+          post =>
+            getDatePartsInSiteTimeZone(getPostPublishedDatetime(post)).year
         )
       )
         .sort(([yearA], [yearB]) => Number(yearB) - Number(yearA))
@@ -47,7 +54,9 @@ const monthFormatter = new Intl.DateTimeFormat(locale, { month: "long" });
             {Object.entries(
               getPostsByGroupCondition(
                 yearGroup,
-                post => post.data.pubDatetime.getMonth() + 1
+                post =>
+                  getDatePartsInSiteTimeZone(getPostPublishedDatetime(post))
+                    .month
               )
             )
               .sort(([monthA], [monthB]) => Number(monthB) - Number(monthA))
@@ -67,12 +76,8 @@ const monthFormatter = new Intl.DateTimeFormat(locale, { month: "long" });
                     {monthGroup
                       .sort(
                         (a, b) =>
-                          Math.floor(
-                            new Date(b.data.pubDatetime).getTime() / 1000
-                          ) -
-                          Math.floor(
-                            new Date(a.data.pubDatetime).getTime() / 1000
-                          )
+                          Math.floor(getPostSortDatetime(b).getTime() / 1000) -
+                          Math.floor(getPostSortDatetime(a).getTime() / 1000)
                       )
                       .map(data => (
                         <Card {...data} />

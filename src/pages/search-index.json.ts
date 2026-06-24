@@ -5,6 +5,10 @@ import type { APIRoute } from "astro";
 import { getCollection } from "astro:content";
 import { getSortedPosts } from "@/utils/getSortedPosts";
 import { getPostUrl } from "@/utils/getPostPaths";
+import {
+  formatDateInSiteTimeZone,
+  getPostSortDatetime,
+} from "@/utils/postDatetime";
 
 // 마크다운 → 평문 (코드블록/링크/이미지/기호 제거)
 function toPlainText(md: string): string {
@@ -37,7 +41,7 @@ export const GET: APIRoute = async () => {
     const url = getPostUrl(p.id, p.filePath);
     const plain = toPlainText((p as { body?: string }).body ?? "");
     const readMin = Math.max(1, Math.round(plain.length / 500)); // 한국어 ~500자/분
-    const d = p.data.modDatetime ?? p.data.pubDatetime;
+    const d = getPostSortDatetime(p);
     return {
       i, // 안정적 정수 id (벡터 인덱스와 1:1 대응)
       url,
@@ -46,7 +50,7 @@ export const GET: APIRoute = async () => {
       tags: p.data.tags ?? [],
       category: categoryFromPath(p.filePath),
       series: p.data.series ?? "",
-      date: d ? new Date(d).toISOString().slice(0, 10) : "",
+      date: formatDateInSiteTimeZone(d),
       readMin,
       body: plain.slice(0, 4000),
     };
