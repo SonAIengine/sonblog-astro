@@ -2,6 +2,12 @@
   "timezone": "Asia/Seoul",
   "strategy": "Use Git first-author time only when it falls on the same KST date as date-only pubDatetime.",
   "posts": {
+    "devops/infra/xgen-workbench-docker-standalone-airgap-deploy": {
+      "datetime": "2026-06-26T09:59:05+09:00",
+      "source": "git-first-author-date",
+      "frontmatterDate": "2026-06-26",
+      "firstAddedAt": "2026-06-26T09:59:05+09:00"
+    },
     "devops/infra/xgen-model-multinode-gpu-serving-daemonset-headless-routing": {
       "datetime": "2026-06-23T19:27:07+09:00",
       "source": "git-first-author-date",
