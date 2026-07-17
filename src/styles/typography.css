@@ -162,6 +162,15 @@
     overflow: visible;
   }
 
+  .app-prose .diagram-frame :is(.nodeLabel, .edgeLabel, .label) p {
+    margin: 0 !important;
+    line-height: 1.35 !important;
+  }
+
+  .app-prose .diagram-frame :is(.nodeLabel, .edgeLabel, .label) {
+    color: var(--foreground);
+  }
+
   .app-prose pre.mermaid[data-mermaid-src] {
     display: grid;
     min-height: 12rem;
@@ -182,16 +191,21 @@
   .app-prose .diagram-error-message {
     margin: 0;
     padding: 0.85rem 1rem 0;
-    color: var(--muted-foreground);
+    color: var(--foreground);
     font-family: var(--font-app);
     font-size: 0.82rem;
+    font-weight: 600;
   }
 
   .app-prose .diagram-error {
     margin: 0;
     border: 0;
+    border-top: 1px solid var(--border);
     border-radius: 0;
-    background: transparent;
+    background: color-mix(in srgb, var(--muted) 34%, var(--background));
+    color: var(--foreground);
+    font-family: var(--font-app);
+    opacity: 1;
   }
 
   @media (max-width: 640px) {

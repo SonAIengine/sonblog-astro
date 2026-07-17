@@ -15,6 +15,7 @@ const FONT_STACK =
 
 let mermaidPromise: Promise<Mermaid> | null = null;
 let activeTheme = getTheme();
+let renderSeq = 0;
 
 function getTheme(): "light" | "dark" {
   return document.documentElement.getAttribute("data-theme") === "dark"
@@ -94,6 +95,12 @@ function mermaidConfig(theme: "light" | "dark"): MermaidConfig {
       .cluster-label {
         letter-spacing: 0;
       }
+      .edgeLabel p,
+      .nodeLabel p,
+      .cluster-label p {
+        margin: 0 !important;
+        line-height: 1.35 !important;
+      }
     `,
     flowchart: {
       curve: "basis",
@@ -154,7 +161,7 @@ function createFrame(encoded: string): HTMLElement {
 
 function createCanvas(code: string): HTMLElement {
   const canvas = document.createElement("div");
-  canvas.className = "mermaid diagram-canvas";
+  canvas.className = "diagram-canvas";
   canvas.textContent = code;
   return canvas;
 }
@@ -215,7 +222,10 @@ async function renderMermaid(target: HTMLElement): Promise<void> {
   try {
     const mermaid = await loadMermaid();
     mermaid.initialize(mermaidConfig(getTheme()));
-    await mermaid.run({ nodes: [canvas] });
+    const renderId = `sonblog-mermaid-${Date.now()}-${renderSeq++}`;
+    const result = await mermaid.render(renderId, code);
+    canvas.innerHTML = result.svg;
+    result.bindFunctions?.(canvas);
     enhanceRenderedSvg(frame);
   } catch (error) {
     showRenderError(frame, code, error);
