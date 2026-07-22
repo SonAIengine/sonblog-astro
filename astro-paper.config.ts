@@ -11,6 +11,7 @@ export default defineAstroPaperConfig({
     lang: "ko",
     timezone: "Asia/Seoul",
     dir: "ltr",
+    googleVerification: "uH7pN0ErLBG0NfXTz_VNezwOk-4Ypqf2viBx0SxHfDM",
   },
   posts: {
     perPage: 4,

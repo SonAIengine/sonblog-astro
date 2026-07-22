@@ -11,6 +11,9 @@ Sitemap: ${sitemapURL.href}
 `;
 
 export const GET: APIRoute = ({ site }) => {
-  const sitemapURL = new URL("sitemap-index.xml", site);
+  const sitemapURL = new URL(
+    "sitemap.xml",
+    site ?? new URL("https://infoedu.co.kr/")
+  );
   return new Response(getRobotsTxt(sitemapURL));
 };
