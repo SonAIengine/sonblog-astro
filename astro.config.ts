@@ -27,6 +27,32 @@ import {
 import { transformerFileName } from "./src/utils/transformers/fileName";
 import config from "./astro-paper.config";
 
+const PRIMARY_SITEMAP_PATHS = new Set([
+  "/",
+  "/about/",
+  "/archives/",
+  "/portfolio/",
+  "/posts/",
+  "/topics/",
+  "/topics/ai/",
+  "/topics/devops/",
+  "/topics/full-stack/",
+  "/topics/search-engine/",
+]);
+
+function isPrimarySitemapPage(page: string) {
+  const pathname = new URL(page).pathname;
+
+  if (pathname in seoRedirects) return false;
+  if (config.features?.showArchives === false && pathname === "/archives/") {
+    return false;
+  }
+
+  if (PRIMARY_SITEMAP_PATHS.has(pathname)) return true;
+
+  return pathname.startsWith("/posts/") && !/^\/posts\/\d+\/?$/.test(pathname);
+}
+
 export default defineConfig({
   site: "https://infoedu.co.kr",
   base: "/",
@@ -35,14 +61,7 @@ export default defineConfig({
   integrations: [
     mdx(),
     sitemap({
-      filter: page => {
-        const pathname = new URL(page).pathname;
-        return (
-          !(pathname in seoRedirects) &&
-          (config.features?.showArchives !== false ||
-            !page.endsWith("/archives/"))
-        );
-      },
+      filter: isPrimarySitemapPage,
     }),
   ],
   i18n: {
