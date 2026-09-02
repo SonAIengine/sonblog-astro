@@ -195,24 +195,6 @@ const websiteStructuredData = {
     -->
     <script is:inline>
       (function () {
-        try {
-          var languageKey = "sonblog:locale";
-          var normalizedPath = location.pathname.replace(/\/+$/, "") || "/";
-          var storedLanguage = localStorage.getItem(languageKey);
-          if (normalizedPath === "/" && !storedLanguage) {
-            var languages =
-              navigator.languages && navigator.languages.length
-                ? navigator.languages
-                : [navigator.language || ""];
-            var primaryLanguage = String(languages[0] || "").toLowerCase();
-            if (primaryLanguage && !primaryLanguage.startsWith("ko")) {
-              localStorage.setItem(languageKey, "en-auto");
-              location.replace("/en/");
-              return;
-            }
-          }
-        } catch (_) {}
-
         const stored = localStorage.getItem("theme");
         const theme =
           stored === "dark" || stored === "light" ? stored : "light";

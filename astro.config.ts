@@ -132,11 +132,7 @@ function buildPostSitemapMetadata() {
     if (!routePath || draft === "true" || !pubDatetime) continue;
     if (Date.now() <= pubDatetime.getTime() - SCHEDULED_POST_MARGIN) continue;
 
-    const lastmod = latestISODate(
-      (modDatetime ?? pubDatetime).toISOString(),
-      SITE_STRUCTURE_LASTMOD
-    );
-    if (!lastmod) continue;
+    const lastmod = (modDatetime ?? pubDatetime).toISOString();
 
     metadata.set(routePath, {
       lastmod,
