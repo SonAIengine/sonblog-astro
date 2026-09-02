@@ -231,7 +231,6 @@ async function authStart() {
     scope: WEBMASTERS_SCOPE,
     access_type: "offline",
     prompt: "consent",
-    include_granted_scopes: "true",
     state,
     code_challenge: challenge,
     code_challenge_method: "S256",
@@ -297,11 +296,31 @@ async function authFinish(argument) {
     );
   }
 
+  const grantedScopes = String(token.scope ?? WEBMASTERS_SCOPE)
+    .split(/\s+/)
+    .filter(Boolean);
+  const unexpectedScopes = grantedScopes.filter(
+    scope => scope !== WEBMASTERS_SCOPE
+  );
+  if (unexpectedScopes.length > 0) {
+    fail(
+      "Google granted unexpected OAuth scopes. Remove the existing app grant, run auth start again, and approve only Search Console access.",
+      { unexpectedScopes }
+    );
+  }
+
+  if (Number(token.refresh_token_expires_in) > 0) {
+    fail(
+      "Google issued a time-limited refresh token. Set the OAuth app publishing status to In production, then run auth start again.",
+      { refreshTokenExpiresIn: Number(token.refresh_token_expires_in) }
+    );
+  }
+
   secureWriteJson(tokenFile, {
     refresh_token: token.refresh_token,
     access_token: token.access_token,
     token_type: token.token_type ?? "Bearer",
-    scope: token.scope ?? WEBMASTERS_SCOPE,
+    scope: grantedScopes.join(" "),
     expires_at: Date.now() + Number(token.expires_in ?? 3600) * 1000,
     created_at: new Date().toISOString(),
   });
