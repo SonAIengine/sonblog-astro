@@ -1,0 +1,9 @@
+[Unit]
+Description=Refresh SON BLOG Google Search Console credentials
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/projects/blog/sonblog-astro
+ExecStart=/usr/bin/node %h/projects/blog/sonblog-astro/scripts/search-console.mjs status

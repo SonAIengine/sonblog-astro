@@ -17,6 +17,9 @@ pnpm-debug.log*
 .env
 .env.production
 
+# local Google Search Console OAuth credentials
+.search-console/
+
 # macOS-specific files
 .DS_Store
 
