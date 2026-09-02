@@ -9,34 +9,71 @@ type Props = {
   canonicalURL?: string;
   pubDatetime?: Date;
   modDatetime?: Date | null;
+  tags?: string[];
+  articleSection?: string;
+  breadcrumbItems?: { name: string; url: string }[];
 };
 
 const { site } = config;
 
-const { title, description, ogImage, canonicalURL, pubDatetime, modDatetime } =
-  Astro.props;
+const {
+  title,
+  description,
+  ogImage,
+  canonicalURL,
+  pubDatetime,
+  modDatetime,
+  tags,
+  articleSection,
+  breadcrumbItems,
+} = Astro.props;
 
 const pageUrl = canonicalURL ?? new URL(Astro.url.pathname, Astro.site).href;
+const articleImage = new URL(ogImage ?? site.ogImage, Astro.site ?? Astro.url)
+  .href;
+const publisher = {
+  "@type": "Person",
+  name: site.author,
+  ...(site.profile && { url: site.profile }),
+};
 
-const structuredData = {
-  "@context": "https://schema.org",
+const articleStructuredData = {
   "@type": "BlogPosting",
+  "@id": `${pageUrl}#article`,
+  url: pageUrl,
   headline: title ?? site.title,
   description,
-  image: ogImage,
+  image: [articleImage],
   mainEntityOfPage: {
     "@type": "WebPage",
     "@id": pageUrl,
   },
   ...(pubDatetime && { datePublished: pubDatetime.toISOString() }),
   dateModified: (modDatetime ?? pubDatetime)?.toISOString(),
-  author: [
-    {
-      "@type": "Person",
-      name: site.author,
-      ...(site.profile && { url: site.profile }),
-    },
-  ],
+  author: [publisher],
+  publisher,
+  inLanguage: site.lang,
+  isAccessibleForFree: true,
+  ...(articleSection && { articleSection }),
+  ...(tags?.length && { keywords: tags.join(", ") }),
+};
+
+const breadcrumbStructuredData =
+  breadcrumbItems && breadcrumbItems.length > 0
+    ? {
+        "@type": "BreadcrumbList",
+        itemListElement: breadcrumbItems.map((item, index) => ({
+          "@type": "ListItem",
+          position: index + 1,
+          name: item.name,
+          item: item.url,
+        })),
+      }
+    : undefined;
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@graph": [articleStructuredData, breadcrumbStructuredData].filter(Boolean),
 };
 ---
 

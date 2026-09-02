@@ -1,5 +1,6 @@
 ---
 import { type CollectionEntry, getCollection, render } from "astro:content";
+import { getRelativeLocaleUrl } from "astro:i18n";
 import PostLayout from "@/layouts/PostLayout.astro";
 import SeriesNav from "@/components/SeriesNav.astro";
 import RelatedPosts from "@/components/RelatedPosts.astro";
@@ -8,6 +9,7 @@ import Footer from "@/components/Footer.astro";
 import Datetime from "@/components/Datetime.astro";
 import ViewCounter from "@/components/ViewCounter.astro";
 import Tag from "@/components/Tag.astro";
+import PostBreadcrumb from "@/components/PostBreadcrumb.astro";
 import { getPostSlug, getPostUrl } from "@/utils/getPostPaths";
 import { getSortedPosts } from "@/utils/getSortedPosts";
 import { getPostPublishedDatetime } from "@/utils/postDatetime";
@@ -20,6 +22,7 @@ import BackButton from "./_components/BackButton.astro";
 import BackToTopButton from "./_components/BackToTopButton.astro";
 import AdjacentPostNav from "./_components/AdjacentPostNav.astro";
 import config from "@/config";
+import { topics } from "@/data/topics";
 
 export async function getStaticPaths() {
   const posts = await getCollection("posts");
@@ -107,6 +110,37 @@ const postCounterPath = new URL(
   canonicalURL ?? Astro.url.pathname,
   Astro.site ?? Astro.url
 ).pathname;
+const siteURL = Astro.site ?? Astro.url;
+const postHref = getPostUrl(post.id, post.filePath, locale);
+const categorySlug = post.id.split("/")[0]?.toLowerCase();
+const primaryTopic = topics.find(topic => topic.slug === categorySlug);
+const breadcrumbItems = [
+  {
+    name: "Home",
+    url: new URL(getRelativeLocaleUrl(locale, ""), siteURL).href,
+  },
+  {
+    name: "Posts",
+    url: new URL(getRelativeLocaleUrl(locale, "posts"), siteURL).href,
+  },
+  ...(primaryTopic
+    ? [
+        {
+          name: primaryTopic.title,
+          url: new URL(
+            getRelativeLocaleUrl(locale, `topics/${primaryTopic.slug}`),
+            siteURL
+          ).href,
+        },
+      ]
+    : []),
+  {
+    name: title,
+    url: new URL(canonicalURL ?? postHref, siteURL).href,
+  },
+];
+const articleSection =
+  primaryTopic?.title ?? categorySlug?.replaceAll("-", " ");
 ---
 
 <PostLayout
@@ -116,8 +150,13 @@ const postCounterPath = new URL(
   canonicalURL={canonicalURL}
   pubDatetime={displayPubDatetime}
   modDatetime={modDatetime}
+  tags={tags}
+  articleSection={articleSection}
+  breadcrumbItems={breadcrumbItems}
 >
   <Header />
+
+  <PostBreadcrumb items={breadcrumbItems} />
 
   <BackButton />
 

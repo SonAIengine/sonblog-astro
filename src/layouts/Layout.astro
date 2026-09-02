@@ -33,6 +33,36 @@ const routeLocale =
 const pageLocale =
   routeLocale === "en" ? routeLocale : (Astro.currentLocale ?? site.lang);
 const isLocalizedHome = pathname === "/" || pathname === "/en";
+const siteRootURL = new URL("/", Astro.site ?? site.url);
+const searchURL = new URL("/search/", siteRootURL);
+const sameAs = [
+  ...new Set(
+    [site.profile, ...config.socials.map(social => social.url)].filter(
+      (url): url is string => Boolean(url && /^https?:\/\//.test(url))
+    )
+  ),
+];
+const publisherStructuredData = {
+  "@type": "Person",
+  name: site.author,
+  ...(site.profile && { url: site.profile }),
+  ...(sameAs.length > 0 && { sameAs }),
+};
+const websiteStructuredData = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "@id": `${siteRootURL.href}#website`,
+  url: siteRootURL.href,
+  name: site.title,
+  description: site.description,
+  inLanguage: site.lang,
+  publisher: publisherStructuredData,
+  potentialAction: {
+    "@type": "SearchAction",
+    target: `${searchURL.href}?q={search_term_string}`,
+    "query-input": "required name=search_term_string",
+  },
+};
 ---
 
 <!doctype html>
@@ -110,6 +140,12 @@ const isLocalizedHome = pathname === "/" || pathname === "/en";
 
     <!-- Filled at runtime by theme.ts to match the current background colour -->
     <meta name="theme-color" content="" />
+
+    <script
+      type="application/ld+json"
+      is:inline
+      set:html={JSON.stringify(websiteStructuredData)}
+    />
 
     <!-- Extra head content injected by child layouts (e.g. JSON-LD, article meta) -->
     <slot name="head" />

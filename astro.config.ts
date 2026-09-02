@@ -5,11 +5,13 @@ import {
   svgoOptimizer,
 } from "astro/config";
 import tailwindcss from "@tailwindcss/vite";
+import fs from "node:fs";
+import path from "node:path";
 import { fileURLToPath } from "node:url";
 // 옛 MkDocs URL → 새 Astro URL SEO 리다이렉트 (scripts/build-redirects.mjs 생성)
 import seoRedirects from "./src/redirects.generated.json";
 import mdx from "@astrojs/mdx";
-import sitemap from "@astrojs/sitemap";
+import sitemap, { ChangeFreqEnum, type SitemapItem } from "@astrojs/sitemap";
 import { unified } from "@astrojs/markdown-remark";
 import remarkToc from "remark-toc";
 import remarkCollapse from "remark-collapse";
@@ -25,7 +27,14 @@ import {
   transformerNotationWordHighlight,
 } from "@shikijs/transformers";
 import { transformerFileName } from "./src/utils/transformers/fileName";
+import { slugifyStr } from "./src/utils/slugify";
 import config from "./astro-paper.config";
+
+const SITE_ORIGIN = "https://infoedu.co.kr";
+const BLOG_CONTENT_DIR = "src/content/posts";
+const SITE_STRUCTURE_LASTMOD = "2026-09-01T15:00:00.000Z";
+const SCHEDULED_POST_MARGIN =
+  config.posts?.scheduledPostMargin ?? 15 * 60 * 1000;
 
 const PRIMARY_SITEMAP_PATHS = new Set([
   "/",
@@ -40,6 +49,195 @@ const PRIMARY_SITEMAP_PATHS = new Set([
   "/topics/search-engine/",
 ]);
 
+type SitemapRouteMeta = {
+  lastmod?: string;
+  changefreq?: SitemapItem["changefreq"];
+  priority?: number;
+  canonicalURL?: string;
+};
+
+function walkPostFiles(dir: string): string[] {
+  if (!fs.existsSync(dir)) return [];
+
+  return fs.readdirSync(dir, { withFileTypes: true }).flatMap(entry => {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) return walkPostFiles(fullPath);
+    return /\.(md|mdx)$/i.test(entry.name) && !entry.name.startsWith("_")
+      ? [fullPath]
+      : [];
+  });
+}
+
+function frontmatterOf(source: string) {
+  return source.match(/^---\r?\n([\s\S]*?)\r?\n---/)?.[1] ?? "";
+}
+
+function frontmatterValue(frontmatter: string, key: string) {
+  const value = frontmatter
+    .match(new RegExp(`^${key}:\\s*(.+)\\s*$`, "m"))?.[1]
+    ?.trim();
+
+  return value?.replace(/^['"]|['"]$/g, "");
+}
+
+function parseFrontmatterDate(value: string | undefined) {
+  if (!value) return undefined;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? undefined : date;
+}
+
+function postRoutePathFromFile(file: string) {
+  const relative = path
+    .relative(path.resolve(BLOG_CONTENT_DIR), file)
+    .replace(/\\/g, "/")
+    .replace(/\.(md|mdx)$/i, "");
+  const segments = relative.split("/").filter(Boolean);
+  const postSlug = segments.pop();
+  if (!postSlug) return undefined;
+
+  const categorySegments = segments
+    .filter(segment => !segment.startsWith("_"))
+    .map(segment => slugifyStr(segment));
+
+  return `/posts/${[...categorySegments, postSlug].join("/")}/`;
+}
+
+function isRecent(lastmod: string, days: number) {
+  const modifiedAt = new Date(lastmod).getTime();
+  return Date.now() - modifiedAt < days * 24 * 60 * 60 * 1000;
+}
+
+function latestISODate(...values: (string | undefined)[]) {
+  return values
+    .filter((value): value is string => Boolean(value))
+    .sort()
+    .at(-1);
+}
+
+function buildPostSitemapMetadata() {
+  const metadata = new Map<string, SitemapRouteMeta>();
+  const root = path.resolve(BLOG_CONTENT_DIR);
+
+  for (const file of walkPostFiles(root)) {
+    const frontmatter = frontmatterOf(fs.readFileSync(file, "utf8"));
+    const draft = frontmatterValue(frontmatter, "draft")?.toLowerCase();
+    const pubDatetime = parseFrontmatterDate(
+      frontmatterValue(frontmatter, "pubDatetime")
+    );
+    const modDatetime = parseFrontmatterDate(
+      frontmatterValue(frontmatter, "modDatetime")
+    );
+    const routePath = postRoutePathFromFile(file);
+
+    if (!routePath || draft === "true" || !pubDatetime) continue;
+    if (Date.now() <= pubDatetime.getTime() - SCHEDULED_POST_MARGIN) continue;
+
+    const lastmod = latestISODate(
+      (modDatetime ?? pubDatetime).toISOString(),
+      SITE_STRUCTURE_LASTMOD
+    );
+    if (!lastmod) continue;
+
+    metadata.set(routePath, {
+      lastmod,
+      changefreq: isRecent(lastmod, 45)
+        ? ChangeFreqEnum.WEEKLY
+        : ChangeFreqEnum.MONTHLY,
+      priority: isRecent(lastmod, 90) ? 0.8 : 0.65,
+      canonicalURL: frontmatterValue(frontmatter, "canonicalURL"),
+    });
+  }
+
+  return metadata;
+}
+
+const postSitemapMetadata = buildPostSitemapMetadata();
+const latestPostLastmod = latestISODate(
+  SITE_STRUCTURE_LASTMOD,
+  ...[...postSitemapMetadata.values()].map(meta => meta.lastmod)
+);
+
+const staticSitemapMetadata = new Map<string, SitemapRouteMeta>([
+  [
+    "/",
+    {
+      lastmod: latestPostLastmod,
+      changefreq: ChangeFreqEnum.DAILY,
+      priority: 1,
+    },
+  ],
+  [
+    "/posts/",
+    {
+      lastmod: latestPostLastmod,
+      changefreq: ChangeFreqEnum.DAILY,
+      priority: 0.95,
+    },
+  ],
+  [
+    "/topics/",
+    {
+      lastmod: latestPostLastmod,
+      changefreq: ChangeFreqEnum.WEEKLY,
+      priority: 0.85,
+    },
+  ],
+  [
+    "/topics/ai/",
+    {
+      lastmod: latestPostLastmod,
+      changefreq: ChangeFreqEnum.WEEKLY,
+      priority: 0.85,
+    },
+  ],
+  [
+    "/topics/devops/",
+    {
+      lastmod: latestPostLastmod,
+      changefreq: ChangeFreqEnum.WEEKLY,
+      priority: 0.8,
+    },
+  ],
+  [
+    "/topics/full-stack/",
+    {
+      lastmod: latestPostLastmod,
+      changefreq: ChangeFreqEnum.WEEKLY,
+      priority: 0.8,
+    },
+  ],
+  [
+    "/topics/search-engine/",
+    {
+      lastmod: latestPostLastmod,
+      changefreq: ChangeFreqEnum.WEEKLY,
+      priority: 0.8,
+    },
+  ],
+  ["/portfolio/", { changefreq: ChangeFreqEnum.MONTHLY, priority: 0.75 }],
+  ["/about/", { changefreq: ChangeFreqEnum.MONTHLY, priority: 0.6 }],
+  [
+    "/archives/",
+    {
+      lastmod: latestPostLastmod,
+      changefreq: ChangeFreqEnum.WEEKLY,
+      priority: 0.6,
+    },
+  ],
+]);
+
+function canonicalMatchesPage(pathname: string, canonicalURL: string) {
+  try {
+    const canonical = new URL(canonicalURL, SITE_ORIGIN);
+    return (
+      canonical.origin === SITE_ORIGIN &&
+      canonical.pathname.replace(/\/?$/, "/") === pathname
+    );
+  } catch {
+    return false;
+  }
+}
+
 function isPrimarySitemapPage(page: string) {
   const pathname = new URL(page).pathname;
 
@@ -50,7 +248,30 @@ function isPrimarySitemapPage(page: string) {
 
   if (PRIMARY_SITEMAP_PATHS.has(pathname)) return true;
 
-  return pathname.startsWith("/posts/") && !/^\/posts\/\d+\/?$/.test(pathname);
+  if (pathname.startsWith("/posts/") && !/^\/posts\/\d+\/?$/.test(pathname)) {
+    const meta = postSitemapMetadata.get(pathname);
+    if (!meta) return false;
+    return (
+      !meta.canonicalURL || canonicalMatchesPage(pathname, meta.canonicalURL)
+    );
+  }
+
+  return false;
+}
+
+function serializeSitemapItem(item: SitemapItem): SitemapItem {
+  const pathname = new URL(item.url).pathname;
+  const meta =
+    postSitemapMetadata.get(pathname) ?? staticSitemapMetadata.get(pathname);
+
+  if (!meta) return item;
+
+  return {
+    ...item,
+    lastmod: meta.lastmod ?? item.lastmod,
+    changefreq: meta.changefreq ?? item.changefreq,
+    priority: meta.priority ?? item.priority,
+  };
 }
 
 export default defineConfig({
@@ -62,6 +283,13 @@ export default defineConfig({
     mdx(),
     sitemap({
       filter: isPrimarySitemapPage,
+      serialize: serializeSitemapItem,
+      namespaces: {
+        news: false,
+        xhtml: false,
+        image: false,
+        video: false,
+      },
     }),
   ],
   i18n: {

@@ -46,14 +46,22 @@ function anchorHrefs(html) {
   );
 }
 
-function sitemapUrls() {
+function sitemapEntries() {
   const files = fs
     .readdirSync(DIST)
     .filter(file => /^sitemap-\d+\.xml$/.test(file))
     .map(file => path.join(DIST, file));
   return files.flatMap(file =>
-    [...fs.readFileSync(file, "utf8").matchAll(/<loc>([^<]+)<\/loc>/g)].map(
-      match => new URL(match[1]).pathname
+    [...fs.readFileSync(file, "utf8").matchAll(/<url>([\s\S]*?)<\/url>/g)].map(
+      match => {
+        const block = match[1];
+        const loc = block.match(/<loc>([^<]+)<\/loc>/)?.[1] ?? "";
+        return {
+          loc,
+          pathname: new URL(loc).pathname,
+          lastmod: block.match(/<lastmod>([^<]+)<\/lastmod>/)?.[1],
+        };
+      }
     )
   );
 }
@@ -71,7 +79,8 @@ const pages = htmlFiles.map(file => {
   };
 });
 
-const urls = sitemapUrls();
+const sitemap = sitemapEntries();
+const urls = sitemap.map(entry => entry.pathname);
 const redirectRoutes = new Set(Object.keys(redirects));
 const failures = [];
 
@@ -87,6 +96,18 @@ if (legacySitemapUrls.length) {
   failures.push(
     `Sitemap contains legacy category URLs: ${legacySitemapUrls
       .slice(0, 10)
+      .join(", ")}`
+  );
+}
+
+const postSitemapEntriesMissingLastmod = sitemap.filter(
+  entry => entry.pathname.startsWith("/posts/") && !entry.lastmod
+);
+if (postSitemapEntriesMissingLastmod.length) {
+  failures.push(
+    `Post sitemap entries missing lastmod: ${postSitemapEntriesMissingLastmod
+      .slice(0, 10)
+      .map(entry => entry.pathname)
       .join(", ")}`
   );
 }
