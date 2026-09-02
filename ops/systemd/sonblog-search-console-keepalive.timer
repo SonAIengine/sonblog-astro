@@ -1,0 +1,10 @@
+[Unit]
+Description=Monthly SON BLOG Google Search Console credential refresh
+
+[Timer]
+OnCalendar=monthly
+Persistent=true
+RandomizedDelaySec=1h
+
+[Install]
+WantedBy=timers.target
