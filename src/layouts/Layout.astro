@@ -194,6 +194,11 @@ const websiteStructuredData = {
         />
       )
     }
+    {
+      site.naverVerification && (
+        <meta name="naver-site-verification" content={site.naverVerification} />
+      )
+    }
 
     <!--
       Inline FOUC-prevention script: sets data-theme on <html> before
