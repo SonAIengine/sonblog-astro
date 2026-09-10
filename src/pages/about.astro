@@ -16,6 +16,32 @@ if (!about) {
 }
 
 const { Content } = await render(about);
+const aboutURL = new URL("/about/", Astro.site ?? config.site.url).href;
+const sameAs = [
+  ...new Set(
+    [config.site.profile, ...config.socials.map(social => social.url)].filter(
+      (url): url is string => Boolean(url && /^https?:\/\//.test(url))
+    )
+  ),
+];
+const profileStructuredData = {
+  "@context": "https://schema.org",
+  "@type": "ProfilePage",
+  "@id": `${aboutURL}#profile`,
+  url: aboutURL,
+  name: `${about.data.title} | ${config.site.title}`,
+  description: about.data.description,
+  inLanguage: config.site.lang,
+  mainEntity: {
+    "@type": "Person",
+    "@id": `${aboutURL}#person`,
+    name: config.site.author,
+    url: aboutURL,
+    jobTitle: "AI Engineer",
+    description: about.data.description,
+    ...(sameAs.length > 0 && { sameAs }),
+  },
+};
 ---
 
 <Layout
@@ -24,6 +50,14 @@ const { Content } = await render(about);
   ogImage={about.data.ogImage}
   canonicalURL={about.data.canonicalURL}
 >
+  <Fragment slot="head">
+    <script
+      type="application/ld+json"
+      is:inline
+      set:html={JSON.stringify(profileStructuredData)}
+    />
+  </Fragment>
+
   <Header />
 
   <Breadcrumb />

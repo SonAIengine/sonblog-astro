@@ -34,6 +34,7 @@ const pageLocale =
   routeLocale === "en" ? routeLocale : (Astro.currentLocale ?? site.lang);
 const isLocalizedHome = pathname === "/" || pathname === "/en";
 const siteRootURL = new URL("/", Astro.site ?? site.url);
+const authorPageURL = new URL("/about/", siteRootURL);
 const searchURL = new URL("/search/", siteRootURL);
 const sameAs = [
   ...new Set(
@@ -44,8 +45,9 @@ const sameAs = [
 ];
 const publisherStructuredData = {
   "@type": "Person",
+  "@id": `${authorPageURL.href}#person`,
   name: site.author,
-  ...(site.profile && { url: site.profile }),
+  url: authorPageURL.href,
   ...(sameAs.length > 0 && { sameAs }),
 };
 const websiteStructuredData = {
@@ -113,6 +115,10 @@ const websiteStructuredData = {
     <meta name="title" content={title} />
     <meta name="description" content={description} />
     <meta name="author" content={site.author} />
+    <meta
+      name="robots"
+      content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
+    />
     <link rel="sitemap" href={getAssetPath("sitemap.xml")} />
 
     <!-- Open Graph -->

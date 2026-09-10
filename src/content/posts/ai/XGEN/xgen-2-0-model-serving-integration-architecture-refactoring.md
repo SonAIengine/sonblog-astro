@@ -3,6 +3,7 @@ title: 'vLLM에서 llama.cpp로: LLM 서빙 아키텍처 통합 마이그레이�
 description: vLLM Ray Serve 분산 구조에서 통합 모델 서빙 서비스로 마이그레이션한 과정. 백엔드 스위칭 매니저 설계, llama.cpp와
   vLLM 런타임 전환까지.
 pubDatetime: 2026-01-22
+modDatetime: 2026-09-10
 tags:
 - 모델서빙
 - 리팩토링
@@ -34,6 +35,8 @@ XGEN 1.0에서는 GPU 모델 서빙을 위해 vLLM과 Ray Serve를 조합한 분
 - **모니터링 어려움**: 여러 레이어에 걸친 로그와 메트릭 수집의 복잡성
 
 XGEN 2.0에서는 이러한 문제를 해결하기 위해 **xgen-model** 단일 서비스로 통합하는 대규모 리팩토링을 진행했다.
+
+이 글은 애플리케이션의 모델 서빙 경계를 다룬다. 이 서비스를 이미지로 빌드하고 K3s에 배포하는 인프라 계층은 [XGEN K3s 인프라 1편](/posts/devops/infra/xgen-k3s-anatomy-1-docker-build-strategy/)에서 이어서 볼 수 있다.
 
 ## 아키텍처 변화
 

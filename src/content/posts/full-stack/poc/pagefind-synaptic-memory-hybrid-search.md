@@ -2,6 +2,7 @@
 title: "Pagefind + synaptic-memory 하이브리드 검색: 블로그 검색을 검색엔진 포트폴리오로 만들기"
 description: "SON BLOG 검색을 Pagefind 정적 전문 검색, synaptic-memory 의미 검색, 한국어 형태소 분석, alias 사전, confidence gate, 평가셋과 blue/green 배포까지 갖춘 하이브리드 검색 구조로 고도화한 과정을 정리한다."
 pubDatetime: 2026-07-05
+modDatetime: 2026-09-10
 tags:
   - Search Engine
   - Pagefind
@@ -14,6 +15,8 @@ tags:
 ---
 
 ## 검색창은 작은 포트폴리오다
+
+> 결론부터 말하면, 브라우저 안의 Pagefind를 항상 동작하는 기본 검색으로 두고 synaptic-memory 서버를 의미·그래프 추천 계층으로 붙였다. 서버가 느리거나 멈춰도 검색은 유지하고, 신뢰도가 충분한 경우에만 의미 검색 결과를 보태는 구조다.
 
 블로그 검색은 보통 부가기능처럼 보인다. 글 목록이 있고, 태그가 있고, 검색창 하나가 있으면 충분해 보인다.
 
@@ -34,6 +37,8 @@ tags:
 그래서 검색 구조를 둘로 나눴다.
 
 Pagefind는 빠르고 안정적인 정적 전문 검색을 맡고, synaptic-memory 기반 검색 서비스는 의미 검색과 그래프 기반 추천을 맡는다.
+
+이 구조를 더 큰 데이터에서 검증했을 때는 검색 점수보다 agent의 도구 선택과 query rewrite가 병목이었다. 884만 MS MARCO 문서에서 확인한 결과는 [검색보다 어려운 건 검색을 시키는 일](/posts/ai/agent/synaptic-memory-msmarco-agent-loop-scale/)에서 별도로 다룬다.
 
 ## 작업 이력부터 보면
 

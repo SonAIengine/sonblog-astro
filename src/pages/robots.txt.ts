@@ -12,6 +12,24 @@ Allow: /
 User-agent: BubblesBot
 Allow: /
 
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
 Sitemap: ${sitemapIndexURL.href}
 Sitemap: ${sitemapURL.href}
 Sitemap: ${rssURL.href}
