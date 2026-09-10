@@ -2,6 +2,7 @@
 title: "884만 문서에서 알게 된 것: 검색보다 어려운 건 검색을 시키는 일"
 description: "synaptic-memory를 884만 MS MARCO passage 위에서 평가하며, 검색 정확도보다 agent loop의 도구 선택, query rewrite, 증거 누적, 실패 기억이 더 큰 병목으로 드러난 과정을 정리한다."
 pubDatetime: 2026-07-05
+modDatetime: 2026-09-10
 tags:
   - synaptic-memory
   - Agentic Search
@@ -41,6 +42,8 @@ LLM agent는 검색 API를 한 번만 호출하지 않는다. 처음 검색 결�
 최근 `synaptic-memory` 작업은 이 지점으로 넘어갔다. 단순히 "검색이 된다"가 아니라, 에이전트가 큰 코퍼스 위에서 검색을 어떻게 운전하는지 측정하기 시작했다.
 
 이 글의 주인공은 ranking 함수 하나가 아니다. 검색 도구를 호출하는 순서, query를 다시 쓰는 방식, 증거를 누적하는 방법, 실패를 다음 실행에 남기는 운영 레이어다.
+
+같은 엔진을 실제 블로그 검색에 Pagefind와 함께 배포한 구조는 [Pagefind + synaptic-memory 하이브리드 검색 글](/posts/full-stack/poc/pagefind-synaptic-memory-hybrid-search/)에 정리했다. 이 글은 그 제품 구조보다 884만 문서에서 agent loop 자체를 평가한 결과에 집중한다.
 
 ## 평가 무대는 884만 개 passage였다
 

@@ -78,6 +78,7 @@ src/content/posts/
 - `src/redirects.generated.json`은 `scripts/build-redirects.mjs`가 생성한다.
 - sitemap에는 redirect page가 들어가면 안 된다.
 - URL 정책 변경 후에는 반드시 `pnpm run build` 또는 `pnpm run audit:urls`를 실행한다.
+- 검색엔진, AI 검색 crawler, IndexNow, DNS 운영 기준은 `docs/DISCOVERABILITY.md`를 따른다.
 
 ## 검색
 

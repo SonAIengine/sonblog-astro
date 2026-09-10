@@ -49,3 +49,27 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  notify-search-engines:
+    needs: deploy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Find the previous deployment cutoff
+        if: github.event_name == 'push'
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          if git cat-file -e "$BEFORE_SHA^{commit}" 2>/dev/null; then
+            echo "INDEXNOW_SINCE=$(git show -s --format=%cI "$BEFORE_SHA")" >> "$GITHUB_ENV"
+          fi
+      - name: Notify IndexNow after deployment
+        continue-on-error: true
+        run: node scripts/submit-indexnow.mjs

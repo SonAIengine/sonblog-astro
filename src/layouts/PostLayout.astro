@@ -31,10 +31,21 @@ const {
 const pageUrl = canonicalURL ?? new URL(Astro.url.pathname, Astro.site).href;
 const articleImage = new URL(ogImage ?? site.ogImage, Astro.site ?? Astro.url)
   .href;
+const siteRootURL = new URL("/", Astro.site ?? site.url);
+const authorPageURL = new URL("/about/", siteRootURL);
+const sameAs = [
+  ...new Set(
+    [site.profile, ...config.socials.map(social => social.url)].filter(
+      (url): url is string => Boolean(url && /^https?:\/\//.test(url))
+    )
+  ),
+];
 const publisher = {
   "@type": "Person",
+  "@id": `${authorPageURL.href}#person`,
   name: site.author,
-  ...(site.profile && { url: site.profile }),
+  url: authorPageURL.href,
+  ...(sameAs.length > 0 && { sameAs }),
 };
 
 const articleStructuredData = {

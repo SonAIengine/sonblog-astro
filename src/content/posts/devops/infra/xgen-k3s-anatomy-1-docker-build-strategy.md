@@ -3,6 +3,7 @@ title: XGEN K3s 인프라 완전 해부 (1) — 전체 구조와 컨테이너 �
 description: XGEN 2.0 AI 에이전트 플랫폼의 K3s 기반 인프라를 처음부터 끝까지 해부한다. 1편에서는 전체 아키텍처 구조, Python/Rust/Node.js
   4종 Dockerfile 멀티스테이지 빌드 전략, Docker Compose 인프라 스택, K8s-Docker 경계 연결 패턴을 다룬다.
 pubDatetime: 2026-02-21
+modDatetime: 2026-09-10
 tags:
 - K3s
 - Kubernetes
@@ -20,6 +21,8 @@ tags:
 XGEN 2.0은 AI 에이전트 플랫폼이다. 워크플로우 기반으로 LLM, 문서 검색, MCP 도구를 조합하여 업무를 자동화하는 시스템으로, 6개의 마이크로서비스가 K3s 클러스터 위에서 동작한다. 이 시리즈는 그 인프라 코드(`xgen-infra` 레포지토리)를 처음부터 끝까지 해부하는 글이다.
 
 1편에서는 전체 구조를 조망하고, 모든 서비스의 시작점인 Dockerfile과 Docker Compose를 분석한다.
+
+여기서는 컨테이너와 배포 관점에 집중한다. 그중 GPU 모델 서버를 Ray Serve 구조에서 단일 서비스로 바꾼 애플리케이션 설계는 [vLLM에서 llama.cpp로: LLM 서빙 아키텍처 통합 마이그레이션](/posts/ai/xgen/xgen-2-0-model-serving-integration-architecture-refactoring/)에 정리했다.
 
 ## 시리즈 목차
 
