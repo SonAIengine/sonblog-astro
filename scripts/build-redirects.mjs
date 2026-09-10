@@ -6,8 +6,10 @@
 // 실행: node scripts/build-redirects.mjs
 import fs from "node:fs";
 import path from "node:path";
+import { execFileSync } from "node:child_process";
 
 const DOCS = process.env.MKDOCS_DOCS || "/home/son/projects/blog/sonblog/docs";
+const DOCS_REPO = path.resolve(DOCS, "..");
 const INDEX = path.resolve("dist/search-index.json");
 const OUT = path.resolve("src/redirects.generated.json");
 
@@ -46,6 +48,70 @@ function walk(dir) {
   return out;
 }
 
+function historicalRenames() {
+  const docsPrefix = `${path.relative(DOCS_REPO, DOCS).replace(/\\/g, "/")}/`;
+  let output;
+  try {
+    output = execFileSync(
+      "git",
+      [
+        "-C",
+        DOCS_REPO,
+        "log",
+        "--all",
+        "--diff-filter=R",
+        "--name-status",
+        "-z",
+        "--format=",
+      ],
+      { encoding: "utf-8", maxBuffer: 50 * 1024 * 1024 }
+    );
+  } catch (error) {
+    console.warn(`Git rename 이력을 읽지 못했습니다: ${error.message}`);
+    return [];
+  }
+
+  const fields = output.split("\0").filter(Boolean);
+  const forwards = new Map();
+  for (let index = 0; index + 2 < fields.length; index += 3) {
+    const [status, oldPath, newPath] = fields.slice(index, index + 3);
+    // git log는 최신 커밋부터 나오므로 같은 출발 경로의 첫 rename이 최종 이력에 가깝다.
+    if (/^R\d+$/.test(status) && !forwards.has(oldPath)) {
+      forwards.set(oldPath, newPath);
+    }
+  }
+
+  function finalPath(start) {
+    const seen = new Set();
+    let current = start;
+    while (forwards.has(current) && !seen.has(current)) {
+      seen.add(current);
+      current = forwards.get(current);
+    }
+    return current;
+  }
+
+  const aliases = [];
+  for (const oldPath of forwards.keys()) {
+    if (!oldPath.startsWith(docsPrefix) || !oldPath.endsWith(".md")) continue;
+
+    const currentPath = finalPath(oldPath);
+    if (!currentPath.startsWith(docsPrefix) || !currentPath.endsWith(".md")) {
+      continue;
+    }
+
+    const currentAbs = path.join(DOCS_REPO, currentPath);
+    if (!fs.existsSync(currentAbs)) continue;
+
+    aliases.push({
+      oldUrl: oldUrlOf(oldPath.slice(docsPrefix.length)),
+      currentAbs,
+      currentRel: currentPath.slice(docsPrefix.length),
+    });
+  }
+  return aliases;
+}
+
 const newDocs = JSON.parse(fs.readFileSync(INDEX, "utf-8"));
 const newByTitle = new Map(newDocs.map(d => [norm(d.title), d.url]));
 const newUrlSet = new Set(newDocs.map(d => d.url));
@@ -53,6 +119,7 @@ const newUrlSet = new Set(newDocs.map(d => d.url));
 const redirects = {};
 let matched = 0,
   fallback = 0,
+  historical = 0,
   missed = 0;
 const misses = [];
 
@@ -75,6 +142,32 @@ for (const abs of walk(DOCS)) {
   else if (!newUrl) {
     missed++;
     if (misses.length < 12) misses.push(`${oldUrl}  (${title || "no-title"})`);
+  }
+}
+
+const redirectRouteKeys = new Set(
+  Object.keys(redirects).map(url => url.toLowerCase())
+);
+
+// Git 이력에만 남은 예전 한글/대문자 파일명도 현재 글로 연결한다.
+// 파일을 정리하면서 URL까지 바뀐 경우 기존 외부 링크와 Google 발견 신호를 보존한다.
+for (const { oldUrl, currentAbs, currentRel } of historicalRenames()) {
+  // Astro는 경로를 디코딩하고 대소문자 구분 없이 비교한다. URL 구분 문자가
+  // 파일명에 있거나 대소문자만 다른 별칭은 유효한 정적 route가 될 수 없다.
+  const routeKey = oldUrl.toLowerCase();
+  if (/[?#%]/.test(oldUrl) || redirectRouteKeys.has(routeKey)) continue;
+
+  const title = titleOf(currentAbs);
+  let newUrl = title ? newByTitle.get(norm(title)) : null;
+  if (!newUrl) {
+    const candidate = `/posts${oldUrlOf(currentRel)}`;
+    if (newUrlSet.has(candidate)) newUrl = candidate;
+  }
+
+  if (newUrl && newUrl !== oldUrl) {
+    redirects[oldUrl] = newUrl;
+    redirectRouteKeys.add(routeKey);
+    historical++;
   }
 }
 
@@ -140,6 +233,6 @@ for (const p of REAL_PAGES) delete redirects[p];
 
 fs.writeFileSync(OUT, `${JSON.stringify(redirects, null, 2)}\n`);
 console.log(
-  `redirects: ${Object.keys(redirects).length} (글 title매칭 ${matched}, 경로폴백 ${fallback}, 미매칭 ${missed})`
+  `redirects: ${Object.keys(redirects).length} (글 title매칭 ${matched}, 경로폴백 ${fallback}, Git 이력 ${historical}, 미매칭 ${missed})`
 );
 if (misses.length) console.log("글 미매칭 샘플:\n  " + misses.join("\n  "));
