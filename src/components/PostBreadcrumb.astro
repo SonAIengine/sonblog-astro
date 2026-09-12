@@ -6,15 +6,16 @@ type BreadcrumbItem = {
 
 type Props = {
   items: BreadcrumbItem[];
+  class?: string;
 };
 
-const { items } = Astro.props;
+const { items, class: className } = Astro.props;
 ---
 
 {
   items.length > 1 && (
     <nav
-      class="post-breadcrumb app-layout"
+      class:list={["post-breadcrumb app-layout", className]}
       aria-label="breadcrumb"
       data-pagefind-ignore
     >
