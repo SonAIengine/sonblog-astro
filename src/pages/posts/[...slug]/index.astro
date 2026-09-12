@@ -154,11 +154,11 @@ const articleSection =
   articleSection={articleSection}
   breadcrumbItems={breadcrumbItems}
 >
-  <Header />
+  <Header class="post-page-frame" />
 
-  <PostBreadcrumb items={breadcrumbItems} />
+  <PostBreadcrumb items={breadcrumbItems} class="post-page-frame" />
 
-  <BackButton />
+  <BackButton class="post-page-frame" />
 
   <main
     id="main-content"
@@ -283,8 +283,12 @@ const articleSection =
     max-width: min(72rem, calc(100% - 2rem));
   }
 
+  .post-page-frame {
+    max-width: 58rem;
+  }
+
   .post-header {
-    max-width: 48rem;
+    max-width: 56rem;
     margin-inline: auto;
     padding-block-end: 1.5rem;
     border-block-end: 1px solid var(--border);
@@ -537,6 +541,8 @@ const articleSection =
     display: grid;
     gap: 2rem;
     align-items: start;
+    max-width: 56rem;
+    margin-inline: auto;
     min-width: 0;
   }
 
@@ -549,9 +555,21 @@ const articleSection =
   }
 
   @media (min-width: 1100px) {
+    .post-page-frame {
+      max-width: 67rem;
+    }
+
+    .post-header,
+    .article-shell {
+      max-width: 65rem;
+    }
+
+    .post-header > * {
+      max-width: 48rem;
+    }
+
     .article-shell {
       grid-template-columns: minmax(0, 48rem) 15rem;
-      justify-content: center;
     }
 
     .article-mobile-toc {

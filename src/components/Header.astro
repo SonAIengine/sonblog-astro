@@ -9,6 +9,11 @@ import { stripBase, stripLocale } from "@/utils/withBase";
 import { useTranslations } from "@/i18n";
 import config from "@/config";
 
+type Props = {
+  class?: string;
+};
+
+const { class: className } = Astro.props;
 const { site, features } = config;
 
 const routeLocale =
@@ -57,7 +62,10 @@ const isActive = (path: string) => {
 </a>
 
 <header
-  class="app-layout flex flex-col items-center justify-between sm:flex-row"
+  class:list={[
+    "app-layout flex flex-col items-center justify-between sm:flex-row",
+    className,
+  ]}
 >
   <div
     class="border-border bg-background relative flex w-full items-center justify-between border-b py-4 sm:py-6"
