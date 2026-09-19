@@ -38,6 +38,7 @@ node scripts/add-communities.mjs
 node scripts/add-layout.mjs
 node scripts/lint-mermaid.mjs
 astro build
+node scripts/restore-legacy-assets.mjs
 node scripts/audit-urls.mjs
 pagefind --site dist --glob 'posts/**/*.html'
 ```
