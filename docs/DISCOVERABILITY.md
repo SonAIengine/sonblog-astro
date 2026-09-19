@@ -8,6 +8,7 @@
 - `/sitemap.xml`: Search Console과 검색엔진에 제출하는 대표 sitemap index다.
 - `/sitemap-0.xml`: 공개 canonical HTML 페이지만 담는다.
 - `/rss.xml`: 새 글 발견용 RSS feed다.
+- `/feed_rss_created.xml`, `/feed_rss_updated.xml`: 예전 MkDocs RSS 주소를 현재 피드로 제공하는 호환 경로다. 크롤링 통계에서 두 주소의 요청이 90일 이상 사라진 뒤 제거할 수 있다.
 - `/llms.txt`: 사이트 설명, topic guide, 대표 글, 최근 글을 제공한다.
 - `/llms-full.txt`: 모든 공개 글의 제목, URL, 날짜, 태그, 설명을 제공한다.
 
@@ -50,11 +51,15 @@ Search Console API는 sitemap 제출과 검색 실적 조회에는 사용할 수
 
 - apex A: GitHub Pages가 안내하는 IPv4 네 개
 - apex AAAA: GitHub Pages가 안내하는 IPv6 네 개
-- `www`: `SonAIengine.github.io`를 가리키는 CNAME
+- `www`: Technitium A 레코드로 홈 서버 Caddy를 가리키며 `https://infoedu.co.kr{uri}`로 301 이동한다.
 - parent와 authoritative zone의 NS 집합 일치
 - HTTPS 강제 적용
 
 DNS 변경 뒤에는 로컬 resolver 하나만 보지 말고 Google Public DNS와 Cloudflare DNS에서도 A, AAAA, CNAME, NS 응답을 확인한다.
+
+## 이전 소셜 이미지 경로
+
+MkDocs가 공개했던 `/assets/images/social/<글 경로>.png`는 Astro 빌드 후 `scripts/restore-legacy-assets.mjs`가 글별 PNG로 복원한다. 현재 글의 기본 `og:image`도 이 경로를 사용한다. 빌드에는 Noto Sans CJK KR 폰트가 필요하다. 과거 이미지 주소의 404 요청을 줄이기 위한 호환 조치이며, Google 글 색인을 보장하지는 않는다.
 
 ## 정기 확인
 

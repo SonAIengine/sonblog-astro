@@ -103,6 +103,10 @@ if (!ogImageUrl && config.features.dynamicOgImage) {
   ogImageUrl = `${postUrl}/index.png`;
 }
 
+if (!ogImageUrl) {
+  ogImageUrl = `/assets/images/social/${post.id}.png`;
+}
+
 const ogImage = ogImageUrl
   ? new URL(ogImageUrl, Astro.url.origin).href
   : undefined;
