@@ -89,6 +89,26 @@ const postRouteSet = new Set(
 );
 const failures = [];
 
+const sitemapIndexPath = path.join(DIST, "sitemap.xml");
+const sitemapIndex = fs.readFileSync(sitemapIndexPath, "utf8");
+const sitemapIndexLastmod = sitemapIndex.match(
+  /<sitemap>[\s\S]*?<lastmod>([^<]+)<\/lastmod>[\s\S]*?<\/sitemap>/
+)?.[1];
+
+if (!sitemapIndexLastmod) {
+  failures.push("Sitemap index is missing the child sitemap lastmod");
+} else {
+  const generatedAt = fs.statSync(sitemapIndexPath).mtimeMs;
+  const declaredAt = new Date(sitemapIndexLastmod).getTime();
+  const clockDrift = Math.abs(generatedAt - declaredAt);
+
+  if (!Number.isFinite(declaredAt) || clockDrift > 5 * 60 * 1000) {
+    failures.push(
+      `Sitemap index lastmod is stale: ${sitemapIndexLastmod} (generated ${new Date(generatedAt).toISOString()})`
+    );
+  }
+}
+
 const sitemapRedirects = urls.filter(url => redirectRoutes.has(url));
 if (sitemapRedirects.length) {
   failures.push(

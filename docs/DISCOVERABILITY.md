@@ -41,6 +41,7 @@ Search Console API는 sitemap 제출과 검색 실적 조회에는 사용할 수
 - canonical 글 URL은 `src/content/posts`의 상대 경로를 그대로 사용한다. `/posts/`는 목록 페이지에만 쓴다.
 - 기존 `/posts/<글 경로>/`는 새 canonical 글 URL로만 이동하며 sitemap, RSS, 내부 링크에는 넣지 않는다.
 - `sonaiengine.github.io/sonblog`에는 본문 사본을 두지 않고 `infoedu.co.kr`의 동일 경로로 이동하는 페이지만 배포한다.
+- `sitemap.xml`의 하위 sitemap `lastmod`는 빌드 시각을 사용한다. URL 구조만 바뀌고 글 날짜가 그대로여도 검색엔진이 `sitemap-0.xml`을 다시 읽게 하기 위해서다.
 - 이전 경로는 가능한 한 최종 URL로 한 번에 연결한다. redirect chain, canonical 충돌, redirect URL의 sitemap 포함은 `scripts/audit-urls.mjs`가 실패 처리한다.
 - URL 복구 배포 순서는 현재 사이트의 canonical 본문 배포, 구 GitHub Pages의 이동 페이지 배포, sitemap 1회 제출 순서다.
 
