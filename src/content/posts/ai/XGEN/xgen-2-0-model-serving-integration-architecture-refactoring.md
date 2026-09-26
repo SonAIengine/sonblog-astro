@@ -36,7 +36,7 @@ XGEN 1.0에서는 GPU 모델 서빙을 위해 vLLM과 Ray Serve를 조합한 분
 
 XGEN 2.0에서는 이러한 문제를 해결하기 위해 **xgen-model** 단일 서비스로 통합하는 대규모 리팩토링을 진행했다.
 
-이 글은 애플리케이션의 모델 서빙 경계를 다룬다. 이 서비스를 이미지로 빌드하고 K3s에 배포하는 인프라 계층은 [XGEN K3s 인프라 1편](/posts/devops/infra/xgen-k3s-anatomy-1-docker-build-strategy/)에서 이어서 볼 수 있다.
+이 글은 애플리케이션의 모델 서빙 경계를 다룬다. 이 서비스를 이미지로 빌드하고 K3s에 배포하는 인프라 계층은 [XGEN K3s 인프라 1편](/devops/infra/xgen-k3s-anatomy-1-docker-build-strategy/)에서 이어서 볼 수 있다.
 
 ## 아키텍처 변화
 

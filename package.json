@@ -9,7 +9,7 @@
     "dev": "astro dev",
     "post-times": "node scripts/build-post-times.mjs",
     "graph": "node scripts/add-communities.mjs && node scripts/add-layout.mjs",
-    "build": "pnpm run post-times && node scripts/add-communities.mjs && node scripts/add-layout.mjs && node scripts/lint-mermaid.mjs && node scripts/check-d2.mjs && astro build && node scripts/restore-legacy-assets.mjs && node scripts/audit-urls.mjs && pagefind --site dist --glob 'posts/**/*.html'",
+    "build": "pnpm run post-times && node scripts/add-communities.mjs && node scripts/add-layout.mjs && node scripts/lint-mermaid.mjs && node scripts/check-d2.mjs && astro build && node scripts/restore-legacy-assets.mjs && node scripts/audit-urls.mjs && pagefind --quiet --site dist --glob '**/*.html'",
     "preview": "astro preview",
     "sync": "astro sync",
     "astro": "astro",

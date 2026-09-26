@@ -40,7 +40,7 @@ node scripts/lint-mermaid.mjs
 astro build
 node scripts/restore-legacy-assets.mjs
 node scripts/audit-urls.mjs
-pagefind --site dist --glob 'posts/**/*.html'
+pagefind --quiet --site dist --glob '**/*.html'
 ```
 
 ## 콘텐츠 구조
@@ -75,6 +75,9 @@ src/content/posts/
 ## SEO와 URL 정책
 
 - canonical origin은 `astro.config.ts`와 `scripts/audit-urls.mjs`에서 `https://infoedu.co.kr` 기준으로 맞춘다.
+- 글의 canonical URL은 `src/content/posts` 아래 상대 경로와 같다. 예: `ai/XGEN/example.md`는 `/ai/XGEN/example/`이다.
+- `/posts/`는 전체 글 목록이고 `/posts/<글 경로>/`는 canonical 글 URL로 이동하는 호환 경로다.
+- 2026-09 URL 복구 전환 동안에는 과거 MkDocs가 공개했던 경로를 우선 canonical로 유지한다. 디렉터리 대소문자도 바꾸지 않는다.
 - legacy 카테고리 landing URL은 topic hub로 리다이렉트한다.
 - `src/redirects.generated.json`은 `scripts/build-redirects.mjs`가 생성한다.
 - sitemap에는 redirect page가 들어가면 안 된다.
@@ -89,7 +92,7 @@ src/content/posts/
 - 검색 alias/동의어 사전은 `search-service/query-aliases.json`에서 관리한다.
 - 한국어 lexical evidence는 형태소 토큰을 함께 보지만, 기술 약어/하이픈 토큰은 별도 코드 토큰화로 유지한다.
 - startup 비용을 줄이기 위해 저장된 문서는 정규식 토큰 + substring evidence로 처리하고, Kiwi 형태소 분석은 쿼리 분석 중심으로 사용한다.
-- 검색 API는 내부/디버깅용으로 `AND`, `OR`, `EQURL:/posts/.../` 연산자를 지원한다.
+- 검색 API는 내부/디버깅용으로 `AND`, `OR`, `EQURL:/ai/.../` 같은 연산자를 지원한다.
 - 검색 API 홈서버 배포는 `docs/SEARCH_SERVICE_DEPLOYMENT.md`를 따르며 `pnpm run search:deploy`가 8182 proxy + 8192/8194 backend blue/green 전환을 수행한다.
 - 검색 backend는 `*.db.manifest.json` graph cache가 맞으면 전체 재임베딩을 건너뛰며, 필요할 때만 `FORCE_GRAPH_REBUILD=true pnpm run search:deploy`로 재색인한다.
 - 검색엔진 포트폴리오 품질 기준과 장기 고도화는 `docs/SEARCH_EXCELLENCE_ROADMAP.md`를 따른다.

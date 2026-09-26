@@ -1,7 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
 import { visit } from "unist-util-visit";
-import { slugifyStr } from "./slugify";
 
 const POSTS_DIR = "src/content/posts";
 const MARKDOWN_EXT_RE = /\.mdx?$/i;
@@ -27,13 +26,9 @@ function toPostUrl(filePath: string): string {
     .replace(/\\/g, "/")
     .replace(MARKDOWN_EXT_RE, "");
   const segments = relative.split("/").filter(Boolean);
-  const slugPath = segments
-    .map((segment, index) =>
-      index === segments.length - 1 ? segment : slugifyStr(segment)
-    )
-    .join("/");
+  const slugPath = segments.join("/");
 
-  return `/posts/${slugPath}/`;
+  return `/${slugPath}/`;
 }
 
 function buildPostUrlMap(): Map<string, string> {
@@ -68,7 +63,7 @@ function isRelativeMarkdownLink(url: string): boolean {
  * Rewrites relative links to markdown source files into their public post URLs.
  *
  * Markdown links such as `[next](./next-post.md)` otherwise render as browser
- * relative URLs like `/posts/current/next-post.md`, which 404 on the static site.
+ * relative URLs like `/current/next-post.md`, which 404 on the static site.
  */
 export function remarkContentLinks() {
   const postUrlByFile = buildPostUrlMap();

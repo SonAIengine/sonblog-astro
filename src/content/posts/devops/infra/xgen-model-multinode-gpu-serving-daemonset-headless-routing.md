@@ -591,6 +591,6 @@ XGEN의 다음 단계는 `xgen-model`을 "GPU 서버 여러 개"가 아니라 "�
 
 ## 관련 글
 
-- [Kubernetes Downward API로 멀티 Pod 세션 라우팅 구현](/posts/devops/infra/kubernetes-downward-api-multi-pod-session-routing/)
-- [XGEN GPU 모델 서빙 인프라 실전기 — 폐쇄망 배포부터 멀티 GPU 오버라이드까지](/posts/devops/infra/xgen-gpu-model-serving-infra-practical-airgap-deploy-multi-gpu/)
-- [XGEN Workbench 분산 실행 인프라: KVM 컴퓨트 풀, GPU 워커, PriorityClass, NetworkPolicy까지](/posts/devops/infra/xgen-workbench-kvm-gpu-distributed-dispatch-infra/)
+- [Kubernetes Downward API로 멀티 Pod 세션 라우팅 구현](/devops/infra/kubernetes-downward-api-multi-pod-session-routing/)
+- [XGEN GPU 모델 서빙 인프라 실전기 — 폐쇄망 배포부터 멀티 GPU 오버라이드까지](/devops/infra/xgen-gpu-model-serving-infra-practical-airgap-deploy-multi-gpu/)
+- [XGEN Workbench 분산 실행 인프라: KVM 컴퓨트 풀, GPU 워커, PriorityClass, NetworkPolicy까지](/devops/infra/xgen-workbench-kvm-gpu-distributed-dispatch-infra/)

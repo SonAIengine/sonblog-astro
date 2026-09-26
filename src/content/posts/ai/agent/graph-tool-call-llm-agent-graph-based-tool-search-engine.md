@@ -30,7 +30,7 @@ LLM Agent가 실제 업무에 투입되면, 사용할 수 있는 도구(tool)의
 
 이 문제를 해결하기 위해 **graph-tool-call**을 만들었다. tool 간 관계를 그래프로 모델링하고, 키워드 매칭 + 그래프 탐색 + 임베딩을 결합한 하이브리드 검색으로 적절한 도구를 찾는 Python 라이브러리다. 2/28에 첫 커밋을 하고 3/7에 v0.6.1까지 릴리스했다. 8일간의 개발 과정을 정리한다.
 
-이 글은 초기 검색 아키텍처를 다룬다. 이후 “최종 도구를 찾는 것”과 “실행에 필요한 선행 도구를 모두 붙이는 것”을 분리해 검증한 과정은 [graph-tool-call v0.36 의존성 완성 글](/posts/ai/agent/graph-tool-call-v036-evidence-gated-dependency-closure/)에서 이어진다.
+이 글은 초기 검색 아키텍처를 다룬다. 이후 “최종 도구를 찾는 것”과 “실행에 필요한 선행 도구를 모두 붙이는 것”을 분리해 검증한 과정은 [graph-tool-call v0.36 의존성 완성 글](/ai/agent/graph-tool-call-v036-evidence-gated-dependency-closure/)에서 이어진다.
 
 
 ## 핵심 아이디어: Tool은 그래프다

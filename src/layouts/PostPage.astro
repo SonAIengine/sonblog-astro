@@ -1,0 +1,609 @@
+---
+import { type CollectionEntry, getCollection, render } from "astro:content";
+import { getRelativeLocaleUrl } from "astro:i18n";
+import PostLayout from "@/layouts/PostLayout.astro";
+import SeriesNav from "@/components/SeriesNav.astro";
+import RelatedPosts from "@/components/RelatedPosts.astro";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
+import Datetime from "@/components/Datetime.astro";
+import ViewCounter from "@/components/ViewCounter.astro";
+import Tag from "@/components/Tag.astro";
+import PostBreadcrumb from "@/components/PostBreadcrumb.astro";
+import { getPostUrl } from "@/utils/getPostPaths";
+import { getPostPublishedDatetime } from "@/utils/postDatetime";
+import { getUniqueTags, PUBLIC_TAG_MIN_COUNT } from "@/utils/getUniqueTags";
+import { slugifyStr } from "@/utils/slugify";
+import { toTransitionName } from "@/utils/toTransitionName";
+import EditPost from "@/pages/posts/[...slug]/_components/EditPost.astro";
+import ShareLinks from "@/pages/posts/[...slug]/_components/ShareLinks.astro";
+import BackButton from "@/pages/posts/[...slug]/_components/BackButton.astro";
+import BackToTopButton from "@/pages/posts/[...slug]/_components/BackToTopButton.astro";
+import AdjacentPostNav from "@/pages/posts/[...slug]/_components/AdjacentPostNav.astro";
+import config from "@/config";
+import { topics } from "@/data/topics";
+
+type AdjacentPost = {
+  id: string;
+  title: string;
+  filePath: string | undefined;
+} | null;
+
+type Props = {
+  post: CollectionEntry<"posts">;
+  prevPost: AdjacentPost;
+  nextPost: AdjacentPost;
+};
+
+const { post, prevPost, nextPost } = Astro.props;
+const locale = Astro.currentLocale ?? config.site.lang;
+const displayPubDatetime = getPostPublishedDatetime(post);
+
+const {
+  title,
+  description,
+  ogImage: initOgImage,
+  canonicalURL,
+  pubDatetime,
+  modDatetime,
+  timezone,
+  tags,
+  hideEditPost,
+} = post.data;
+
+const { Content } = await render(post);
+const publicTagSlugs = new Set(
+  getUniqueTags(await getCollection("posts"), {
+    minCount: PUBLIC_TAG_MIN_COUNT,
+  }).map(tag => tag.tag)
+);
+
+let ogImageUrl: string | undefined;
+
+if (typeof initOgImage === "string") {
+  ogImageUrl = initOgImage;
+} else if (initOgImage?.src) {
+  ogImageUrl = initOgImage.src;
+}
+
+if (!ogImageUrl && config.features.dynamicOgImage) {
+  const postUrl = getPostUrl(post.id, post.filePath, locale).replace(
+    /\/+$/,
+    ""
+  );
+  ogImageUrl = `${postUrl}/index.png`;
+}
+
+if (!ogImageUrl) {
+  ogImageUrl = `/assets/images/social/${post.id}.png`;
+}
+
+const ogImage = ogImageUrl
+  ? new URL(ogImageUrl, Astro.url.origin).href
+  : undefined;
+const postCounterPath = new URL(
+  canonicalURL ?? Astro.url.pathname,
+  Astro.site ?? Astro.url
+).pathname;
+const siteURL = Astro.site ?? Astro.url;
+const postHref = getPostUrl(post.id, post.filePath, locale);
+const categorySlug = post.id.split("/")[0]?.toLowerCase();
+const primaryTopic = topics.find(topic => topic.slug === categorySlug);
+const breadcrumbItems = [
+  {
+    name: "Home",
+    url: new URL(getRelativeLocaleUrl(locale, ""), siteURL).href,
+  },
+  {
+    name: "Posts",
+    url: new URL(getRelativeLocaleUrl(locale, "posts"), siteURL).href,
+  },
+  ...(primaryTopic
+    ? [
+        {
+          name: primaryTopic.title,
+          url: new URL(
+            getRelativeLocaleUrl(locale, `topics/${primaryTopic.slug}`),
+            siteURL
+          ).href,
+        },
+      ]
+    : []),
+  {
+    name: title,
+    url: new URL(canonicalURL ?? postHref, siteURL).href,
+  },
+];
+const articleSection =
+  primaryTopic?.title ?? categorySlug?.replaceAll("-", " ");
+---
+
+<PostLayout
+  title={`${title} | ${config.site.title}`}
+  description={description}
+  ogImage={ogImage}
+  canonicalURL={canonicalURL}
+  pubDatetime={displayPubDatetime}
+  modDatetime={modDatetime}
+  tags={tags}
+  articleSection={articleSection}
+  breadcrumbItems={breadcrumbItems}
+>
+  <Header class="post-page-frame" />
+
+  <PostBreadcrumb items={breadcrumbItems} class="post-page-frame" />
+
+  <BackButton class="post-page-frame" />
+
+  <main
+    id="main-content"
+    class:list={[
+      "app-layout post-page-main",
+      { "mt-8": !config.features.showBackButton },
+    ]}
+    data-pagefind-body
+  >
+    <header class="post-header">
+      <h1
+        style={{ viewTransitionName: toTransitionName(title) }}
+        class="post-title text-foreground inline-block text-[1.85rem] leading-tight font-bold break-words sm:text-4xl"
+      >
+        {title}
+      </h1>
+
+      <p class="post-description">{description}</p>
+
+      <div class="post-meta-row flex flex-wrap items-center gap-3">
+        <Datetime
+          {pubDatetime}
+          {modDatetime}
+          {timezone}
+          postId={post.id}
+          size="lg"
+          class="post-meta-chip"
+        />
+        <ViewCounter path={postCounterPath} label="Views" />
+        <span
+          aria-hidden="true"
+          class:list={[
+            "text-muted-foreground max-sm:hidden",
+            { hidden: !config.features.editPost?.enabled || hideEditPost },
+          ]}
+        >
+          |
+        </span>
+        <EditPost {hideEditPost} {post} class="max-sm:hidden" />
+      </div>
+    </header>
+
+    <SeriesNav series={post.data.series} currentId={post.id} />
+
+    <details
+      id="article-mobile-toc"
+      class="article-mobile-toc"
+      data-pagefind-ignore
+      hidden
+    >
+      <summary>목차</summary>
+      <ol id="article-mobile-toc-list"></ol>
+    </details>
+
+    <div class="article-shell">
+      <article
+        id="article"
+        class:list={[
+          "mt-8 w-full",
+          "app-prose max-w-app min-w-0",
+          "prose-pre:bg-(--shiki-light-bg) dark:prose-pre:bg-(--shiki-dark-bg)",
+        ]}
+      >
+        <Content />
+      </article>
+
+      <aside
+        id="article-toc"
+        class="article-toc"
+        aria-label="글 목차"
+        data-pagefind-ignore
+        hidden
+      >
+        <p class="article-toc-title">On this page</p>
+        <ol id="article-toc-list"></ol>
+      </aside>
+    </div>
+
+    <hr class="my-8 border-dashed" />
+
+    <EditPost class="sm:hidden" {hideEditPost} {post} />
+
+    <BackToTopButton />
+
+    <ul class="mt-4 mb-8 flex flex-wrap gap-4 sm:my-8">
+      {
+        tags.map(tag => {
+          const tagSlug = slugifyStr(tag);
+          return (
+            <Tag
+              tag={tagSlug}
+              tagName={tag}
+              size="sm"
+              linked={publicTagSlugs.has(tagSlug)}
+            />
+          );
+        })
+      }
+    </ul>
+
+    <RelatedPosts
+      tags={post.data.tags}
+      currentId={post.id}
+      series={post.data.series}
+    />
+
+    <ShareLinks />
+
+    <hr class="my-8 border-dashed" />
+
+    <AdjacentPostNav {prevPost} {nextPost} />
+  </main>
+  <Footer />
+</PostLayout>
+
+<script>
+  import "@/scripts/postEnhancements";
+</script>
+
+<style is:global>
+  .post-page-main {
+    max-width: min(72rem, calc(100% - 2rem));
+  }
+
+  .post-page-frame {
+    max-width: 58rem;
+  }
+
+  .post-header {
+    max-width: 56rem;
+    margin-inline: auto;
+    padding-block-end: 1.5rem;
+    border-block-end: 1px solid var(--border);
+  }
+
+  .post-title {
+    font-family: var(--font-readable);
+    letter-spacing: 0;
+  }
+
+  .post-description {
+    max-width: 42rem;
+    margin-top: 1rem;
+    color: var(--muted-foreground);
+    font-family: var(--font-readable);
+    font-size: 1.03rem;
+    line-height: 1.72;
+  }
+
+  .post-meta-row {
+    margin-top: 1rem;
+    font-family: var(--font-app);
+  }
+
+  .post-meta-chip {
+    min-height: 2.25rem;
+    gap: 0.48rem;
+    padding: 0.42rem 0.68rem;
+    border: 1px solid color-mix(in srgb, var(--border) 86%, transparent);
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--muted) 42%, var(--background));
+    color: color-mix(in srgb, var(--muted-foreground) 86%, var(--foreground));
+    font-size: 0.9rem;
+    line-height: 1;
+  }
+
+  .post-meta-chip svg {
+    width: 1.08rem;
+    height: 1.08rem;
+    min-width: 1.08rem;
+    color: color-mix(in srgb, var(--muted-foreground) 88%, var(--foreground));
+    stroke-width: 2.1;
+  }
+
+  #article.app-prose {
+    font-family: var(--font-readable);
+    font-size: 1.03rem;
+    line-height: 1.86;
+  }
+
+  #article.app-prose :where(p, ul, ol) {
+    margin-block: 1.1rem;
+  }
+
+  #article.app-prose :where(strong, b) {
+    font-weight: 700;
+  }
+
+  #article.app-prose h2,
+  #article.app-prose h3 {
+    position: relative;
+    font-family: var(--font-readable);
+    font-style: normal;
+    letter-spacing: 0;
+  }
+
+  #article.app-prose h2 {
+    margin-top: 3.4rem;
+    padding-top: 1.15rem;
+    border-top: 1px solid var(--border);
+    font-size: 1.6rem;
+    line-height: 1.35;
+  }
+
+  #article.app-prose > h2:first-child {
+    margin-top: 0;
+  }
+
+  #article.app-prose h2::before {
+    content: "";
+    position: absolute;
+    top: -1px;
+    left: 0;
+    width: 2.4rem;
+    height: 2px;
+    background: var(--accent);
+  }
+
+  #article.app-prose h3 {
+    margin-top: 2.3rem;
+    color: color-mix(in srgb, var(--foreground) 88%, var(--accent));
+    font-size: 1.24rem;
+    line-height: 1.45;
+  }
+
+  #article.app-prose :where(code, kbd, pre, pre *) {
+    font-family: var(--font-app);
+  }
+
+  #article.app-prose :not(pre) > code {
+    padding: 0.12rem 0.35rem;
+    border-radius: 0.32rem;
+    background: color-mix(in srgb, var(--muted) 82%, var(--background));
+    color: color-mix(in srgb, var(--foreground) 86%, var(--accent));
+    font-size: 0.9em;
+    font-weight: 650;
+  }
+
+  #article.app-prose .reaction-gallery {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    margin-block: 1.6rem 1.9rem;
+  }
+
+  #article.app-prose .reaction-gallery figure {
+    min-width: 0;
+    margin: 0;
+  }
+
+  #article.app-prose .reaction-gallery img {
+    width: 100%;
+    height: clamp(24rem, 44vw, 34rem);
+    object-fit: contain;
+    border: 1px solid color-mix(in srgb, var(--border) 90%, transparent);
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--muted) 58%, var(--background));
+  }
+
+  #article.app-prose .reaction-gallery figcaption {
+    margin-top: 0.55rem;
+    color: var(--muted-foreground);
+    font-size: 0.88rem;
+    line-height: 1.65;
+  }
+
+  .article-mobile-toc {
+    margin: 1.5rem auto 0;
+    max-width: 48rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--muted) 45%, var(--background));
+    font-family: var(--font-readable);
+  }
+
+  .article-mobile-toc[hidden] {
+    display: none;
+  }
+
+  .article-mobile-toc summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 2.8rem;
+    padding: 0 0.95rem;
+    color: var(--foreground);
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .article-mobile-toc summary::after {
+    content: "";
+    width: 0.55rem;
+    height: 0.55rem;
+    border-right: 2px solid var(--muted-foreground);
+    border-bottom: 2px solid var(--muted-foreground);
+    transform: rotate(45deg) translateY(-2px);
+    transition: transform 160ms ease;
+  }
+
+  .article-mobile-toc[open] summary::after {
+    transform: rotate(225deg) translate(-2px, -2px);
+  }
+
+  .article-mobile-toc ol {
+    margin: 0;
+    padding: 0.25rem 0 0.75rem;
+    border-top: 1px solid var(--border);
+    list-style: none;
+    max-height: min(52dvh, 24rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .article-mobile-toc a {
+    display: block;
+    padding: 0.5rem 0.95rem;
+    color: var(--muted-foreground);
+    font-size: 0.94rem;
+    line-height: 1.4;
+    text-decoration: none;
+  }
+
+  .article-mobile-toc a.is-active {
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .article-mobile-toc .article-toc-item--nested a {
+    padding-inline-start: 1.6rem;
+    font-size: 0.88rem;
+  }
+
+  @media (max-width: 640px) {
+    .post-page-main {
+      max-width: 100%;
+    }
+
+    .post-header {
+      padding-block-end: 1.15rem;
+    }
+
+    .post-description {
+      font-size: 0.98rem;
+      line-height: 1.7;
+    }
+
+    #article.app-prose {
+      margin-top: 1.35rem;
+      font-size: 1rem;
+      line-height: 1.82;
+    }
+
+    #article.app-prose h2 {
+      margin-top: 2.7rem;
+      font-size: 1.35rem;
+      line-height: 1.3;
+    }
+
+    #article.app-prose h3 {
+      font-size: 1.1rem;
+      line-height: 1.35;
+    }
+
+    #article.app-prose pre {
+      max-width: calc(100vw - 2rem);
+    }
+
+    #article.app-prose .reaction-gallery {
+      grid-template-columns: 1fr;
+      gap: 1.35rem;
+    }
+
+    #article.app-prose .reaction-gallery img {
+      height: min(70vh, 34rem);
+    }
+  }
+
+  .article-shell {
+    display: grid;
+    gap: 2rem;
+    align-items: start;
+    max-width: 56rem;
+    margin-inline: auto;
+    min-width: 0;
+  }
+
+  .article-shell > * {
+    min-width: 0;
+  }
+
+  .article-toc {
+    display: none;
+  }
+
+  @media (min-width: 1100px) {
+    .post-page-frame {
+      max-width: 67rem;
+    }
+
+    .post-header,
+    .article-shell {
+      max-width: 65rem;
+    }
+
+    .post-header > * {
+      max-width: 48rem;
+    }
+
+    .article-shell {
+      grid-template-columns: minmax(0, 48rem) 15rem;
+    }
+
+    .article-mobile-toc {
+      display: none;
+    }
+
+    .article-toc {
+      position: sticky;
+      top: 5rem;
+      display: block;
+      max-height: calc(100dvh - 6rem);
+      margin-top: 2rem;
+      overflow: auto;
+      padding-inline-start: 0.25rem;
+    }
+
+    .article-toc[hidden] {
+      display: none;
+    }
+  }
+
+  .article-toc-title {
+    margin-bottom: 0.75rem;
+    font-family: var(--font-app);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+
+  .article-toc ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .article-toc a {
+    display: block;
+    border-inline-start: 2px solid var(--border);
+    padding: 0.35rem 0 0.35rem 0.75rem;
+    color: var(--muted-foreground);
+    font-size: 0.875rem;
+    line-height: 1.35;
+    text-decoration: none;
+    transition:
+      border-color 160ms ease,
+      color 160ms ease;
+  }
+
+  .article-toc a:hover,
+  .article-toc a:focus-visible,
+  .article-toc a.is-active {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .article-toc-item--nested a {
+    padding-inline-start: 1.5rem;
+    font-size: 0.8125rem;
+  }
+</style>

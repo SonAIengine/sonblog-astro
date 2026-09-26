@@ -17,7 +17,7 @@ draft: false
 
 제목을 정확히 기억하지 못해도 관련 글을 추천해주고, 한글과 영어가 섞인 검색어도 어느 정도 따라왔다. `Pagefind`가 정적 전문 검색을 맡고, `synaptic-memory`가 의미 기반 추천을 보강하는 구조도 블로그에는 잘 맞았다.
 
-이전에 [AI 회사 자율운영 플랫폼에 synaptic-memory + graph-tool-call을 통합한 과정](/posts/ai/agent/hive-corp-synaptic-memory-graph-tool-call-integration/)을 정리한 적이 있다. 그때의 관심이 "에이전트가 기억을 잘 꺼내 쓰게 만들기"였다면, 이번에는 조금 더 작고 직접적인 문제다. 내 블로그 검색창에서 이 라이브러리가 정말 쓸 만한 결과를 내고 있는지 확인하는 일이다.
+이전에 [AI 회사 자율운영 플랫폼에 synaptic-memory + graph-tool-call을 통합한 과정](/ai/agent/hive-corp-synaptic-memory-graph-tool-call-integration/)을 정리한 적이 있다. 그때의 관심이 "에이전트가 기억을 잘 꺼내 쓰게 만들기"였다면, 이번에는 조금 더 작고 직접적인 문제다. 내 블로그 검색창에서 이 라이브러리가 정말 쓸 만한 결과를 내고 있는지 확인하는 일이다.
 
 그런데 며칠 써보니 이상한 기분이 들었다.
 
@@ -96,9 +96,9 @@ SEARCH_EVAL_STRICT=true pnpm run search:eval
   "intent": "Qdrant 하이브리드 검색을 워크플로우 엔진에 붙인 글이 최상위여야 한다.",
   "type": "positive",
   "relevant": [
-    "/posts/ai/xgen/xgen-1-0-workflow-engine-qdrant-hybrid-search/",
-    "/posts/search-engine/qdrant/hybrid-queries/",
-    "/posts/ai/xgen/qdrant-hybrid-search-sparse-dense-vector-integration/"
+    "/ai/XGEN/xgen-1-0-workflow-engine-qdrant-hybrid-search/",
+    "/search-engine/Qdrant/hybrid-queries/",
+    "/ai/XGEN/qdrant-hybrid-search-sparse-dense-vector-integration/"
   ],
   "minTopScore": 0.75
 }
@@ -127,9 +127,9 @@ SEARCH_EVAL_STRICT=true pnpm run search:eval
   "intent": "K3s와 ArgoCD GitOps 배포 글이 1위권에 나와야 한다.",
   "type": "positive",
   "relevant": [
-    "/posts/devops/infra/xgen-2-0-infra-k8s-argocd-ops-deploy/",
-    "/posts/devops/infra/xgen-k3s-anatomy-4-cicd-jenkins-argocd/",
-    "/posts/devops/infra/reusable-gha-helm-k3s-generic-deploy-platform-setup/"
+    "/devops/infra/xgen-2-0-infra-k8s-argocd-ops-deploy/",
+    "/devops/infra/xgen-k3s-anatomy-4-cicd-jenkins-argocd/",
+    "/devops/infra/reusable-gha-helm-k3s-generic-deploy-platform-setup/"
   ],
   "minTopScore": 0.75
 }
@@ -146,7 +146,7 @@ SEARCH_EVAL_STRICT=true pnpm run search:eval
   "intent": "Search API와 LLMOps Docker Compose 글이 나와야 한다.",
   "type": "positive",
   "relevant": [
-    "/posts/devops/infra/search-api-llmops-docker-compose/"
+    "/devops/infra/search-api-llmops-docker-compose/"
   ],
   "minTopScore": 0.7
 }
@@ -169,9 +169,9 @@ SEARCH_EVAL_STRICT=true pnpm run search:eval
   "intent": "오타/혼합어 Deeplearn도 딥러닝 글로 보정되어야 한다.",
   "type": "positive",
   "relevant": [
-    "/posts/ai/deep-learning/dropout/",
-    "/posts/ai/deep-learning/tokenization/",
-    "/posts/ai/deep-learning/transformer-query-key-value/"
+    "/ai/deep-learning/dropout/",
+    "/ai/deep-learning/tokenization/",
+    "/ai/deep-learning/transformer-query-key-value/"
   ],
   "minTopScore": 0.65
 }

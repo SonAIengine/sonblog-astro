@@ -27,7 +27,6 @@ import {
   transformerNotationWordHighlight,
 } from "@shikijs/transformers";
 import { transformerFileName } from "./src/utils/transformers/fileName";
-import { slugifyStr } from "./src/utils/slugify";
 import config from "./astro-paper.config";
 
 const SITE_ORIGIN = "https://infoedu.co.kr";
@@ -95,11 +94,9 @@ function postRoutePathFromFile(file: string) {
   const postSlug = segments.pop();
   if (!postSlug) return undefined;
 
-  const categorySegments = segments
-    .filter(segment => !segment.startsWith("_"))
-    .map(segment => slugifyStr(segment));
+  const categorySegments = segments.filter(segment => !segment.startsWith("_"));
 
-  return `/posts/${[...categorySegments, postSlug].join("/")}/`;
+  return `/${[...categorySegments, postSlug].join("/")}/`;
 }
 
 function isRecent(lastmod: string, days: number) {
@@ -244,11 +241,11 @@ function isPrimarySitemapPage(page: string) {
 
   if (PRIMARY_SITEMAP_PATHS.has(pathname)) return true;
 
-  if (pathname.startsWith("/posts/") && !/^\/posts\/\d+\/?$/.test(pathname)) {
-    const meta = postSitemapMetadata.get(pathname);
-    if (!meta) return false;
+  const postMeta = postSitemapMetadata.get(pathname);
+  if (postMeta) {
     return (
-      !meta.canonicalURL || canonicalMatchesPage(pathname, meta.canonicalURL)
+      !postMeta.canonicalURL ||
+      canonicalMatchesPage(pathname, postMeta.canonicalURL)
     );
   }
 

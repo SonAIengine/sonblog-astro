@@ -43,7 +43,7 @@ LLM agent는 검색 API를 한 번만 호출하지 않는다. 처음 검색 결�
 
 이 글의 주인공은 ranking 함수 하나가 아니다. 검색 도구를 호출하는 순서, query를 다시 쓰는 방식, 증거를 누적하는 방법, 실패를 다음 실행에 남기는 운영 레이어다.
 
-같은 엔진을 실제 블로그 검색에 Pagefind와 함께 배포한 구조는 [Pagefind + synaptic-memory 하이브리드 검색 글](/posts/full-stack/poc/pagefind-synaptic-memory-hybrid-search/)에 정리했다. 이 글은 그 제품 구조보다 884만 문서에서 agent loop 자체를 평가한 결과에 집중한다.
+같은 엔진을 실제 블로그 검색에 Pagefind와 함께 배포한 구조는 [Pagefind + synaptic-memory 하이브리드 검색 글](/full-stack/poc/pagefind-synaptic-memory-hybrid-search/)에 정리했다. 이 글은 그 제품 구조보다 884만 문서에서 agent loop 자체를 평가한 결과에 집중한다.
 
 ## 평가 무대는 884만 개 passage였다
 

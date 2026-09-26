@@ -22,7 +22,7 @@ XGEN 2.0은 AI 에이전트 플랫폼이다. 워크플로우 기반으로 LLM, �
 
 1편에서는 전체 구조를 조망하고, 모든 서비스의 시작점인 Dockerfile과 Docker Compose를 분석한다.
 
-여기서는 컨테이너와 배포 관점에 집중한다. 그중 GPU 모델 서버를 Ray Serve 구조에서 단일 서비스로 바꾼 애플리케이션 설계는 [vLLM에서 llama.cpp로: LLM 서빙 아키텍처 통합 마이그레이션](/posts/ai/xgen/xgen-2-0-model-serving-integration-architecture-refactoring/)에 정리했다.
+여기서는 컨테이너와 배포 관점에 집중한다. 그중 GPU 모델 서버를 Ray Serve 구조에서 단일 서비스로 바꾼 애플리케이션 설계는 [vLLM에서 llama.cpp로: LLM 서빙 아키텍처 통합 마이그레이션](/ai/XGEN/xgen-2-0-model-serving-integration-architecture-refactoring/)에 정리했다.
 
 ## 시리즈 목차
 

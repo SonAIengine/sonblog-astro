@@ -38,7 +38,7 @@ tags:
 
 Pagefind는 빠르고 안정적인 정적 전문 검색을 맡고, synaptic-memory 기반 검색 서비스는 의미 검색과 그래프 기반 추천을 맡는다.
 
-이 구조를 더 큰 데이터에서 검증했을 때는 검색 점수보다 agent의 도구 선택과 query rewrite가 병목이었다. 884만 MS MARCO 문서에서 확인한 결과는 [검색보다 어려운 건 검색을 시키는 일](/posts/ai/agent/synaptic-memory-msmarco-agent-loop-scale/)에서 별도로 다룬다.
+이 구조를 더 큰 데이터에서 검증했을 때는 검색 점수보다 agent의 도구 선택과 query rewrite가 병목이었다. 884만 MS MARCO 문서에서 확인한 결과는 [검색보다 어려운 건 검색을 시키는 일](/ai/agent/synaptic-memory-msmarco-agent-loop-scale/)에서 별도로 다룬다.
 
 ## 작업 이력부터 보면
 

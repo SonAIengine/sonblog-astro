@@ -36,6 +36,14 @@ node scripts/submit-indexnow.mjs --all
 
 Search Console API는 sitemap 제출과 검색 실적 조회에는 사용할 수 있지만, 일반 블로그 글의 색인 생성을 API로 강제할 수는 없다. Google Indexing API는 일반 웹문서용이 아니다.
 
+## URL 이전 원칙
+
+- canonical 글 URL은 `src/content/posts`의 상대 경로를 그대로 사용한다. `/posts/`는 목록 페이지에만 쓴다.
+- 기존 `/posts/<글 경로>/`는 새 canonical 글 URL로만 이동하며 sitemap, RSS, 내부 링크에는 넣지 않는다.
+- `sonaiengine.github.io/sonblog`에는 본문 사본을 두지 않고 `infoedu.co.kr`의 동일 경로로 이동하는 페이지만 배포한다.
+- 이전 경로는 가능한 한 최종 URL로 한 번에 연결한다. redirect chain, canonical 충돌, redirect URL의 sitemap 포함은 `scripts/audit-urls.mjs`가 실패 처리한다.
+- URL 복구 배포 순서는 현재 사이트의 canonical 본문 배포, 구 GitHub Pages의 이동 페이지 배포, sitemap 1회 제출 순서다.
+
 ## 콘텐츠 기준
 
 - 첫 문단에서 문제, 기존 방식의 한계, 결과를 설명한다.
@@ -59,7 +67,7 @@ DNS 변경 뒤에는 로컬 resolver 하나만 보지 말고 Google Public DNS�
 
 ## 이전 소셜 이미지 경로
 
-MkDocs가 공개했던 `/assets/images/social/<글 경로>.png`는 Astro 빌드 후 `scripts/restore-legacy-assets.mjs`가 글별 PNG로 복원한다. 현재 글의 기본 `og:image`도 이 경로를 사용한다. 빌드에는 Noto Sans CJK KR 폰트가 필요하다. 과거 이미지 주소의 404 요청을 줄이기 위한 호환 조치이며, Google 글 색인을 보장하지는 않는다.
+MkDocs가 공개했던 `/assets/images/social/<글 경로>.png`는 Astro 빌드 후 `scripts/restore-legacy-assets.mjs`가 글별 PNG로 복원한다. 현재 글의 기본 `og:image`도 이 경로를 사용한다. 디렉터리 대소문자가 달랐던 과거 주소도 함께 복원한다. 빌드에는 Noto Sans CJK KR 폰트가 필요하다. 과거 이미지 주소의 404 요청을 줄이기 위한 호환 조치이며, Google 글 색인을 보장하지는 않는다.
 
 ## 정기 확인
 

@@ -45,7 +45,7 @@ export function imagePathForPostUrl(url) {
     throw new Error(`Invalid post URL origin: ${url}`);
   }
   const pathname = parsed.pathname;
-  const match = pathname.match(/^\/posts\/(.+)\/$/);
+  const match = pathname.match(/^\/(.+)\/$/);
   if (!match) throw new Error(`Invalid post URL: ${url}`);
   return `${safeSegments(match[1]).join("/")}.png`;
 }
@@ -126,7 +126,7 @@ async function restoreLegacyAssets() {
   let imageCount = 0;
   for (const post of posts) {
     const routePath = imagePathForPostUrl(post.url);
-    const paths = new Set([routePath]);
+    const paths = new Set([routePath, routePath.toLowerCase()]);
     const sourcePath = sourceByRoute.get(routePath.toLowerCase());
     if (sourcePath) paths.add(sourcePath);
     const image = await renderSocialImage(post);

@@ -219,9 +219,9 @@ APNs 서명용 개인 키는 휴대폰의 Keychain 밖으로 내보내지 않는
 
 ## 별도 게이트웨이 방식과 무엇이 달라졌나
 
-이전에 만든 [iOS 에이전트 컨트롤 타워](/posts/full-stack/desktop/sonlife-app-ios-agent-control-tower-swiftui-sse-watch-siri/)는 백엔드가 작업 상태와 Server-Sent Events(SSE), 승인 요청, 푸시를 관리한다. 여러 사용자와 업무 시스템을 연결하는 서비스라면 중앙 게이트웨이가 자연스럽다.
+이전에 만든 [iOS 에이전트 컨트롤 타워](/full-stack/desktop/sonlife-app-ios-agent-control-tower-swiftui-sse-watch-siri/)는 백엔드가 작업 상태와 Server-Sent Events(SSE), 승인 요청, 푸시를 관리한다. 여러 사용자와 업무 시스템을 연결하는 서비스라면 중앙 게이트웨이가 자연스럽다.
 
-웹 백엔드에서 다룬 [클라이언트 연결 끊김에도 워크플로우 실행 유지하기](/posts/full-stack/backend/client-workflow-execution-keep/)도 실행과 전송을 분리한다는 원칙은 같다. 다만 그 구조는 DB와 결과 조회 API가 복구를 맡고, Pocket Agent는 설치할 백엔드가 없으므로 작업 파일과 바이트 오프셋이 같은 역할을 맡는다.
+웹 백엔드에서 다룬 [클라이언트 연결 끊김에도 워크플로우 실행 유지하기](/full-stack/backend/client-workflow-execution-keep/)도 실행과 전송을 분리한다는 원칙은 같다. 다만 그 구조는 DB와 결과 조회 API가 복구를 맡고, Pocket Agent는 설치할 백엔드가 없으므로 작업 파일과 바이트 오프셋이 같은 역할을 맡는다.
 
 Pocket Agent의 목표는 다르다. 사용자가 이미 관리하는 한 대 이상의 개발 서버에 바로 접속하고 싶었다. 서버마다 게이트웨이를 배포하고 인증 체계를 운영하는 대신, SSH를 제어 채널로 쓰고 파일을 복구 채널로 삼았다.
 

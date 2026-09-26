@@ -74,7 +74,7 @@ Google 색인 상태 검사:
 
 ```bash
 node scripts/search-console.mjs inspect \
-  https://infoedu.co.kr/posts/ai/agent/insurance-ad-video-ai-compliance-qa-pipeline/
+  https://infoedu.co.kr/ai/agent/insurance-ad-video-ai-compliance-qa-pipeline/
 ```
 
 ## 월 1회 자동 유지

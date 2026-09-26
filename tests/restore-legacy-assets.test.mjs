@@ -9,7 +9,7 @@ import {
 test("maps a canonical post URL to its social image", () => {
   assert.equal(
     imagePathForPostUrl(
-      "https://infoedu.co.kr/posts/ai/agent/scenario-validation-automation-recording-execution-validation-pipeline/"
+      "https://infoedu.co.kr/ai/agent/scenario-validation-automation-recording-execution-validation-pipeline/"
     ),
     "ai/agent/scenario-validation-automation-recording-execution-validation-pipeline.png"
   );
@@ -28,6 +28,6 @@ test("preserves the case of legacy source paths", () => {
 
 test("rejects paths that cannot map to post assets", () => {
   assert.throws(() => imagePathForPostUrl("https://infoedu.co.kr/"));
-  assert.throws(() => imagePathForPostUrl("/posts/ai/%2Fescape/"));
-  assert.throws(() => imagePathForPostUrl("https://example.com/posts/ai/post/"));
+  assert.throws(() => imagePathForPostUrl("/ai/%2Fescape/"));
+  assert.throws(() => imagePathForPostUrl("https://example.com/ai/post/"));
 });

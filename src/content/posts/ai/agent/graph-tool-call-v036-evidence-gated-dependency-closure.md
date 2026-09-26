@@ -15,7 +15,7 @@ draft: false
 
 `graph-tool-call`의 초기 문제는 단순했다. LLM에게 수백 개 도구를 그대로 보여줄 수 없으니, 사용자 질문에 맞는 도구 몇 개만 골라줘야 했다.
 
-초기 버전의 BM25·그래프·임베딩 하이브리드 검색 구조는 [graph-tool-call 기초 아키텍처 글](/posts/ai/agent/graph-tool-call-llm-agent-graph-based-tool-search-engine/)에 정리했다. 이 글은 그 다음 단계인 **도구 의존성 완성, OpenAPI 입력 계약, 외부 벤치마크 검증**에 초점을 맞춘다.
+초기 버전의 BM25·그래프·임베딩 하이브리드 검색 구조는 [graph-tool-call 기초 아키텍처 글](/ai/agent/graph-tool-call-llm-agent-graph-based-tool-search-engine/)에 정리했다. 이 글은 그 다음 단계인 **도구 의존성 완성, OpenAPI 입력 계약, 외부 벤치마크 검증**에 초점을 맞춘다.
 
 여기서 도구는 사람이 누르는 버튼이나 API 호출에 가깝다. 예를 들어 주문을 조회하는 도구, 상품을 검색하는 도구, 재고를 가져오는 도구가 따로 있다. LLM 에이전트는 사용자의 말을 보고 이 도구들을 골라 실행한다.
 

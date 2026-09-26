@@ -2,6 +2,12 @@
   "timezone": "Asia/Seoul",
   "strategy": "Use Git first-author time only when it falls on the same KST date as date-only pubDatetime.",
   "posts": {
+    "full-stack/desktop/pocket-agent-ios-ssh-disconnect-safe-ai-agent": {
+      "datetime": "2026-09-12T14:37:20+09:00",
+      "source": "git-first-author-date",
+      "frontmatterDate": "2026-09-12",
+      "firstAddedAt": "2026-09-12T14:37:20+09:00"
+    },
     "ai/agent/synaptic-memory-msmarco-agent-loop-scale": {
       "datetime": "2026-07-05T17:20:19+09:00",
       "source": "git-first-author-date",

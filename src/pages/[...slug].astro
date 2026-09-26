@@ -1,0 +1,37 @@
+---
+import { getCollection } from "astro:content";
+import PostPage from "@/layouts/PostPage.astro";
+import { getPostSlug } from "@/utils/getPostPaths";
+import { getSortedPosts } from "@/utils/getSortedPosts";
+
+export async function getStaticPaths() {
+  const sortedPosts = getSortedPosts(await getCollection("posts"));
+
+  return sortedPosts.map((post, index) => ({
+    params: { slug: getPostSlug(post.id, post.filePath) },
+    props: {
+      post,
+      prevPost:
+        index > 0
+          ? {
+              id: sortedPosts[index - 1].id,
+              title: sortedPosts[index - 1].data.title,
+              filePath: sortedPosts[index - 1].filePath,
+            }
+          : null,
+      nextPost:
+        index < sortedPosts.length - 1
+          ? {
+              id: sortedPosts[index + 1].id,
+              title: sortedPosts[index + 1].data.title,
+              filePath: sortedPosts[index + 1].filePath,
+            }
+          : null,
+    },
+  }));
+}
+
+const { post, prevPost, nextPost } = Astro.props;
+---
+
+<PostPage {post} {prevPost} {nextPost} />

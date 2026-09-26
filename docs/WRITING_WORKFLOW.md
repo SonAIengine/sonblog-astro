@@ -332,7 +332,7 @@ Playwright로 촬영할 때는 민감 정보가 보이지 않는지 먼저 확�
 
    ```bash
    node scripts/search-console.mjs status
-   node scripts/search-console.mjs inspect https://infoedu.co.kr/posts/.../
+   node scripts/search-console.mjs inspect https://infoedu.co.kr/ai/.../
    ```
 
 5. sitemap 내용이 크게 바뀌었거나 Google이 오래 다운로드하지 않았다면 한 번만 다시 제출한다.

@@ -22,7 +22,7 @@ MCP 서버 하나만 붙어 있을 때는 괜찮다. 도구가 5개, 10개 정�
 
 도구가 100개를 넘으면 prompt가 지저분해진다. 1,000개를 넘으면 "어떤 도구를 쓸지"보다 "도구 목록을 어떻게 넣을지"가 먼저 문제가 된다. 이때 필요한 것이 도구 검색엔진이었다.
 
-그래서 이전 글 [graph-tool-call: LLM Agent를 위한 그래프 기반 도구 검색 엔진](/posts/ai/agent/graph-tool-call-llm-agent-graph-based-tool-search-engine/)에서는 이 문제를 다뤘다. OpenAPI와 MCP에서 도구를 수집하고, 도구 사이의 관계를 그래프로 만들고, BM25와 그래프 확장과 임베딩을 섞어서 필요한 도구만 찾아오는 구조였다.
+그래서 이전 글 [graph-tool-call: LLM Agent를 위한 그래프 기반 도구 검색 엔진](/ai/agent/graph-tool-call-llm-agent-graph-based-tool-search-engine/)에서는 이 문제를 다뤘다. OpenAPI와 MCP에서 도구를 수집하고, 도구 사이의 관계를 그래프로 만들고, BM25와 그래프 확장과 임베딩을 섞어서 필요한 도구만 찾아오는 구조였다.
 
 그런데 도구 검색을 만들고 나니 다음 문제가 보였다.
 
@@ -216,7 +216,7 @@ MCP 서버 1개와 도구 10개짜리 환경에서는 tool calling만으로 충�
 
 ## v0.20 개발기가 구현 기록이라면, 이 글은 방향성 기록이다
 
-이미 [graph-tool-call v0.20 개발기](/posts/ai/agent/graph-tool-call-v020-rpc-detection-plan-execute-compiler/)에서는 RPC 탐지, 동적 prefix, Intent Parser, PathSynthesizer, Runner, Response Synthesizer 같은 구현 흐름을 정리했다.
+이미 [graph-tool-call v0.20 개발기](/ai/agent/graph-tool-call-v020-rpc-detection-plan-execute-compiler/)에서는 RPC 탐지, 동적 prefix, Intent Parser, PathSynthesizer, Runner, Response Synthesizer 같은 구현 흐름을 정리했다.
 
 그 글이 내부 구조와 개발 과정을 다뤘다면, 이 글에서 남기고 싶은 말은 조금 더 단순하다.
 

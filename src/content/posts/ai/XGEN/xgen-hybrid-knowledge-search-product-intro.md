@@ -65,7 +65,7 @@ flowchart LR
 
 정확 검색만 있으면 표현이 조금만 달라도 놓친다. 의미 검색만 있으면 고유명사와 숫자, 버전, 코드명이 약해질 수 있다. XGEN에서는 두 신호를 함께 보고, 사용자가 "정확히 맞은 결과"와 "관련 있어 보이는 결과"를 구분해서 판단할 수 있게 하는 쪽이 더 낫다.
 
-이전 글에서 다룬 [Qdrant 하이브리드 검색](/posts/ai/xgen/qdrant-hybrid-search-sparse-dense-vector-integration/)이나 [Sparse Vector와 Full-Text Index](/posts/ai/xgen/sparse-vector-full-text-index-hybrid-search-impl/)는 이 검색 경험의 내부 구현에 가까운 이야기다. 이번 글의 핵심은 구현 방식보다 사용자가 체감하는 변화다.
+이전 글에서 다룬 [Qdrant 하이브리드 검색](/ai/XGEN/qdrant-hybrid-search-sparse-dense-vector-integration/)이나 [Sparse Vector와 Full-Text Index](/ai/XGEN/sparse-vector-full-text-index-hybrid-search-impl/)는 이 검색 경험의 내부 구현에 가까운 이야기다. 이번 글의 핵심은 구현 방식보다 사용자가 체감하는 변화다.
 
 ## 검색 결과를 무작정 섞지 않는다
 
@@ -98,7 +98,7 @@ XGEN에서는 사람이 직접 검색창에 입력하는 경우도 있지만, �
 
 여기서 검색 품질이 낮으면 뒤의 답변도 흔들린다. 엉뚱한 문서를 가져오면 에이전트는 그럴듯하지만 틀린 답을 만들 수 있다. 반대로 좋은 검색은 에이전트를 훨씬 안정적으로 만든다. 사용자가 매번 문서를 첨부하지 않아도, XGEN 안에 쌓인 지식을 다시 호출할 수 있기 때문이다.
 
-이 점에서 검색은 RAG의 한 단계가 아니라 XGEN 에이전트 경험의 기반이다. [Iterative RAG](/posts/ai/xgen/iterative-rag-search-engine-impl/)처럼 여러 번 검색하고 부족한 근거를 보강하는 구조도 결국 첫 검색 품질 위에 올라간다.
+이 점에서 검색은 RAG의 한 단계가 아니라 XGEN 에이전트 경험의 기반이다. [Iterative RAG](/ai/XGEN/iterative-rag-search-engine-impl/)처럼 여러 번 검색하고 부족한 근거를 보강하는 구조도 결국 첫 검색 품질 위에 올라간다.
 
 ## 문서 처리 품질도 검색 경험의 일부다
 
@@ -114,7 +114,7 @@ PDF, DOCX, PPT, Excel, HWP 계열 문서는 구조가 제각각이다. 표가 �
 - 너무 큰 문서는 검색 가능한 단위로 나누되, 문맥을 잃지 않게 한다.
 - 문서 제목, 요약, 키워드 같은 메타데이터를 함께 활용한다.
 
-이 부분은 [문서 임베딩 파이프라인](/posts/ai/xgen/document-embedding-pipeline-chunking-option-preprocessing-strategy/)에서 더 자세히 정리해뒀다. 사용자는 검색창만 보지만, 검색창 뒤에는 문서를 검색 가능한 지식으로 바꾸는 작업이 계속 돌아간다.
+이 부분은 [문서 임베딩 파이프라인](/ai/XGEN/document-embedding-pipeline-chunking-option-preprocessing-strategy/)에서 더 자세히 정리해뒀다. 사용자는 검색창만 보지만, 검색창 뒤에는 문서를 검색 가능한 지식으로 바꾸는 작업이 계속 돌아간다.
 
 ## 좋은 검색은 "모른다"도 말할 수 있어야 한다
 
@@ -160,7 +160,7 @@ XGEN 검색에서 중요한 기준 중 하나는 확신이 낮은 결과를 과�
 - 무관한 질의에 엉뚱한 결과를 자신 있게 내지 않는가
 - 에이전트가 근거로 써도 될 만큼 출처가 분명한가
 
-블로그 검색 쪽에서는 이미 [synaptic-memory 검색 품질 평가 루프](/posts/ai/agent/synaptic-memory-search-eval-loop/)를 만들면서 작은 문제지와 채점기를 붙여봤다. XGEN 검색도 같은 방향으로 가야 한다. 감으로 "좋아진 것 같다"가 아니라, 같은 문제를 반복해서 풀리고 실패 유형을 쌓아야 한다.
+블로그 검색 쪽에서는 이미 [synaptic-memory 검색 품질 평가 루프](/ai/agent/synaptic-memory-search-eval-loop/)를 만들면서 작은 문제지와 채점기를 붙여봤다. XGEN 검색도 같은 방향으로 가야 한다. 감으로 "좋아진 것 같다"가 아니라, 같은 문제를 반복해서 풀리고 실패 유형을 쌓아야 한다.
 
 ## 정리
 

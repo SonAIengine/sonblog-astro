@@ -1,7 +1,7 @@
 // SEO 리다이렉트 맵 생성: 옛 MkDocs URL → 새 Astro URL.
-// 옛 docs(로컬 mkdocs 레포)의 경로·제목과 새 search-index의 url·제목을
+// 옛 docs(로컬 mkdocs 레포)의 경로·제목과 새 Astro 원문의 경로·제목을
 // 제목으로 매칭한다(슬러그가 바뀐 글도 정확히 연결). 매칭 실패 시 같은 경로
-// (/posts 접두) 폴백. 결과를 src/redirects.generated.json 으로 출력.
+// 기준으로 연결한다. 결과를 src/redirects.generated.json 으로 출력.
 //
 // 실행: node scripts/build-redirects.mjs
 import fs from "node:fs";
@@ -10,7 +10,7 @@ import { execFileSync } from "node:child_process";
 
 const DOCS = process.env.MKDOCS_DOCS || "/home/son/projects/blog/sonblog/docs";
 const DOCS_REPO = path.resolve(DOCS, "..");
-const INDEX = path.resolve("dist/search-index.json");
+const POSTS = path.resolve("src/content/posts");
 const OUT = path.resolve("src/redirects.generated.json");
 
 function norm(s) {
@@ -22,12 +22,13 @@ function norm(s) {
 }
 
 // MkDocs(use_directory_urls) URL: docs/a/b.md → /a/b/ , a/index.md → /a/
-function oldUrlOf(rel) {
-  let p = rel.replace(/\\/g, "/").replace(/\.md$/, "");
+function contentUrlOf(rel) {
+  let p = rel.replace(/\\/g, "/").replace(/\.mdx?$/, "");
   if (p === "index") return "/";
   if (p.endsWith("/index")) p = p.slice(0, -"/index".length);
   return `/${p}/`;
 }
+const oldUrlOf = contentUrlOf;
 function titleOf(abs) {
   const t = fs.readFileSync(abs, "utf-8");
   const fm = t.match(/^---\r?\n([\s\S]*?)\r?\n---/);
@@ -38,12 +39,17 @@ function titleOf(abs) {
   const h1 = t.match(/^#\s+(.+)$/m);
   return h1 ? h1[1].trim() : null;
 }
+function isDraft(abs) {
+  const source = fs.readFileSync(abs, "utf-8");
+  const frontmatter = source.match(/^---\r?\n([\s\S]*?)\r?\n---/)?.[1] ?? "";
+  return /^draft:\s*true\s*$/im.test(frontmatter);
+}
 function walk(dir) {
   const out = [];
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
     const abs = path.join(dir, e.name);
     if (e.isDirectory()) out.push(...walk(abs));
-    else if (e.name.endsWith(".md")) out.push(abs);
+    else if (/\.mdx?$/.test(e.name)) out.push(abs);
   }
   return out;
 }
@@ -112,9 +118,16 @@ function historicalRenames() {
   return aliases;
 }
 
-const newDocs = JSON.parse(fs.readFileSync(INDEX, "utf-8"));
-const newByTitle = new Map(newDocs.map(d => [norm(d.title), d.url]));
-const newUrlSet = new Set(newDocs.map(d => d.url));
+const newDocs = walk(POSTS)
+  .filter(abs => !path.basename(abs).startsWith("_"))
+  .filter(abs => !isDraft(abs))
+  .map(abs => ({
+    title: titleOf(abs),
+    url: contentUrlOf(path.relative(POSTS, abs)),
+  }))
+  .filter(doc => doc.title);
+const newByTitle = new Map(newDocs.map(doc => [norm(doc.title), doc.url]));
+const newUrlSet = new Set(newDocs.map(doc => doc.url));
 
 const redirects = {};
 let matched = 0,
@@ -132,7 +145,7 @@ for (const abs of walk(DOCS)) {
   let newUrl = title ? newByTitle.get(norm(title)) : null;
   if (newUrl) matched++;
   else {
-    const cand = `/posts${oldUrl}`; // 경로 동일 폴백
+    const cand = oldUrl;
     if (newUrlSet.has(cand)) {
       newUrl = cand;
       fallback++;
@@ -160,7 +173,7 @@ for (const { oldUrl, currentAbs, currentRel } of historicalRenames()) {
   const title = titleOf(currentAbs);
   let newUrl = title ? newByTitle.get(norm(title)) : null;
   if (!newUrl) {
-    const candidate = `/posts${oldUrlOf(currentRel)}`;
+    const candidate = oldUrlOf(currentRel);
     if (newUrlSet.has(candidate)) newUrl = candidate;
   }
 
@@ -176,9 +189,6 @@ for (const { oldUrl, currentAbs, currentRel } of historicalRenames()) {
 // 상위 주제는 새 topic hub로 보내고, 세부 디렉토리는 대응 태그 페이지를 우선한다.
 // 태그가 없으면 상위 topic hub, 그것도 없으면 /posts/.
 const TOPIC_SLUGS = new Set(["ai", "search-engine", "full-stack", "devops"]);
-function tagExists(slug) {
-  return fs.existsSync(path.resolve("dist/tags", slug, "index.html"));
-}
 function walkDirs(dir, rel = "") {
   const out = [];
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -194,17 +204,13 @@ for (const rel of walkDirs(DOCS)) {
   const oldUrl = `/${rel}/`;
   if (redirects[oldUrl]) continue;
   const segs = rel.split("/");
-  const last = segs[segs.length - 1];
   const top = segs[0];
-  let dest = segs.length === 1 && TOPIC_SLUGS.has(top)
-    ? `/topics/${top}/`
-    : tagExists(last)
-    ? `/tags/${last}/`
-    : TOPIC_SLUGS.has(top)
-      ? `/topics/${top}/`
-    : tagExists(top)
-      ? `/tags/${top}/`
-      : "/posts/";
+  let dest =
+    top === "portfolio"
+      ? "/portfolio/"
+      : TOPIC_SLUGS.has(top)
+        ? `/topics/${top}/`
+        : "/posts/";
   redirects[oldUrl] = dest;
 }
 
@@ -230,6 +236,28 @@ const REAL_PAGES = [
   "/topics/devops/",
 ];
 for (const p of REAL_PAGES) delete redirects[p];
+for (const p of newUrlSet) delete redirects[p];
+const newRouteKeys = new Set([...newUrlSet].map(url => url.toLowerCase()));
+for (const source of Object.keys(redirects)) {
+  if (newRouteKeys.has(source.toLowerCase())) delete redirects[source];
+}
+
+function resolveDestination(source) {
+  const seen = new Set([source]);
+  let destination = redirects[source];
+  while (destination && redirects[destination]) {
+    if (seen.has(destination)) {
+      throw new Error(`Redirect cycle: ${[...seen, destination].join(" -> ")}`);
+    }
+    seen.add(destination);
+    destination = redirects[destination];
+  }
+  return destination;
+}
+
+for (const source of Object.keys(redirects)) {
+  redirects[source] = resolveDestination(source);
+}
 
 fs.writeFileSync(OUT, `${JSON.stringify(redirects, null, 2)}\n`);
 console.log(

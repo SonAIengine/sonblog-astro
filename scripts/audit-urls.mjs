@@ -4,7 +4,6 @@ import redirects from "../src/redirects.generated.json" with { type: "json" };
 
 const DIST = path.resolve("dist");
 const SITE_ORIGIN = "https://infoedu.co.kr";
-const LEGACY_PREFIX_RE = /^\/(?:ai|search-engine|devops|full-stack)\//;
 
 function walk(dir) {
   const files = [];
@@ -82,6 +81,12 @@ const pages = htmlFiles.map(file => {
 const sitemap = sitemapEntries();
 const urls = sitemap.map(entry => entry.pathname);
 const redirectRoutes = new Set(Object.keys(redirects));
+const searchIndex = JSON.parse(
+  fs.readFileSync(path.join(DIST, "search-index.json"), "utf8")
+);
+const postRouteSet = new Set(
+  searchIndex.map(post => new URL(post.url, SITE_ORIGIN).pathname)
+);
 const failures = [];
 
 const sitemapRedirects = urls.filter(url => redirectRoutes.has(url));
@@ -91,17 +96,19 @@ if (sitemapRedirects.length) {
   );
 }
 
-const legacySitemapUrls = urls.filter(url => LEGACY_PREFIX_RE.test(url));
-if (legacySitemapUrls.length) {
+const compatibilityPostUrls = urls.filter(
+  url => url.startsWith("/posts/") && url !== "/posts/"
+);
+if (compatibilityPostUrls.length) {
   failures.push(
-    `Sitemap contains legacy category URLs: ${legacySitemapUrls
+    `Sitemap contains compatibility post URLs: ${compatibilityPostUrls
       .slice(0, 10)
       .join(", ")}`
   );
 }
 
 const postSitemapEntriesMissingLastmod = sitemap.filter(
-  entry => entry.pathname.startsWith("/posts/") && !entry.lastmod
+  entry => postRouteSet.has(entry.pathname) && !entry.lastmod
 );
 if (postSitemapEntriesMissingLastmod.length) {
   failures.push(
@@ -120,6 +127,41 @@ if (badRedirectPages.length) {
     `Redirect pages missing noindex/canonical: ${badRedirectPages
       .slice(0, 10)
       .map(page => page.route)
+      .join(", ")}`
+  );
+}
+
+const sitemapRedirectPages = pages.filter(
+  page => page.redirect && urls.includes(page.route)
+);
+if (sitemapRedirectPages.length) {
+  failures.push(
+    `Sitemap contains rendered redirect pages: ${sitemapRedirectPages
+      .slice(0, 10)
+      .map(page => page.route)
+      .join(", ")}`
+  );
+}
+
+const missingCanonicalPosts = [...postRouteSet].filter(
+  route => !urls.includes(route)
+);
+if (missingCanonicalPosts.length) {
+  failures.push(
+    `Canonical posts missing from sitemap: ${missingCanonicalPosts
+      .slice(0, 10)
+      .join(", ")}`
+  );
+}
+
+const redirectChains = Object.entries(redirects).filter(
+  ([, destination]) => destination in redirects
+);
+if (redirectChains.length) {
+  failures.push(
+    `Redirect chains remain: ${redirectChains
+      .slice(0, 10)
+      .map(([source, destination]) => `${source} -> ${destination}`)
       .join(", ")}`
   );
 }
@@ -190,7 +232,7 @@ if (internalHrefFailures.length) {
   );
 }
 
-const postRoutes = urls.filter(url => url.startsWith("/posts/")).length;
+const postRoutes = urls.filter(url => postRouteSet.has(url)).length;
 const tagRoutes = urls.filter(url => url.startsWith("/tags/")).length;
 const topicRoutes = urls.filter(url => url.startsWith("/topics/")).length;
 
