@@ -3,6 +3,7 @@ import { getCollection } from "astro:content";
 import Layout from "@/layouts/Layout.astro";
 import { getSortedPosts } from "@/utils/getSortedPosts";
 import { getPostSlug, getPostUrl } from "@/utils/getPostPaths";
+import Figure from "./Figure.astro";
 import { POST_LINKS, type PortfolioCopy } from "./content";
 
 type Props = { t: PortfolioCopy };
@@ -38,6 +39,10 @@ const recent = [...posts]
       .slice(0, 7)
       .replace("-", "."),
   }));
+
+const projectTitles = new Set(
+  [t.projects.featured, ...t.projects.cards].map(p => p.title)
+);
 
 const sections = [
   t.fit.title,
@@ -114,10 +119,6 @@ const num = (title: string) =>
                 ))
               }
             </ul>
-            <div class="pf-about-card-links">
-              <a href={mailto}>{t.glance.mail}</a>
-              <a href={GITHUB} target="_blank" rel="noopener">GitHub</a>
-            </div>
           </aside>
           <aside class="pf-about-card pf-pdf-card">
             <div class="pf-pdf-row">
@@ -162,84 +163,84 @@ const num = (title: string) =>
           <div class="pf-section-line"></div>
         </div>
         {
-          [t.projects.featured].map(p => (
-            <article class="pf-case" id="case-xgen">
-              <div class="pf-case-head">
-                <span class="pf-project-label">{t.projects.featuredLabel}</span>
-                <h3>{p.title}</h3>
-                <p class="pf-case-meta">
-                  {p.period} · {p.ownership}
-                </p>
-              </div>
-              <div class="pf-case-body">
-                <div class="pf-case-text">
-                  {p.metric && (
-                    <p class="pf-metric">
-                      <b>{p.metric.value}</b>
-                      <span>{p.metric.label}</span>
-                    </p>
-                  )}
-                  <p class="pf-project-desc">{p.summary}</p>
-                  <ol class="pf-steps">
-                    {p.points.map(pt => (
-                      <li>
-                        <b>{pt.k}</b>
-                        <span>{pt.v}</span>
-                      </li>
-                    ))}
-                  </ol>
+          [t.projects.featured].map(p => {
+            const main = p.points.slice(0, 3);
+            const more = p.points.slice(3);
+            return (
+              <article class="pf-case" id="case-xgen">
+                <div class="pf-case-head">
+                  <span class="pf-project-label">
+                    {t.projects.featuredLabel}
+                  </span>
+                  <h3>{p.title}</h3>
+                  <p class="pf-case-meta">
+                    {p.period} · {p.ownership}
+                  </p>
                 </div>
-                {p.figure && (
-                  <figure class="pf-figure pf-case-figure">
-                    <a href={p.figure.src} target="_blank" rel="noopener">
-                      <img
-                        src={p.figure.src}
-                        alt={p.figure.alt}
-                        loading="lazy"
-                      />
-                    </a>
-                    <figcaption>{p.figure.caption}</figcaption>
-                  </figure>
-                )}
-              </div>
-              <div class="pf-case-foot">
-                {p.evidence && <p class="pf-project-evidence">{p.evidence}</p>}
-                {p.posts.length > 0 && (
-                  <div class="pf-project-posts-row">
-                    <span>{t.projects.postsLabel}</span>
-                    {p.posts.map(l => (
-                      <a href={l.href}>{l.label}</a>
-                    ))}
+                <div class="pf-case-body">
+                  <div class="pf-case-text">
+                    {p.metric && (
+                      <p class="pf-metric">
+                        <b>{p.metric.value}</b>
+                        <span>{p.metric.label}</span>
+                      </p>
+                    )}
+                    <p class="pf-project-desc">{p.summary}</p>
+                    <ol class="pf-steps">
+                      {main.map(pt => (
+                        <li>
+                          <b>{pt.k}</b>
+                          <span>{pt.v}</span>
+                        </li>
+                      ))}
+                    </ol>
+                    {more.length > 0 && (
+                      <details class="pf-more" open>
+                        <summary>{t.projects.moreLabel}</summary>
+                        <ol class="pf-steps">
+                          {more.map(pt => (
+                            <li>
+                              <b>{pt.k}</b>
+                              <span>{pt.v}</span>
+                            </li>
+                          ))}
+                        </ol>
+                      </details>
+                    )}
                   </div>
-                )}
-                {p.stack && (
-                  <div class="pf-project-stack-row">
-                    {p.stack.map(s => (
-                      <span class="pf-stack-item">{s}</span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </article>
-          ))
+                  {p.figure && (
+                    <Figure figure={p.figure} class="pf-case-figure" />
+                  )}
+                </div>
+                <div class="pf-case-foot">
+                  {p.evidence && (
+                    <p class="pf-project-evidence">{p.evidence}</p>
+                  )}
+                  {p.posts.length > 0 && (
+                    <div class="pf-project-posts-row">
+                      <span>{t.projects.postsLabel}</span>
+                      {p.posts.map(l => (
+                        <a href={l.href}>{l.label}</a>
+                      ))}
+                    </div>
+                  )}
+                  {p.stack && (
+                    <div class="pf-project-stack-row">
+                      {p.stack.map(s => (
+                        <span class="pf-stack-item">{s}</span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </article>
+            );
+          })
         }
-        <div class="pf-project-grid--cards">
+        <div class="pf-cards">
           {
             t.projects.cards.map(p => (
-              <article class:list={["pf-card", { "pf-card--wide": p.wide }]}>
-                {p.figure && (
-                  <figure class="pf-figure">
-                    <a href={p.figure.src} target="_blank" rel="noopener">
-                      <img
-                        src={p.figure.src}
-                        alt={p.figure.alt}
-                        loading="lazy"
-                      />
-                    </a>
-                    <figcaption>{p.figure.caption}</figcaption>
-                  </figure>
-                )}
-                <div class="pf-card-body">
+              <article class:list={["pf-card", { "pf-card--fig": p.figure }]}>
+                <div class="pf-card-head">
                   <p class="pf-card-meta">
                     {p.period} · {p.ownership}
                   </p>
@@ -250,6 +251,11 @@ const num = (title: string) =>
                       <span>{p.metric.label}</span>
                     </p>
                   )}
+                </div>
+                {p.figure && (
+                  <Figure figure={p.figure} class="pf-card-figure" />
+                )}
+                <div class="pf-card-body">
                   <p class="pf-project-desc">{p.summary}</p>
                   {p.badges && (
                     <ul class="pf-badges">
@@ -325,18 +331,25 @@ const num = (title: string) =>
       </div>
       <div class="pf-oss-grid pf-oss-grid--3">
         {
-          t.oss.items.map(o => (
-            <a href={o.href} class="pf-oss-card" target="_blank" rel="noopener">
-              <div class="pf-oss-header">
-                <span class="pf-oss-lang">Python</span>
-              </div>
-              <h4>{o.name}</h4>
-              <p>{o.desc}</p>
-              <div class="pf-oss-meta">
-                <span class="pf-oss-badge">{o.badge}</span>
-              </div>
-            </a>
-          ))
+          t.oss.items
+            .filter(o => !projectTitles.has(o.name))
+            .map(o => (
+              <a
+                href={o.href}
+                class="pf-oss-card"
+                target="_blank"
+                rel="noopener"
+              >
+                <div class="pf-oss-header">
+                  <span class="pf-oss-lang">Python</span>
+                </div>
+                <h4>{o.name}</h4>
+                <p>{o.desc}</p>
+                <div class="pf-oss-meta">
+                  <span class="pf-oss-badge">{o.badge}</span>
+                </div>
+              </a>
+            ))
         }
       </div>
       <div class="pf-writing">
@@ -388,17 +401,18 @@ const num = (title: string) =>
         <h2 class="pf-section-title">{t.edu.title}</h2>
         <div class="pf-section-line"></div>
       </div>
-      <div class="pf-edu-grid">
+      <dl class="pf-edu">
         {
-          t.edu.schools.map(s => (
-            <div class="pf-edu-card">
-              <span class="pf-edu-period">{s.period}</span>
-              <h3 class="pf-edu-school">{s.school}</h3>
-              <span class="pf-edu-degree">{s.degree}</span>
+          t.edu.schools.map(e => (
+            <div>
+              <dt>{e.period}</dt>
+              <dd>
+                <b>{e.school}</b> {e.degree}
+              </dd>
             </div>
           ))
         }
-      </div>
+      </dl>
       <div class="pf-chips-row pf-certs">
         <span class="pf-chips-label">{t.edu.certsLabel}</span>
         {t.edu.certs.map(c => <span class="pf-chip">{c}</span>)}
@@ -420,24 +434,59 @@ const num = (title: string) =>
         >
       </div>
     </section>
-    <a class="pf-float-mail" href={mailto}>{t.glance.mail}</a>
+    <a class="pf-float-mail" href={mailto} hidden>{t.glance.mail}</a>
+    <dialog class="pf-lightbox" aria-label="figure">
+      <form method="dialog"><button aria-label="close">×</button></form>
+      <img alt="" />
+    </dialog>
   </main>
 </Layout>
 
 <script>
-  // Card spotlight: pass the cursor position to CSS as --mx/--my.
-  function initSpotlight() {
-    document.querySelectorAll<HTMLElement>("[data-spotlight]").forEach(el => {
-      if (el.dataset.spotBound) return;
-      el.dataset.spotBound = "1";
-      el.addEventListener("pointermove", e => {
-        const r = el.getBoundingClientRect();
-        el.style.setProperty("--mx", `${e.clientX - r.left}px`);
-        el.style.setProperty("--my", `${e.clientY - r.top}px`);
+  function initPortfolio() {
+    // Floating mail button only when neither the hero nor the closing CTA is on screen.
+    const mail = document.querySelector<HTMLElement>(".pf-float-mail");
+    const anchors = [".pf-hero", ".pf-cta"]
+      .map(sel => document.querySelector(sel))
+      .filter((el): el is Element => el !== null);
+    if (mail && anchors.length > 0 && "IntersectionObserver" in window) {
+      const visible = new Set<Element>();
+      const io = new IntersectionObserver(entries => {
+        entries.forEach(e =>
+          e.isIntersecting ? visible.add(e.target) : visible.delete(e.target)
+        );
+        mail.hidden = visible.size > 0;
       });
+      anchors.forEach(el => io.observe(el));
+    }
+
+    // Collapse the secondary case-study steps on small screens.
+    if (window.matchMedia("(max-width: 600px)").matches) {
+      document
+        .querySelectorAll<HTMLDetailsElement>(".pf-more")
+        .forEach(d => (d.open = false));
+    }
+
+    // Open figures in an in-page dialog; without JS the link opens the image.
+    const dialog = document.querySelector<HTMLDialogElement>(".pf-lightbox");
+    const big = dialog?.querySelector("img");
+    document
+      .querySelectorAll<HTMLAnchorElement>("a[data-lightbox]")
+      .forEach(a => {
+        a.addEventListener("click", e => {
+          if (!dialog || !big || !dialog.showModal) return;
+          e.preventDefault();
+          const img = a.querySelector("img");
+          big.src = a.href;
+          big.alt = img?.alt ?? "";
+          dialog.showModal();
+        });
+      });
+    dialog?.addEventListener("click", e => {
+      if (e.target === dialog) dialog.close();
     });
   }
-  document.addEventListener("astro:page-load", initSpotlight);
+  document.addEventListener("astro:page-load", initPortfolio);
 </script>
 
 <style is:global>
@@ -1895,23 +1944,8 @@ const num = (title: string) =>
     text-decoration-style: dashed;
     text-underline-offset: 3px;
   }
-  .pf-project-grid--cards .pf-project-content .pf-project-desc {
-    flex: none;
-  }
-  .pf-project-grid--cards .pf-project-posts-row {
-    margin-top: auto;
-    padding-top: 0.9rem;
-  }
-  .pf-project-grid--cards article.pf-project {
-    margin-bottom: 0;
-  }
   .pf-project-stack-row {
     margin-top: 0.9rem;
-  }
-  .pf-project-grid--cards {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 1rem;
   }
 
   .pf-oss-grid--3 {
@@ -2007,9 +2041,6 @@ const num = (title: string) =>
 
   @media (max-width: 860px) {
     .pf-oss-grid--3 {
-      grid-template-columns: 1fr;
-    }
-    .pf-project-grid--cards {
       grid-template-columns: 1fr;
     }
   }
@@ -2187,9 +2218,6 @@ const num = (title: string) =>
   }
 
   /* ── Project cards ── */
-  .pf-project-grid--cards {
-    margin-top: 1.2rem;
-  }
   .pf-card {
     display: flex;
     flex-direction: column;
@@ -2245,18 +2273,12 @@ const num = (title: string) =>
     background: var(--pf-tint);
     border: 1px solid var(--pf-border-accent);
   }
-  .pf-badges li::before {
-    content: "✓ ";
-  }
 
   /* ── Mobile: facts first, floating mail button ── */
   .pf-float-mail {
     display: none;
   }
   @media (max-width: 860px) {
-    .pf-about-side {
-      order: -1;
-    }
     .pf-case-body {
       grid-template-columns: 1fr;
     }
@@ -2288,6 +2310,152 @@ const num = (title: string) =>
     }
     .pf-metric b {
       font-size: 1.4rem;
+    }
+  }
+
+  /* ── Round 2: unified cards, readable figures, lighter mobile ── */
+  .pf-hero-greeting {
+    text-wrap: balance;
+  }
+  .pf-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1.2rem;
+  }
+  .pf-card--fig {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    grid-template-areas: "head fig" "body fig";
+    column-gap: 2rem;
+    align-items: start;
+  }
+  .pf-card--fig .pf-card-head {
+    grid-area: head;
+  }
+  .pf-card--fig .pf-card-figure {
+    grid-area: fig;
+  }
+  .pf-card--fig .pf-card-body {
+    grid-area: body;
+  }
+  .pf-card-figure img {
+    max-height: 420px;
+    width: auto;
+    max-width: 100%;
+    margin: 0 auto;
+    object-fit: contain;
+  }
+  .pf-card .pf-project-posts-row {
+    margin-top: 0.9rem;
+    padding-top: 0;
+  }
+  .pf-badges li::before {
+    content: "";
+    display: inline-block;
+    width: 0.4rem;
+    height: 0.4rem;
+    margin-right: 0.4rem;
+    border-radius: 50%;
+    background: currentColor;
+    vertical-align: middle;
+  }
+  .pf-more > summary {
+    cursor: pointer;
+    margin: 0.4rem 0 0.6rem;
+    font-family: var(--font-app);
+    font-size: 0.78rem;
+    color: var(--accent);
+  }
+  @media (min-width: 601px) {
+    .pf-more > summary {
+      display: none;
+    }
+  }
+  .pf-edu {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .pf-edu > div {
+    display: grid;
+    grid-template-columns: 9rem 1fr;
+    gap: 1rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .pf-edu dt {
+    font-family: var(--font-app);
+    font-size: 0.78rem;
+    color: var(--accent);
+  }
+  .pf-edu dd {
+    margin: 0;
+    font-size: 0.92rem;
+    color: var(--muted-foreground);
+  }
+  .pf-edu dd b {
+    color: var(--foreground);
+    margin-right: 0.4rem;
+  }
+  .pf-lightbox {
+    max-width: 96vw;
+    max-height: 92vh;
+    padding: 0;
+    border: none;
+    border-radius: 12px;
+    background: #fff;
+  }
+  .pf-lightbox::backdrop {
+    background: rgba(0, 0, 0, 0.7);
+  }
+  .pf-lightbox img {
+    display: block;
+    max-width: 96vw;
+    max-height: 88vh;
+    object-fit: contain;
+  }
+  .pf-lightbox form {
+    position: absolute;
+    top: 0.4rem;
+    right: 0.4rem;
+  }
+  .pf-lightbox button {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    font-size: 1.1rem;
+    cursor: pointer;
+  }
+  .pf-float-mail[hidden] {
+    display: none !important;
+  }
+  @media (max-width: 860px) {
+    .pf-card--fig {
+      grid-template-columns: 1fr;
+      grid-template-areas: "head" "fig" "body";
+    }
+    .pf-card-figure {
+      margin-bottom: 0.8rem;
+    }
+    .pf-float-mail {
+      bottom: calc(1rem + env(safe-area-inset-bottom));
+    }
+    .portfolio-root {
+      padding-bottom: 4rem;
+    }
+  }
+  @media (max-width: 520px) {
+    .pf-edu > div {
+      grid-template-columns: 1fr;
+      gap: 0.1rem;
+    }
+    .pf-hero-greeting {
+      letter-spacing: 0.1em;
     }
   }
 </style>

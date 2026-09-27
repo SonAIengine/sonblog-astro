@@ -14,7 +14,14 @@ export type Project = {
   posts: Link[];
   stack?: string[];
   metric?: { value: string; label: string };
-  figure?: { src: string; alt: string; caption: string };
+  figure?: {
+    src: string;
+    alt: string;
+    caption: string;
+    width: number;
+    height: number;
+    mobileSrc?: string;
+  };
   badges?: string[];
   wide?: boolean;
 };
@@ -50,6 +57,7 @@ export type PortfolioCopy = {
     title: string;
     featuredLabel: string;
     postsLabel: string;
+    moreLabel: string;
     featured: Project;
     cards: Project[];
   };
@@ -160,11 +168,15 @@ export const ko: PortfolioCopy = {
     title: "대표 프로젝트",
     featuredLabel: "Featured",
     postsLabel: "관련 글",
+    moreLabel: "서빙 · 장애 · 운영 더 보기",
     featured: {
       title: "XGEN 배포 플랫폼과 모델 서빙",
       metric: { value: "8개 환경", label: "공통 차트 수정 0회로 운영" },
       figure: {
         src: "/portfolio/fig-deploy.jpg",
+        width: 1600,
+        height: 1196,
+        mobileSrc: "/portfolio/fig-deploy-m.jpg",
         alt: "중앙 배포에서 서버별 Helm 차트 구조로 바꾼 배포 구조도",
         caption:
           "중앙 배포(철회)와 서버별 Helm 차트(현재) · 포트폴리오 PDF 8쪽",
@@ -239,10 +251,10 @@ export const ko: PortfolioCopy = {
         period: "FDE (현장 배치 엔지니어)",
         ownership: "에이전트 개발 · 고객 커뮤니케이션 · 교육",
         summary:
-          "사용자 500명 규모 서비스에 들어가 에이전트를 직접 만들고, 사용자 교육을 5회 진행했습니다.",
+          "지방은행 생성형 AI 플랫폼에 들어가 에이전트를 직접 만들고, 고객 커뮤니케이션과 사용자 교육을 맡았습니다.",
         points: [
           {
-            v: "에이전트 라우터, 실패 로그 화면, SQL 조회 결과 결합, 쓰기 SQL 차단(DML 가드), Oracle 연동",
+            v: "에이전트 라우터, 실패 로그 화면, SQL 조회 결과를 답변에 결합",
           },
           {
             v: "고객 서버 배포와 모델 서빙 운영 (GPU 메모리 기반 적재 제어, 장애 자동 복구)",
@@ -258,8 +270,10 @@ export const ko: PortfolioCopy = {
         },
         figure: {
           src: "/portfolio/fig-harness.jpg",
+          width: 770,
+          height: 980,
           alt: "작업당 AI 호출 횟수와 평가 점수 비교 차트",
-          caption: "70과제 평균 AI 호출과 평가 점수 · 포트폴리오 PDF 22쪽",
+          caption: "작업당 AI 호출, 70과제 평균 · 포트폴리오 PDF 22쪽",
         },
         period: "2026.08 ~ 현재",
         ownership: "튜닝·평가 담당 (실행 파이프라인 설계는 동료)",
@@ -290,8 +304,10 @@ export const ko: PortfolioCopy = {
         metric: { value: "9,094회", label: "최근 6개월 PyPI 다운로드" },
         figure: {
           src: "/portfolio/fig-toolsearch.jpg",
-          alt: "의미 검색이 주문 조회 도구를 놓치는 예시",
-          caption: "의미 검색이 놓친 사전 단계 도구 · 포트폴리오 PDF 13쪽",
+          width: 1400,
+          height: 795,
+          alt: "준비 단계 도구 발견율 14.3%에서 100%, 전달 토큰 1,476에서 160으로 줄어든 막대 그래프",
+          caption: "준비 단계 도구 발견율과 전달 토큰 · 포트폴리오 PDF 16쪽",
         },
         period: "2026.03 ~ · 오픈소스",
         ownership: "단독 설계·개발 (커밋 96%)",
@@ -314,8 +330,8 @@ export const ko: PortfolioCopy = {
       {
         title: "LLM 파인튜닝",
         metric: {
-          value: "SFT · DPO",
-          label: "14B 한국어 LLM, 선호 데이터 1.23만 건",
+          value: "14B",
+          label: "한국어 LLM POLAR, SFT·DPO(선호 데이터 1.23만 건)",
         },
         period: "2024.04 ~ 06 · 2026.09 ~",
         ownership: "POLAR는 AI Lab 공동 개발, sev는 개인",
@@ -337,9 +353,14 @@ export const ko: PortfolioCopy = {
       },
       {
         title: "커머스 상품 검색",
-        metric: { value: "74ms", label: "검색 서버(10ms) 밖에서 찾은 병목" },
+        metric: {
+          value: "10ms / 74ms",
+          label: "검색 서버 / 앞단 API, 병목은 검색 서버 밖",
+        },
         figure: {
           src: "/portfolio/fig-latency.jpg",
+          width: 1400,
+          height: 269,
           alt: "구간별 응답 시간 막대 그래프",
           caption: "구간별 응답 시간 · 포트폴리오 PDF 25쪽",
         },
@@ -553,6 +574,7 @@ export const en: PortfolioCopy = {
     title: "Selected projects",
     featuredLabel: "Featured",
     postsLabel: "Posts",
+    moreLabel: "Serving, incident, ops",
     featured: {
       title: "XGEN deployment platform and model serving",
       metric: {
@@ -561,6 +583,9 @@ export const en: PortfolioCopy = {
       },
       figure: {
         src: "/portfolio/fig-deploy.jpg",
+        width: 1600,
+        height: 1196,
+        mobileSrc: "/portfolio/fig-deploy-m.jpg",
         alt: "Deployment diagram from central push to per-server Helm charts",
         caption:
           "Central push (rolled back) vs per-server Helm chart (current) · PDF p.8 (Korean)",
@@ -635,10 +660,10 @@ export const en: PortfolioCopy = {
         period: "FDE (forward deployed engineer)",
         ownership: "Agent development · customer communication · training",
         summary:
-          "Built agents on site for a 500-user service and ran 5 user training sessions.",
+          "Went on site at a regional bank to build agents, handle customer communication, and train users.",
         points: [
           {
-            v: "Agent router, failure log view, merged SQL query results, write-SQL blocking (DML guard), Oracle integration",
+            v: "Agent router, failure log view, SQL query results merged into answers",
           },
           {
             v: "Deployment and model serving on customer servers (GPU memory aware loading, auto recovery)",
@@ -654,9 +679,10 @@ export const en: PortfolioCopy = {
         },
         figure: {
           src: "/portfolio/fig-harness.jpg",
+          width: 770,
+          height: 980,
           alt: "Chart of AI calls per task and eval scores",
-          caption:
-            "Average AI calls and eval scores over 70 tasks · PDF p.22 (Korean)",
+          caption: "AI calls per task, 70-task average · PDF p.22 (Korean)",
         },
         period: "2026.08 to present",
         ownership: "Tuning and evaluation (pipeline designed by a teammate)",
@@ -689,9 +715,11 @@ export const en: PortfolioCopy = {
         metric: { value: "9,094", label: "PyPI downloads in 6 months" },
         figure: {
           src: "/portfolio/fig-toolsearch.jpg",
-          alt: "Example where semantic search misses the order lookup tool",
+          width: 1400,
+          height: 795,
+          alt: "Bar charts: prerequisite tool recall 14.3% to 100%, tokens sent 1,476 to 160",
           caption:
-            "The prerequisite tool semantic search missed · PDF p.13 (Korean)",
+            "Prerequisite tool recall and tokens sent · PDF p.16 (Korean)",
         },
         period: "2026.03 to present · open source",
         ownership: "Sole designer and developer (96% of commits)",
@@ -716,8 +744,8 @@ export const en: PortfolioCopy = {
       {
         title: "LLM fine-tuning",
         metric: {
-          value: "SFT · DPO",
-          label: "14B Korean LLM, 12,300 preference pairs",
+          value: "14B",
+          label: "Korean LLM POLAR, SFT and DPO (12,300 pairs)",
         },
         period: "2024.04 to 06 · 2026.09 to present",
         ownership: "POLAR co-developed at AI Lab, sev is personal",
@@ -742,11 +770,14 @@ export const en: PortfolioCopy = {
       {
         title: "Commerce product search",
         metric: {
-          value: "74ms",
-          label: "bottleneck found outside the 10ms search server",
+          value: "10ms / 74ms",
+          label:
+            "search server / upstream API, the bottleneck was outside search",
         },
         figure: {
           src: "/portfolio/fig-latency.jpg",
+          width: 1400,
+          height: 269,
           alt: "Bar chart of latency per hop",
           caption: "Latency per hop · PDF p.25 (Korean)",
         },

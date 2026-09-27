@@ -1,0 +1,27 @@
+---
+import type { Project } from "./content";
+
+type Props = { figure: NonNullable<Project["figure"]>; class?: string };
+const { figure: f, class: cls } = Astro.props;
+---
+
+<figure class:list={["pf-figure", cls]}>
+  <a href={f.src} target="_blank" rel="noopener" data-lightbox>
+    <picture>
+      {
+        f.mobileSrc && (
+          <source media="(max-width: 600px)" srcset={f.mobileSrc} />
+        )
+      }
+      <img
+        src={f.src}
+        alt={f.alt}
+        width={f.width}
+        height={f.height}
+        loading="lazy"
+        decoding="async"
+      />
+    </picture>
+  </a>
+  <figcaption>{f.caption}</figcaption>
+</figure>
