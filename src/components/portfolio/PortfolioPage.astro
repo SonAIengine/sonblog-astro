@@ -39,12 +39,6 @@ const recent = [...posts]
       .replace("-", "."),
   }));
 
-// Build date in KST, shown next to the live post count.
-const builtAt = new Date(Date.now() + 9 * 3600 * 1000)
-  .toISOString()
-  .slice(0, 10)
-  .replaceAll("-", ".");
-
 const sections = [
   t.fit.title,
   t.projects.title,
@@ -360,7 +354,7 @@ const num = (title: string) =>
       <div class="pf-writing">
         <div class="pf-writing-head">
           <h3>{t.oss.writingTitle}</h3>
-          <p>{t.oss.writingDesc(posts.length, builtAt)}</p>
+          <p>{t.oss.writingDesc(posts.length)}</p>
         </div>
         <ul class="pf-writing-list">
           {

@@ -62,7 +62,7 @@ export type PortfolioCopy = {
     title: string;
     items: { name: string; href: string; desc: string; badge: string }[];
     writingTitle: string;
-    writingDesc: (n: number, date: string) => string;
+    writingDesc: (n: number) => string;
     allPosts: Link;
   };
   skills: { title: string; rows: { label: string; items: string[] }[] };
@@ -121,15 +121,15 @@ export const ko: PortfolioCopy = {
     items: [
       {
         title: "LLM 서빙과 배포 플랫폼",
-        body: "GPU 서버마다 모델을 올리고, 고객사 서버와 폐쇄망에 같은 방식으로 배포하는 구조를 설계하고 운영합니다. vLLM, llama.cpp, K3s, Helm, ArgoCD를 씁니다.",
+        body: "GPU 서버마다 모델을 올리고, 온프레미스 고객사 서버와 폐쇄망에 같은 방식으로 배포하는 구조를 설계하고 운영합니다. vLLM, llama.cpp, K3s, Helm, ArgoCD를 씁니다.",
       },
       {
         title: "AI 에이전트 실행 품질",
-        body: "에이전트가 도중에 멈추거나 완료를 거짓으로 보고하는 문제를 공개 벤치마크로 재고, 개선용과 검증용 과제에서 모두 좋아진 변경만 반영합니다.",
+        body: "도구 호출, 권한, 완료 판정을 통제하는 하네스를 튜닝합니다. 에이전트가 도중에 멈추거나 완료를 거짓으로 보고하는 문제를 공개 벤치마크로 재고, 개선용과 검증용 과제에서 모두 좋아진 변경만 반영합니다.",
       },
       {
         title: "고객 현장과 파트 리딩",
-        body: "고객사 30여 곳의 시연과 PoC를 맡았고, 지방은행 프로젝트에는 FDE로 들어가 에이전트 개발과 사용자 교육을 했습니다. 8명 파트의 업무 배분, 코드 리뷰, 채용 면접을 맡고 있습니다.",
+        body: "고객사 30여 곳의 시연과 PoC를 맡았고, 지방은행 프로젝트에는 FDE로 들어가 권한, 감사 로그, SSO 같은 금융권 요건을 맞추며 에이전트 개발과 사용자 교육을 했습니다. 8명 파트의 업무 배분, 코드 리뷰, 채용 면접을 맡고 있습니다.",
       },
     ],
   },
@@ -215,7 +215,8 @@ export const ko: PortfolioCopy = {
         title: "에이전트 하네스 튜닝과 평가",
         period: "2026.08 ~ 현재",
         ownership: "튜닝·평가 담당 (실행 파이프라인 설계는 동료)",
-        summary: "실사용 요청의 약 8%가 도중에 멈추는 문제에서 시작했습니다.",
+        summary:
+          "하네스는 모델 바깥에서 도구 호출, 권한, 완료 판정을 통제하는 계층입니다. 실사용 요청의 약 8%가 도중에 멈추는 문제에서 시작했습니다.",
         points: [
           {
             v: "Qihoo360이 공개한 Harness-Bench를 연동하고, 70과제를 개선용 39개와 검증용 31개로 나눠 두 쪽 모두 좋아진 변경만 반영",
@@ -337,7 +338,7 @@ export const ko: PortfolioCopy = {
       {
         name: "graph-tool-call",
         href: "https://github.com/SonAIengine/graph-tool-call",
-        desc: "LLM 에이전트용 도구 검색. 필요한 도구와 그 사전 단계 도구를 함께 찾습니다.",
+        desc: "LLM 에이전트용 도구 검색. 필요한 도구와 사전 단계 도구를 함께 찾고, MCP 서버나 여러 MCP 서버를 묶는 프록시로도 씁니다.",
         badge: "pip install graph-tool-call",
       },
       {
@@ -349,13 +350,13 @@ export const ko: PortfolioCopy = {
       {
         name: "ku-portal-mcp",
         href: "https://github.com/SonAIengine/ku-portal-mcp",
-        desc: "고려대 포털 MCP 서버. 외부 기여 PR 2건.",
+        desc: "고려대 포털을 MCP 서버로 직접 설계해 PyPI로 배포. 외부 기여 PR 2건.",
         badge: "pip install ku-portal-mcp",
       },
     ],
     writingTitle: "최근 글",
-    writingDesc: (n, date) =>
-      `기술 블로그에 ${n}편을 썼습니다(${date} 기준). 만든 것과 실패한 것을 같이 남깁니다.`,
+    writingDesc: n =>
+      `기술 블로그에 ${Math.floor(n / 10) * 10}편 넘게 썼습니다. 만든 것과 실패한 것을 같이 남깁니다.`,
     allPosts: { label: "전체 글 보기", href: "/posts/" },
   },
   skills: {
@@ -377,6 +378,7 @@ export const ko: PortfolioCopy = {
         ],
       },
       { label: "Language", items: ["Python", "Rust", "TypeScript"] },
+      { label: "AI Coding", items: ["Claude Code", "Codex"] },
       { label: "Framework", items: ["FastAPI", "Axum", "NestJS", "Next.js"] },
       { label: "Data", items: ["PostgreSQL", "Valkey · Redis", "MinIO"] },
     ],
@@ -442,15 +444,15 @@ export const en: PortfolioCopy = {
     items: [
       {
         title: "LLM serving and deployment platforms",
-        body: "I design and run the setup that puts models on every GPU server and deploys the same way to customer servers and air-gapped networks. vLLM, llama.cpp, K3s, Helm, ArgoCD.",
+        body: "I design and run the setup that puts models on every GPU server and deploys the same way to on-premises customer servers and air-gapped networks. vLLM, llama.cpp, K3s, Helm, ArgoCD.",
       },
       {
         title: "AI agent execution quality",
-        body: "I measure agents that stall midway or falsely report completion on a public benchmark, and ship only changes that improve both the tuning split and the held-out split.",
+        body: "I tune the harness that controls tool calls, permissions, and completion checks. I measure agents that stall midway or falsely report completion on a public benchmark, and ship only changes that improve both the tuning split and the held-out split.",
       },
       {
         title: "Customer sites and team leadership",
-        body: "I led demos and PoCs for about 30 customers and worked on site as an FDE for a regional bank, building agents and training users. I handle work allocation, code review, and hiring interviews for an 8-person part.",
+        body: "I led demos and PoCs for about 30 customers and worked on site as an FDE for a regional bank, meeting banking requirements such as permissions, audit logs, and SSO while building agents and training users. I handle work allocation, code review, and hiring interviews for an 8-person part.",
       },
     ],
   },
@@ -540,7 +542,8 @@ export const en: PortfolioCopy = {
         title: "Agent harness tuning and evaluation",
         period: "2026.08 to present",
         ownership: "Tuning and evaluation (pipeline designed by a teammate)",
-        summary: "Started from about 8% of real requests stalling midway.",
+        summary:
+          "The harness is the layer outside the model that controls tool calls, permissions, and completion checks. The work started from about 8% of real requests stalling midway.",
         points: [
           {
             v: "Integrated Qihoo360's public Harness-Bench, split its 70 tasks into 39 tuning and 31 held-out, and kept only changes that improved both",
@@ -669,7 +672,7 @@ export const en: PortfolioCopy = {
       {
         name: "graph-tool-call",
         href: "https://github.com/SonAIengine/graph-tool-call",
-        desc: "Tool retrieval for LLM agents. Finds the needed tool together with its prerequisite tools.",
+        desc: "Tool retrieval for LLM agents. Finds the needed tool with its prerequisite tools, and runs as an MCP server or a proxy in front of many MCP servers.",
         badge: "pip install graph-tool-call",
       },
       {
@@ -681,13 +684,13 @@ export const en: PortfolioCopy = {
       {
         name: "ku-portal-mcp",
         href: "https://github.com/SonAIengine/ku-portal-mcp",
-        desc: "MCP server for the Korea University portal. 2 external PRs.",
+        desc: "MCP server for the Korea University portal, designed by me and published on PyPI. 2 external PRs.",
         badge: "pip install ku-portal-mcp",
       },
     ],
     writingTitle: "Recent posts (Korean)",
-    writingDesc: (n, date) =>
-      `${n} posts on my tech blog as of ${date}, covering what I built and what failed.`,
+    writingDesc: n =>
+      `${Math.floor(n / 10) * 10}+ posts on my tech blog, covering what I built and what failed.`,
     allPosts: { label: "All posts", href: "/posts/" },
   },
   skills: {
@@ -709,6 +712,7 @@ export const en: PortfolioCopy = {
         ],
       },
       { label: "Language", items: ["Python", "Rust", "TypeScript"] },
+      { label: "AI Coding", items: ["Claude Code", "Codex"] },
       { label: "Framework", items: ["FastAPI", "Axum", "NestJS", "Next.js"] },
       { label: "Data", items: ["PostgreSQL", "Valkey · Redis", "MinIO"] },
     ],
