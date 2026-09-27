@@ -1,8 +1,12 @@
 ---
 import type { Project } from "./content";
 
-type Props = { figure: NonNullable<Project["figure"]>; class?: string };
-const { figure: f, class: cls } = Astro.props;
+type Props = {
+  figure: NonNullable<Project["figure"]>;
+  class?: string;
+  eager?: boolean;
+};
+const { figure: f, class: cls, eager = false } = Astro.props;
 ---
 
 <figure class:list={["pf-figure", cls]}>
@@ -18,7 +22,8 @@ const { figure: f, class: cls } = Astro.props;
         alt={f.alt}
         width={f.width}
         height={f.height}
-        loading="lazy"
+        loading={eager ? "eager" : "lazy"}
+        fetchpriority={eager ? "high" : "auto"}
         decoding="async"
       />
     </picture>

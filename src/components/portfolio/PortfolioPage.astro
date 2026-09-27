@@ -209,7 +209,7 @@ const num = (title: string) =>
                     )}
                   </div>
                   {p.figure && (
-                    <Figure figure={p.figure} class="pf-case-figure" />
+                    <Figure figure={p.figure} class="pf-case-figure" eager />
                   )}
                 </div>
                 <div class="pf-case-foot">
@@ -1949,7 +1949,7 @@ const num = (title: string) =>
   }
 
   .pf-oss-grid--3 {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   }
   .pf-writing {
     margin-top: 1.6rem;

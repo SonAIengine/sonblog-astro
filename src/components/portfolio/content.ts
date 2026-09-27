@@ -467,7 +467,7 @@ export const ko: PortfolioCopy = {
       { label: "Language", items: ["Python", "Rust", "TypeScript"] },
       {
         label: "Agent",
-        items: ["LangChain", "LangGraph", "MCP", "Tool calling"],
+        items: ["LangChain", "LangGraph", "MCP 서버 구축", "Tool calling"],
       },
       { label: "Training", items: ["DeepSpeed", "TRL (SFT · DPO)", "LoRA"] },
       { label: "AI Coding", items: ["Claude Code", "Codex"] },
@@ -887,7 +887,7 @@ export const en: PortfolioCopy = {
       { label: "Language", items: ["Python", "Rust", "TypeScript"] },
       {
         label: "Agent",
-        items: ["LangChain", "LangGraph", "MCP", "Tool calling"],
+        items: ["LangChain", "LangGraph", "MCP servers", "Tool calling"],
       },
       { label: "Training", items: ["DeepSpeed", "TRL (SFT · DPO)", "LoRA"] },
       { label: "AI Coding", items: ["Claude Code", "Codex"] },
