@@ -41,6 +41,29 @@ Agent는 가설과 코드를 제안한다. 하지만 데이터 분할, 점수 �
 
 대화 중 조건을 바꿀 수도 있다. 위 장면에서는 통화시간처럼 실제 예측 시점에 알 수 없는 값을 제외해 달라고 요청했다. 시스템은 기존 모델을 말로만 수정했다고 하지 않고, 해당 열을 뺀 새 후보를 다시 학습하고 비교한다.
 
+### 100초로 보는 실제 사용 흐름
+
+아래 영상은 공개된 [UCI Bank Marketing 데이터](https://archive.ics.uci.edu/dataset/222/bank+marketing)로 과제를 만들고, Agent가 학습한 모델에서 누수 가능성이 있는 `통화시간초` 열을 제외한 뒤 다시 학습하고, 예측과 공개 실행 기록까지 확인하는 흐름을 담았다.
+
+<figure>
+  <video
+    controls
+    playsinline
+    preload="metadata"
+    poster="/assets/videos/expharness-intro-v3-poster.jpg"
+    width="1920"
+    height="1080"
+    aria-label="expharness에서 자연어 요청으로 모델을 만들고 데이터 누수 열을 제외해 다시 학습하는 100초 시연"
+  >
+    <source src="/assets/videos/expharness-intro-v3.mp4" type="video/mp4" />
+    브라우저에서 영상을 재생할 수 없다면
+    <a href="/assets/videos/expharness-intro-v3.mp4">MP4 파일을 열어 볼 수 있다.</a>
+  </video>
+  <figcaption>
+    실제 서비스 화면을 녹화한 99.8초 시연이다. 데이터는 공개 사용이 허용된 UCI Bank Marketing을 사용했고, 화면의 자막은 편집 과정에서 추가했다.
+  </figcaption>
+</figure>
+
 사용자에게는 하나의 대화처럼 보이지만 내부 책임은 나뉜다. 아래 그림은 제출 후 검증 계층을 더 확장하면서 [현재 구현을 한 장으로 정리한 기술 문서](https://ml.bridge.infoedu.co.kr/architecture)다. 제출 당시에도 Agent와 하네스를 분리하는 원칙은 같았지만, 후보 수와 승격 게이트 같은 세부 정책은 이후 계속 보완됐다.
 
 ![Agent는 도구를 이용해 판단하고 하네스는 데이터 경계 안에서 학습, 채점, 승격과 산출물 봉인을 담당하는 expharness 아키텍처](./expharness-agent-harness-architecture.png)
