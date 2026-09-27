@@ -514,7 +514,7 @@ export const ko: PortfolioCopy = {
       {
         period: "2021.02 ~ 2023.02",
         school: "한양대학교",
-        degree: "도시공학과 학사 (편입)",
+        degree: "도시공학과 학사",
       },
     ],
     certsLabel: "자격",
@@ -962,7 +962,7 @@ export const en: PortfolioCopy = {
       {
         period: "2021.02 ~ 2023.02",
         school: "Hanyang University",
-        degree: "B.S. Urban Planning (transfer)",
+        degree: "B.S. Urban Planning",
       },
     ],
     certsLabel: "Certs",
