@@ -41,26 +41,26 @@ Agent는 가설과 코드를 제안한다. 하지만 데이터 분할, 점수 �
 
 대화 중 조건을 바꿀 수도 있다. 위 장면에서는 통화시간처럼 실제 예측 시점에 알 수 없는 값을 제외해 달라고 요청했다. 시스템은 기존 모델을 말로만 수정했다고 하지 않고, 해당 열을 뺀 새 후보를 다시 학습하고 비교한다.
 
-### 100초로 보는 실제 사용 흐름
+### 2분 16초로 보는 실제 사용 흐름
 
-아래 영상은 공개된 [UCI Bank Marketing 데이터](https://archive.ics.uci.edu/dataset/222/bank+marketing)로 과제를 만들고, Agent가 학습한 모델에서 누수 가능성이 있는 `통화시간초` 열을 제외한 뒤 다시 학습하고, 예측과 공개 실행 기록까지 확인하는 흐름을 담았다.
+아래 영상은 현재 [`expharness`](https://ml.bridge.infoedu.co.kr/) 사이트의 소개 화면에서 제공하는 것과 같은 최종 영상이다. 공개된 [UCI Bank Marketing 데이터](https://archive.ics.uci.edu/dataset/222/bank+marketing)로 과제를 만들고, Agent가 학습한 모델에서 누수 가능성이 있는 `통화시간초` 열을 제외한 뒤 다시 학습하고, 파일 예측과 공개 실행 기록까지 확인하는 흐름을 담았다.
 
 <figure>
   <video
     controls
     playsinline
     preload="metadata"
-    poster="/assets/videos/expharness-intro-v3-poster.jpg"
+    poster="/assets/videos/expharness-intro-poster.jpg"
     width="1920"
     height="1080"
-    aria-label="expharness에서 자연어 요청으로 모델을 만들고 데이터 누수 열을 제외해 다시 학습하는 100초 시연"
+    aria-label="expharness에서 자연어 요청으로 모델을 만들고 데이터 누수 열을 제외해 다시 학습하는 2분 16초 소개 영상"
   >
-    <source src="/assets/videos/expharness-intro-v3.mp4" type="video/mp4" />
+    <source src="/assets/videos/expharness-intro.mp4" type="video/mp4" />
     브라우저에서 영상을 재생할 수 없다면
-    <a href="/assets/videos/expharness-intro-v3.mp4">MP4 파일을 열어 볼 수 있다.</a>
+    <a href="/assets/videos/expharness-intro.mp4">MP4 파일을 열어 볼 수 있다.</a>
   </video>
   <figcaption>
-    실제 서비스 화면을 녹화한 99.8초 시연이다. 데이터는 공개 사용이 허용된 UCI Bank Marketing을 사용했고, 화면의 자막은 편집 과정에서 추가했다.
+    운영 사이트와 동일한 136.4초 소개 영상이다. 공개 사용이 허용된 UCI Bank Marketing 데이터로 실제 서비스 흐름을 녹화했으며, 설명 음성과 자막을 포함한다.
   </figcaption>
 </figure>
 
