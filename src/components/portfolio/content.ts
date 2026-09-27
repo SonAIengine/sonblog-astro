@@ -211,8 +211,7 @@ export const ko: PortfolioCopy = {
           v: "문서 처리 서비스 최대 메모리 약 47% 감소(2,257MB → 1,204MB). 11개 저장소에 개발·검증·운영 3단계 배포와 MR별 미리보기 서버를 넣었습니다.",
         },
       ],
-      evidence:
-        "근거 · 배포 저장소 커밋 962/1,069 (90%), 모델 서빙 저장소 커밋 189/218 (86%), 2026.09 집계 · 관리 화면과 구조도는 포트폴리오 PDF에",
+      evidence: "관리 화면과 구조도는 포트폴리오 PDF에",
       posts: [
         {
           label: "ApplicationSet 시행착오와 서버별 배포 구조",
@@ -336,7 +335,7 @@ export const ko: PortfolioCopy = {
           caption: "준비 단계 도구 발견율과 전달 토큰 · 포트폴리오 PDF 19쪽",
         },
         period: "2026.03 ~ · 오픈소스",
-        ownership: "단독 설계·개발 (커밋 96%)",
+        ownership: "단독 설계·개발",
         summary:
           "의미 검색은 목표 도구(환불)는 찾지만 그 입력값을 만들어 줄 도구(주문 조회)를 놓쳤습니다. 도구 간 입력·출력 관계를 그래프로 만들어 함께 찾습니다.",
         points: [
@@ -396,7 +395,7 @@ export const ko: PortfolioCopy = {
         period: "2024.07 ~ 2026.04 · 2025.06부터 XGEN과 병행",
         ownership: "하이브리드 쿼리 설계 · Rust 전환 색인 담당",
         summary:
-          '"빨간 여성 롱코트" 같은 문장형 검색어를 위해 키워드, 상품 벡터, 색상 벡터를 한 번에 묻는 OpenSearch 쿼리를 설계했습니다(NestJS, 커밋 323건).',
+          '"빨간 여성 롱코트" 같은 문장형 검색어를 위해 키워드, 상품 벡터, 색상 벡터를 한 번에 묻는 OpenSearch 쿼리를 설계했습니다(NestJS).',
         points: [
           {
             v: "Rust 검색 API 전환 때 색인을 5만 건 단위 스트리밍으로 다시 짜고, 기존 일괄 처리 코드 8천여 줄 제거",
@@ -648,8 +647,7 @@ export const en: PortfolioCopy = {
           v: "Cut peak memory of the document service by about 47% (2,257MB → 1,204MB). Added dev, staging, prod promotion and per-MR preview servers across 11 repositories.",
         },
       ],
-      evidence:
-        "Evidence · deployment repo commits 962/1,069 (90%), model serving repo commits 189/218 (86%), counted 2026.09 · screens and diagrams in the PDF",
+      evidence: "Screens and diagrams are in the PDF",
       posts: [
         {
           label: "ApplicationSet trial and per-server deployment (KO)",
@@ -777,7 +775,7 @@ export const en: PortfolioCopy = {
             "Prerequisite tool recall and tokens sent · PDF p.19 (Korean)",
         },
         period: "2026.03 to present · open source",
-        ownership: "Sole designer and developer (96% of commits)",
+        ownership: "Sole designer and developer",
         summary:
           "Semantic search found the target tool (refund) but missed the tool that produces its input (order lookup). This library builds an input/output graph between tools to retrieve both.",
         points: [
@@ -842,7 +840,7 @@ export const en: PortfolioCopy = {
         period: "2024.07 to 2026.04 · alongside XGEN from 2025.06",
         ownership: "Hybrid query design · indexing in the Rust rewrite",
         summary:
-          'For sentence-like queries such as "red women\'s long coat", I designed one OpenSearch query combining keyword, product vector, and color vector (NestJS, 323 commits).',
+          'For sentence-like queries such as "red women\'s long coat", I designed one OpenSearch query combining keyword, product vector, and color vector (NestJS).',
         points: [
           {
             v: "Rewrote indexing as 50,000-document streaming batches in the Rust search API and removed about 8,000 lines of batch code",
