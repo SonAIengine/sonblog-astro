@@ -90,6 +90,7 @@ const P = {
   indexing:
     "/search-engine/rust-search/opensearch-indexing-service-streaming-vs-batch-processing-comparison/",
   aiSearchCase: "/portfolio/search/ai-search-setup-case/",
+  gliner: "/ai/fine-tuning/gliner-dpo-lora-finetuning/",
 };
 
 /** Every internal post link used on the page, checked against real posts at build time. */
@@ -125,7 +126,7 @@ export const ko: PortfolioCopy = {
       },
       {
         title: "AI 에이전트 실행 품질",
-        body: "도구 호출, 권한, 완료 판정을 통제하는 하네스를 튜닝합니다. 에이전트가 도중에 멈추거나 완료를 거짓으로 보고하는 문제를 공개 벤치마크로 재고, 개선용과 검증용 과제에서 모두 좋아진 변경만 반영합니다.",
+        body: "LangChain·LangGraph로 XGEN 에이전트와 챗봇을 만들었고, 지금은 그 실행 경로를 자체 하네스로 옮기며 튜닝과 평가를 맡고 있습니다. 에이전트가 도중에 멈추거나 완료를 거짓으로 보고하는 문제를 공개 벤치마크로 재고, 개선용과 검증용 과제에서 모두 좋아진 변경만 반영합니다.",
       },
       {
         title: "고객 현장과 파트 리딩",
@@ -277,6 +278,26 @@ export const ko: PortfolioCopy = {
         ],
       },
       {
+        title: "LLM 파인튜닝",
+        period: "2024.04 ~ 06 · 2026.09 ~",
+        ownership: "POLAR는 AI Lab 공동 개발, sev는 개인",
+        summary:
+          "입사 직후 플래티어 AI Lab에서 한국어 LLM POLAR를 공동으로 만들었고, 지금은 작은 결정 모델을 LoRA로 학습하고 있습니다.",
+        points: [
+          {
+            v: "POLAR: SOLAR-10.7B 기반 14B 한국어 LLM, DeepSpeed로 SFT와 DPO(선호 데이터 1.23만 건) 학습, Hugging Face 공개와 리더보드 제출",
+          },
+          {
+            v: "sev(2026.09 ~): Eikos 기반 Qwen3.5-4B LoRA 결정 모델의 데이터셋, 학습, 서빙, 평가를 한 하네스로 관리",
+          },
+        ],
+        evidenceLink: {
+          label: "Hugging Face · x2bee/POLAR-14B-DPO-v1.3",
+          href: "https://huggingface.co/x2bee/POLAR-14B-DPO-v1.3",
+        },
+        posts: [{ label: "GliNER과 DPO-LoRA 파인튜닝", href: P.gliner }],
+      },
+      {
         title: "커머스 상품 검색",
         period: "2024.07 ~ 2026.04 · 2025.06부터 XGEN과 병행",
         ownership: "하이브리드 쿼리 설계 · Rust 전환 색인 담당",
@@ -307,6 +328,7 @@ export const ko: PortfolioCopy = {
         period: "2024.03 ~ 재직 중",
         bullets: [
           "커머스 검색 개발로 입사, 2025.06부터 XGEN 담당, 2026.06 조직개편 후 기술·컨설팅 파트장",
+          "2024 한국어 LLM POLAR 파인튜닝(SFT·DPO) 공동 수행, 2025 XGEN 1.0 LangChain 노드, 2026 LangGraph 기반 AI 챗봇 개발",
           "XGEN 배포 플랫폼과 모델 서빙 설계·구현, 게이트웨이(Rust) 인증·라우팅, TTA GS 성능시험 환경 구축",
           "11개 저장소에 3단계 배포, MR별 미리보기 서버, AI 코드 리뷰 도입",
           "고객사 30여 곳 시연·PoC·기술 컨설팅(5곳 계약), Intel Gaudi2/3 LLM 추론 PoC 공동 수행",
@@ -378,6 +400,11 @@ export const ko: PortfolioCopy = {
         ],
       },
       { label: "Language", items: ["Python", "Rust", "TypeScript"] },
+      {
+        label: "Agent",
+        items: ["LangChain", "LangGraph", "MCP", "Tool calling"],
+      },
+      { label: "Training", items: ["DeepSpeed", "TRL (SFT · DPO)", "LoRA"] },
       { label: "AI Coding", items: ["Claude Code", "Codex"] },
       { label: "Framework", items: ["FastAPI", "Axum", "NestJS", "Next.js"] },
       { label: "Data", items: ["PostgreSQL", "Valkey · Redis", "MinIO"] },
@@ -448,7 +475,7 @@ export const en: PortfolioCopy = {
       },
       {
         title: "AI agent execution quality",
-        body: "I tune the harness that controls tool calls, permissions, and completion checks. I measure agents that stall midway or falsely report completion on a public benchmark, and ship only changes that improve both the tuning split and the held-out split.",
+        body: "I built XGEN agents and chatbots on LangChain and LangGraph, and now tune and evaluate the in-house harness that replaces that execution path. I measure agents that stall midway or falsely report completion on a public benchmark, and ship only changes that improve both the tuning split and the held-out split.",
       },
       {
         title: "Customer sites and team leadership",
@@ -608,6 +635,28 @@ export const en: PortfolioCopy = {
         ],
       },
       {
+        title: "LLM fine-tuning",
+        period: "2024.04 to 06 · 2026.09 to present",
+        ownership: "POLAR co-developed at AI Lab, sev is personal",
+        summary:
+          "Right after joining Plateer I co-built the Korean LLM POLAR at AI Lab, and I am now training small decision models with LoRA.",
+        points: [
+          {
+            v: "POLAR: 14B Korean LLM on SOLAR-10.7B, SFT and DPO (12,300 preference pairs) with DeepSpeed, published on Hugging Face and submitted to the leaderboard",
+          },
+          {
+            v: "sev (2026.09 to present): one harness for data, LoRA training, serving, and evaluation of an Eikos-based Qwen3.5-4B decision model",
+          },
+        ],
+        evidenceLink: {
+          label: "Hugging Face · x2bee/POLAR-14B-DPO-v1.3",
+          href: "https://huggingface.co/x2bee/POLAR-14B-DPO-v1.3",
+        },
+        posts: [
+          { label: "GliNER and DPO-LoRA fine-tuning (KO)", href: P.gliner },
+        ],
+      },
+      {
         title: "Commerce product search",
         period: "2024.07 to 2026.04 · alongside XGEN from 2025.06",
         ownership: "Hybrid query design · indexing in the Rust rewrite",
@@ -641,6 +690,7 @@ export const en: PortfolioCopy = {
         period: "2024.03 to present",
         bullets: [
           "Joined for commerce search, took on XGEN from 2025.06, Tech & Consulting part leader after the 2026.06 reorg",
+          "Co-fine-tuned the Korean LLM POLAR (SFT, DPO) in 2024; built XGEN LangChain nodes in 2025 and a LangGraph chatbot in 2026",
           "Designed and built the XGEN deployment platform and model serving, gateway (Rust) auth and routing, TTA GS test environment",
           "Three-stage promotion, per-MR preview servers, and AI code review across 11 repositories",
           "Demos, PoCs, and consulting for about 30 customers (5 contracts), co-ran an Intel Gaudi2/3 LLM inference PoC",
@@ -712,6 +762,11 @@ export const en: PortfolioCopy = {
         ],
       },
       { label: "Language", items: ["Python", "Rust", "TypeScript"] },
+      {
+        label: "Agent",
+        items: ["LangChain", "LangGraph", "MCP", "Tool calling"],
+      },
+      { label: "Training", items: ["DeepSpeed", "TRL (SFT · DPO)", "LoRA"] },
       { label: "AI Coding", items: ["Claude Code", "Codex"] },
       { label: "Framework", items: ["FastAPI", "Axum", "NestJS", "Next.js"] },
       { label: "Data", items: ["PostgreSQL", "Valkey · Redis", "MinIO"] },

@@ -1919,6 +1919,9 @@ const num = (title: string) =>
   .pf-project-stack-row {
     margin-top: 0.9rem;
   }
+  .pf-project-grid--cards > :last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
   .pf-project-grid--cards {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
