@@ -84,6 +84,44 @@ const pc = {
       Lately I focus on the MCP ecosystem, open-sourcing LLM-agent infrastructure like
       <a href="/ai/agent/graph-tool-call-llm-agent-graph-based-tool-search-engine/">graph-tool-call</a> and <a href="/ai/agent/gwanjong-mcp-ai-social-agent-mcp-system-design-impl/">gwanjong-mcp</a>.
     </p>
+    <div class="pf-chips-group">
+        <div class="pf-chips-row">
+          <span class="pf-chips-label">Languages</span>
+          <span class="pf-chip">Rust</span>
+          <span class="pf-chip">Python</span>
+          <span class="pf-chip">TypeScript</span>
+          <span class="pf-chip">Go</span>
+        </div>
+        <div class="pf-chips-row">
+          <span class="pf-chips-label">Frameworks</span>
+          <span class="pf-chip">NestJS</span>
+          <span class="pf-chip">Next.js</span>
+          <span class="pf-chip">FastAPI</span>
+          <span class="pf-chip">Axum</span>
+          <span class="pf-chip">Tauri</span>
+          <span class="pf-chip">React</span>
+        </div>
+        <div class="pf-chips-row">
+          <span class="pf-chips-label">AI / ML</span>
+          <span class="pf-chip">vLLM</span>
+          <span class="pf-chip">llama.cpp</span>
+          <span class="pf-chip">Qdrant</span>
+          <span class="pf-chip">OpenSearch</span>
+          <span class="pf-chip">HuggingFace</span>
+          <span class="pf-chip">LangChain</span>
+          <span class="pf-chip">LangGraph</span>
+          <span class="pf-chip">MCP</span>
+          <span class="pf-chip">Neo4j</span>
+        </div>
+        <div class="pf-chips-row">
+          <span class="pf-chips-label">Infra</span>
+          <span class="pf-chip">Kubernetes</span>
+          <span class="pf-chip">Docker</span>
+          <span class="pf-chip">ArgoCD</span>
+          <span class="pf-chip">Jenkins</span>
+          <span class="pf-chip">Redis</span>
+        </div>
+      </div>
       </div>
 
       <div class="pf-about-side">
@@ -103,57 +141,24 @@ const pc = {
         </div>
       </aside>
       <aside class="pf-about-card pf-pdf-card">
-        <span class="pf-about-card-label">Portfolio PDF</span>
+        <div class="pf-pdf-row">
         <a class="pf-pdf-cover" href="/portfolio/son-seongjun-portfolio.pdf" target="_blank" rel="noopener" aria-label="Open the portfolio PDF in a new tab">
           <img src="/portfolio/cover-preview.jpg" width="1600" height="900" loading="lazy" alt="Cover of Sungjun Son portfolio 2026" />
         </a>
-        <p class="pf-pdf-meta">2026 · 26 pages (Korean) · Updated Sep</p>
+        <div class="pf-pdf-body">
+          <span class="pf-about-card-label">Portfolio PDF</span>
+          <p class="pf-pdf-meta">26 pages · Korean · 2026.09</p>
         <div class="pf-about-card-links">
           <a href="/portfolio/son-seongjun-portfolio.pdf" target="_blank" rel="noopener">Open PDF</a>
           <a href="/portfolio/son-seongjun-portfolio.pdf" download="Sungjun_Son_Portfolio_2026.pdf">Download</a>
+        </div>
+        </div>
         </div>
       </aside>
       </div>
     </div>
 
-    <div class="pf-chips-group">
-      <div class="pf-chips-row">
-        <span class="pf-chips-label">Languages</span>
-        <span class="pf-chip">Rust</span>
-        <span class="pf-chip">Python</span>
-        <span class="pf-chip">TypeScript</span>
-        <span class="pf-chip">Go</span>
-      </div>
-      <div class="pf-chips-row">
-        <span class="pf-chips-label">Frameworks</span>
-        <span class="pf-chip">NestJS</span>
-        <span class="pf-chip">Next.js</span>
-        <span class="pf-chip">FastAPI</span>
-        <span class="pf-chip">Axum</span>
-        <span class="pf-chip">Tauri</span>
-        <span class="pf-chip">React</span>
-      </div>
-      <div class="pf-chips-row">
-        <span class="pf-chips-label">AI / ML</span>
-        <span class="pf-chip">vLLM</span>
-        <span class="pf-chip">llama.cpp</span>
-        <span class="pf-chip">Qdrant</span>
-        <span class="pf-chip">OpenSearch</span>
-        <span class="pf-chip">HuggingFace</span>
-        <span class="pf-chip">LangChain</span>
-        <span class="pf-chip">LangGraph</span>
-        <span class="pf-chip">MCP</span>
-        <span class="pf-chip">Neo4j</span>
-      </div>
-      <div class="pf-chips-row">
-        <span class="pf-chips-label">Infra</span>
-        <span class="pf-chip">Kubernetes</span>
-        <span class="pf-chip">Docker</span>
-        <span class="pf-chip">ArgoCD</span>
-        <span class="pf-chip">Jenkins</span>
-        <span class="pf-chip">Redis</span>
-      </div>
-    </div>
+
   </div>
 </section>
 
@@ -1177,20 +1182,37 @@ a.pf-hero-btn--lang:hover {
   transform: translateY(-1px);
 }
 .pf-about-side { display: flex; flex-direction: column; gap: 1rem; }
+.pf-pdf-row { display: flex; gap: 1rem; align-items: center; }
 .pf-pdf-cover {
+  flex: 0 0 44%;
   display: block;
   overflow: hidden;
-  border-radius: 9px;
+  border-radius: 7px;
   border: 1px solid var(--border);
   transition: transform 0.25s, box-shadow 0.25s;
 }
 .pf-pdf-cover img { display: block; width: 100%; height: auto; }
-.pf-pdf-cover:hover { transform: translateY(-2px); box-shadow: 0 10px 28px var(--pf-shadow); }
+.pf-pdf-cover:hover { transform: translateY(-2px); box-shadow: 0 8px 22px var(--pf-shadow); }
+.pf-pdf-body { flex: 1; min-width: 0; }
+.pf-pdf-body .pf-about-card-label { margin-bottom: 0.35rem; }
 .pf-pdf-meta {
-  margin: 0.75rem 0 0;
+  margin: 0;
   font-family: var(--font-app);
   font-size: 0.7rem;
   color: var(--muted-foreground);
+}
+.pf-pdf-body .pf-about-card-links { margin-top: 0.7rem; }
+.pf-pdf-card { padding: 1.1rem 1.3rem; }
+.pf-about-narrative .pf-chips-group { margin-top: 1.8rem; }
+.pf-about-narrative .pf-chips-row { position: relative; padding-left: 96px; }
+.pf-about-narrative .pf-chips-label { position: absolute; left: 0; top: 0.35rem; min-width: 0; }
+@media (max-width: 520px) {
+  .pf-about-narrative .pf-chips-row { padding-left: 0; }
+  .pf-about-narrative .pf-chips-label { position: static; min-width: 100%; }
+}
+.pf-pdf-body .pf-about-card-links a { white-space: nowrap; }
+@media (max-width: 1200px) {
+  .pf-pdf-body .pf-about-card-links { flex-direction: column; gap: 0.45rem; }
 }
 @media (max-width: 860px) {
   .pf-about-grid { grid-template-columns: 1fr; gap: 1.5rem; }
