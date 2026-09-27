@@ -1,0 +1,2108 @@
+---
+import { getCollection } from "astro:content";
+import Layout from "@/layouts/Layout.astro";
+import { getSortedPosts } from "@/utils/getSortedPosts";
+import { getPostSlug, getPostUrl } from "@/utils/getPostPaths";
+import { POST_LINKS, type PortfolioCopy } from "./content";
+
+type Props = { t: PortfolioCopy };
+const { t } = Astro.props;
+
+const PDF = "/portfolio/son-seongjun-portfolio.pdf";
+const COVER = "/portfolio/cover-preview.jpg";
+const EMAIL = "sonsj97@gmail.com";
+const GITHUB = "https://github.com/SonAIengine";
+const mailto = `mailto:${EMAIL}?subject=${encodeURIComponent(t.hero.mailSubject)}`;
+
+const posts = getSortedPosts(await getCollection("posts"));
+
+// Fail the build if a hand-written post link no longer resolves to a real post.
+const known = new Set(posts.map(p => `${getPostSlug(p.id, p.filePath)}/`));
+const missing = POST_LINKS.filter(href => !known.has(href));
+if (missing.length > 0) {
+  throw new Error(`portfolio: unknown post links ${missing.join(", ")}`);
+}
+
+const recent = [...posts]
+  .sort(
+    (a, b) =>
+      new Date(b.data.pubDatetime).getTime() -
+      new Date(a.data.pubDatetime).getTime()
+  )
+  .slice(0, 5)
+  .map(p => ({
+    title: p.data.title,
+    href: getPostUrl(p.id, p.filePath),
+    date: new Date(p.data.pubDatetime)
+      .toISOString()
+      .slice(0, 7)
+      .replace("-", "."),
+  }));
+
+// Build date in KST, shown next to the live post count.
+const builtAt = new Date(Date.now() + 9 * 3600 * 1000)
+  .toISOString()
+  .slice(0, 10)
+  .replaceAll("-", ".");
+
+const sections = [
+  t.fit.title,
+  t.projects.title,
+  t.experience.title,
+  t.oss.title,
+  t.skills.title,
+  t.edu.title,
+];
+const num = (title: string) =>
+  `${String(sections.indexOf(title) + 1).padStart(2, "0")}.`;
+---
+
+<Layout
+  title={t.meta.title}
+  description={t.meta.description}
+  ogImage="/portfolio/og-portfolio.jpg"
+>
+  <main class="portfolio-root" lang={t.lang}>
+    <section class="pf-hero">
+      <div class="pf-hero-mesh"></div>
+      <div class="pf-hero-inner">
+        <p class="pf-hero-greeting">{t.hero.eyebrow}</p>
+        <h1 class="pf-hero-name">{t.hero.name}</h1>
+        <p class="pf-hero-role">{t.hero.role}</p>
+        {t.hero.summary.map(line => <p class="pf-hero-summary">{line}</p>)}
+        <div class="pf-proof">
+          {
+            t.hero.stats.map(s => (
+              <div class="pf-proof-item">
+                <span class="pf-proof-value">{s.value}</span>
+                <span class="pf-proof-label">{s.label}</span>
+              </div>
+            ))
+          }
+        </div>
+        <div class="pf-hero-links">
+          <a href={mailto} class="pf-hero-btn pf-hero-btn--primary"
+            >{t.hero.ctaMail}</a
+          >
+          <a href={PDF} class="pf-hero-btn" target="_blank" rel="noopener"
+            >{t.hero.ctaPdf}</a
+          >
+          <a href={GITHUB} class="pf-hero-btn" target="_blank" rel="noopener"
+            >GitHub</a
+          >
+          <a href={t.hero.langSwitch.href} class="pf-hero-btn pf-hero-btn--lang"
+            >{t.hero.langSwitch.label}</a
+          >
+        </div>
+        <p class="pf-hero-note">{t.hero.note} <a href={mailto}>{EMAIL}</a></p>
+      </div>
+    </section>
+
+    <section class="pf-section">
+      <div class="pf-section-header">
+        <span class="pf-section-num">{num(t.fit.title)}</span>
+        <h2 class="pf-section-title">{t.fit.title}</h2>
+        <div class="pf-section-line"></div>
+      </div>
+      <div class="pf-about-grid">
+        <ol class="pf-fit-list">
+          {
+            t.fit.items.map(item => (
+              <li class="pf-fit-item">
+                <h3>{item.title}</h3>
+                <p>{item.body}</p>
+              </li>
+            ))
+          }
+        </ol>
+        <div class="pf-about-side">
+          <aside class="pf-about-card">
+            <span class="pf-about-card-label">{t.glance.label}</span>
+            <ul class="pf-about-facts">
+              {
+                t.glance.rows.map(r => (
+                  <li>
+                    <>
+                      <span class="pf-fact-k">{r.k}</span>
+                      <span class="pf-fact-v">{r.v}</span>
+                    </>
+                  </li>
+                ))
+              }
+            </ul>
+            <div class="pf-about-card-links">
+              <a href={mailto}>{t.glance.mail}</a>
+              <a href={GITHUB} target="_blank" rel="noopener">GitHub</a>
+            </div>
+          </aside>
+          <aside class="pf-about-card pf-pdf-card">
+            <div class="pf-pdf-row">
+              <a
+                class="pf-pdf-cover"
+                href={PDF}
+                target="_blank"
+                rel="noopener"
+                aria-label={t.glance.pdfAria}
+              >
+                <img
+                  src={COVER}
+                  width="1600"
+                  height="900"
+                  loading="lazy"
+                  alt={t.glance.pdfAlt}
+                />
+              </a>
+              <div class="pf-pdf-body">
+                <span class="pf-about-card-label">{t.glance.pdfLabel}</span>
+                <p class="pf-pdf-meta">{t.glance.pdfDesc}</p>
+                <div class="pf-about-card-links">
+                  <a href={PDF} target="_blank" rel="noopener"
+                    >{t.glance.pdfOpen}</a
+                  >
+                  <a href={PDF} download={t.glance.pdfFilename}
+                    >{t.glance.pdfDownload}</a
+                  >
+                </div>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="pf-section">
+      <div class="pf-section-header">
+        <span class="pf-section-num">{num(t.projects.title)}</span>
+        <h2 class="pf-section-title">{t.projects.title}</h2>
+        <div class="pf-section-line"></div>
+      </div>
+      {
+        [t.projects.featured].map(p => {
+          const isFeatured = true;
+          return (
+            <article
+              class:list={[
+                "pf-project",
+                { "pf-project--featured": isFeatured },
+              ]}
+              data-spotlight
+            >
+              <div class="pf-project-content">
+                <div class="pf-project-top">
+                  <span class="pf-project-label">
+                    {isFeatured ? t.projects.featuredLabel : p.period}
+                  </span>
+                  <span class="pf-project-owner">{p.ownership}</span>
+                </div>
+                <h3>{p.title}</h3>
+                {isFeatured && (
+                  <span class="pf-project-period">{p.period}</span>
+                )}
+                <p class="pf-project-desc">{p.summary}</p>
+                <ul
+                  class:list={[
+                    "pf-project-highlights",
+                    { "pf-project-highlights--keyed": isFeatured },
+                  ]}
+                >
+                  {p.points.map(pt => (
+                    <li>
+                      {pt.k && <b>{pt.k}</b>}
+                      <span>{pt.v}</span>
+                    </li>
+                  ))}
+                </ul>
+                {p.evidence && <p class="pf-project-evidence">{p.evidence}</p>}
+                {p.evidenceLink && (
+                  <p class="pf-project-evidence">
+                    <a
+                      href={p.evidenceLink.href}
+                      target="_blank"
+                      rel="noopener"
+                    >
+                      {p.evidenceLink.label}
+                    </a>
+                  </p>
+                )}
+                {p.posts.length > 0 && (
+                  <div class="pf-project-posts-row">
+                    <span>{t.projects.postsLabel}</span>
+                    {p.posts.map(l => (
+                      <a href={l.href}>{l.label}</a>
+                    ))}
+                  </div>
+                )}
+                {p.stack && (
+                  <div class="pf-project-stack-row">
+                    {p.stack.map(s => (
+                      <span class="pf-stack-item">{s}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </article>
+          );
+        })
+      }
+      <div class="pf-project-grid--cards">
+        {
+          t.projects.cards.map(p => {
+            const isFeatured = false;
+            return (
+              <article
+                class:list={[
+                  "pf-project",
+                  { "pf-project--featured": isFeatured },
+                ]}
+                data-spotlight
+              >
+                <div class="pf-project-content">
+                  <div class="pf-project-top">
+                    <span class="pf-project-label">
+                      {isFeatured ? t.projects.featuredLabel : p.period}
+                    </span>
+                    <span class="pf-project-owner">{p.ownership}</span>
+                  </div>
+                  <h3>{p.title}</h3>
+                  {isFeatured && (
+                    <span class="pf-project-period">{p.period}</span>
+                  )}
+                  <p class="pf-project-desc">{p.summary}</p>
+                  <ul
+                    class:list={[
+                      "pf-project-highlights",
+                      { "pf-project-highlights--keyed": isFeatured },
+                    ]}
+                  >
+                    {p.points.map(pt => (
+                      <li>
+                        {pt.k && <b>{pt.k}</b>}
+                        <span>{pt.v}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  {p.evidence && (
+                    <p class="pf-project-evidence">{p.evidence}</p>
+                  )}
+                  {p.evidenceLink && (
+                    <p class="pf-project-evidence">
+                      <a
+                        href={p.evidenceLink.href}
+                        target="_blank"
+                        rel="noopener"
+                      >
+                        {p.evidenceLink.label}
+                      </a>
+                    </p>
+                  )}
+                  {p.posts.length > 0 && (
+                    <div class="pf-project-posts-row">
+                      <span>{t.projects.postsLabel}</span>
+                      {p.posts.map(l => (
+                        <a href={l.href}>{l.label}</a>
+                      ))}
+                    </div>
+                  )}
+                  {p.stack && (
+                    <div class="pf-project-stack-row">
+                      {p.stack.map(s => (
+                        <span class="pf-stack-item">{s}</span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </article>
+            );
+          })
+        }
+      </div>
+    </section>
+
+    <section class="pf-section">
+      <div class="pf-section-header">
+        <span class="pf-section-num">{num(t.experience.title)}</span>
+        <h2 class="pf-section-title">{t.experience.title}</h2>
+        <div class="pf-section-line"></div>
+      </div>
+      <div class="pf-exp-list">
+        {
+          t.experience.items.map(e => (
+            <div class="pf-exp-card">
+              <div class="pf-exp-head">
+                <h3 class="pf-exp-role">
+                  {e.company} · {e.role}
+                </h3>
+                <span class="pf-exp-period">{e.period}</span>
+              </div>
+              <ul class="pf-tl-list">
+                {e.bullets.map(b => (
+                  <li>{b}</li>
+                ))}
+              </ul>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <section class="pf-section">
+      <div class="pf-section-header">
+        <span class="pf-section-num">{num(t.oss.title)}</span>
+        <h2 class="pf-section-title">{t.oss.title}</h2>
+        <div class="pf-section-line"></div>
+      </div>
+      <div class="pf-oss-grid pf-oss-grid--3">
+        {
+          t.oss.items.map(o => (
+            <a href={o.href} class="pf-oss-card" target="_blank" rel="noopener">
+              <div class="pf-oss-header">
+                <span class="pf-oss-lang">Python</span>
+              </div>
+              <h4>{o.name}</h4>
+              <p>{o.desc}</p>
+              <div class="pf-oss-meta">
+                <span class="pf-oss-badge">{o.badge}</span>
+              </div>
+            </a>
+          ))
+        }
+      </div>
+      <div class="pf-writing">
+        <div class="pf-writing-head">
+          <h3>{t.oss.writingTitle}</h3>
+          <p>{t.oss.writingDesc(posts.length, builtAt)}</p>
+        </div>
+        <ul class="pf-writing-list">
+          {
+            recent.map(r => (
+              <li>
+                <>
+                  <span class="pf-writing-date">{r.date}</span>
+                  <a href={r.href}>{r.title}</a>
+                </>
+              </li>
+            ))
+          }
+        </ul>
+        <a class="pf-footer-btn" href={t.oss.allPosts.href}
+          >{t.oss.allPosts.label}</a
+        >
+      </div>
+    </section>
+
+    <section class="pf-section">
+      <div class="pf-section-header">
+        <span class="pf-section-num">{num(t.skills.title)}</span>
+        <h2 class="pf-section-title">{t.skills.title}</h2>
+        <div class="pf-section-line"></div>
+      </div>
+      <div class="pf-chips-group pf-chips-group--skills">
+        {
+          t.skills.rows.map(r => (
+            <div class="pf-chips-row">
+              <span class="pf-chips-label">{r.label}</span>
+              {r.items.map(c => (
+                <span class="pf-chip">{c}</span>
+              ))}
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <section class="pf-section">
+      <div class="pf-section-header">
+        <span class="pf-section-num">{num(t.edu.title)}</span>
+        <h2 class="pf-section-title">{t.edu.title}</h2>
+        <div class="pf-section-line"></div>
+      </div>
+      <div class="pf-edu-grid">
+        {
+          t.edu.schools.map(s => (
+            <div class="pf-edu-card">
+              <span class="pf-edu-period">{s.period}</span>
+              <h3 class="pf-edu-school">{s.school}</h3>
+              <span class="pf-edu-degree">{s.degree}</span>
+            </div>
+          ))
+        }
+      </div>
+      <div class="pf-chips-row pf-certs">
+        <span class="pf-chips-label">{t.edu.certsLabel}</span>
+        {t.edu.certs.map(c => <span class="pf-chip">{c}</span>)}
+      </div>
+    </section>
+
+    <section class="pf-cta">
+      <h2>{t.cta.title}</h2>
+      {t.cta.body.map(line => <p>{line}</p>)}
+      <div class="pf-hero-links">
+        <a href={mailto} class="pf-hero-btn pf-hero-btn--primary"
+          >{t.cta.mail}</a
+        >
+        <a href={PDF} class="pf-hero-btn" target="_blank" rel="noopener"
+          >{t.cta.pdf}</a
+        >
+        <a href={GITHUB} class="pf-hero-btn" target="_blank" rel="noopener"
+          >GitHub</a
+        >
+      </div>
+    </section>
+  </main>
+</Layout>
+
+<script>
+  // Card spotlight: pass the cursor position to CSS as --mx/--my.
+  function initSpotlight() {
+    document.querySelectorAll<HTMLElement>("[data-spotlight]").forEach(el => {
+      if (el.dataset.spotBound) return;
+      el.dataset.spotBound = "1";
+      el.addEventListener("pointermove", e => {
+        const r = el.getBoundingClientRect();
+        el.style.setProperty("--mx", `${e.clientX - r.left}px`);
+        el.style.setProperty("--my", `${e.clientY - r.top}px`);
+      });
+    });
+  }
+  document.addEventListener("astro:page-load", initSpotlight);
+</script>
+
+<style is:global>
+  /* ============================================================
+   Portfolio: Linear/teal, 사이트 디자인 토큰 정렬
+   라이트/다크는 --background/--foreground/--accent 토큰으로 자동 적응.
+   (mkdocs [data-md-color-scheme] 잔재 전부 제거)
+   ============================================================ */
+
+  .portfolio-root {
+    --pf-tint: color-mix(in srgb, var(--accent) 8%, transparent);
+    --pf-tint-strong: color-mix(in srgb, var(--accent) 16%, transparent);
+    --pf-border-accent: color-mix(in srgb, var(--accent) 30%, transparent);
+    --pf-surface: color-mix(in srgb, var(--foreground) 2.5%, var(--background));
+    --pf-surface-hover: color-mix(in srgb, var(--accent) 5%, var(--background));
+    --pf-shadow: color-mix(in srgb, var(--accent) 12%, transparent);
+  }
+
+  /* ── Hero (항상 무채색 다크 밴드 + teal glow) ── */
+  .pf-hero {
+    position: relative;
+    overflow: hidden;
+    background: #0a0a0b;
+    text-align: center;
+    padding: 5.5rem 2rem 4rem;
+  }
+  .pf-hero-mesh {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(
+        ellipse at 20% 40%,
+        rgba(20, 184, 166, 0.16) 0%,
+        transparent 55%
+      ),
+      radial-gradient(
+        ellipse at 82% 18%,
+        rgba(45, 212, 191, 0.1) 0%,
+        transparent 50%
+      ),
+      radial-gradient(
+        ellipse at 60% 92%,
+        rgba(13, 148, 136, 0.1) 0%,
+        transparent 55%
+      );
+  }
+  .pf-hero::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(20, 184, 166, 0.4),
+      transparent
+    );
+  }
+  .pf-hero-inner {
+    position: relative;
+    z-index: 1;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  .pf-hero-greeting {
+    margin: 0 0 0.9rem;
+    font-family: var(--font-app);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #5eead4;
+  }
+  .pf-hero-name {
+    margin: 0 0 0.7rem;
+    border: none;
+    padding: 0;
+    color: #f7f8f8 !important;
+    font-size: clamp(2.1rem, 5vw, 3.3rem);
+    font-weight: 800;
+    letter-spacing: -0.035em;
+    line-height: 1.08;
+  }
+  .pf-hero-keywords {
+    margin: 0 0 2.2rem;
+    color: #8a8f98;
+    font-family: var(--font-app);
+    font-size: 0.88rem;
+    letter-spacing: 0.02em;
+  }
+  .pf-hero-stats {
+    display: flex;
+    justify-content: center;
+    gap: 2.75rem;
+    margin-bottom: 2rem;
+  }
+  .pf-hero-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+  }
+  .pf-hero-stat-num {
+    color: #f7f8f8;
+    font-family: var(--font-app);
+    font-size: 1.55rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    font-feature-settings: "tnum" 1;
+  }
+  .pf-hero-stat-label {
+    color: #6b7280;
+    font-family: var(--font-app);
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .pf-hero-emails {
+    margin: 0 0 1.3rem;
+    color: #8a8f98;
+    font-family: var(--font-app);
+    font-size: 0.76rem;
+  }
+  .pf-hero-socials {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.9rem;
+    margin-bottom: 1.4rem;
+  }
+  a.pf-social-icon,
+  a.pf-social-icon:link,
+  a.pf-social-icon:visited {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(20, 184, 166, 0.08);
+    border: 1px solid rgba(20, 184, 166, 0.22);
+    color: #99f6e4 !important;
+    text-decoration: none !important;
+    transition:
+      transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+      background 0.3s,
+      border-color 0.3s,
+      box-shadow 0.3s;
+  }
+  a.pf-social-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+  a.pf-social-icon:hover {
+    background: rgba(20, 184, 166, 0.18);
+    border-color: rgba(20, 184, 166, 0.5);
+    color: #ccfbf1 !important;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 18px rgba(20, 184, 166, 0.22);
+  }
+  .pf-hero-links {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+  }
+  a.pf-hero-btn,
+  a.pf-hero-btn:link,
+  a.pf-hero-btn:visited {
+    display: inline-block;
+    padding: 0.5rem 1.2rem;
+    border-radius: 8px;
+    font-family: var(--font-app);
+    font-size: 0.76rem;
+    font-weight: 500;
+    color: #99f6e4 !important;
+    background: rgba(20, 184, 166, 0.08);
+    border: 1px solid rgba(20, 184, 166, 0.25);
+    text-decoration: none !important;
+    transition:
+      transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+      background 0.3s,
+      border-color 0.3s,
+      box-shadow 0.3s;
+  }
+  a.pf-hero-btn:hover {
+    background: rgba(20, 184, 166, 0.16);
+    border-color: rgba(20, 184, 166, 0.5);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(20, 184, 166, 0.18);
+  }
+  a.pf-hero-btn--primary,
+  a.pf-hero-btn--primary:link,
+  a.pf-hero-btn--primary:visited {
+    background: rgba(20, 184, 166, 0.22) !important;
+    border-color: rgba(20, 184, 166, 0.45) !important;
+    color: #ccfbf1 !important;
+  }
+  a.pf-hero-btn--lang,
+  a.pf-hero-btn--lang:link,
+  a.pf-hero-btn--lang:visited {
+    background: transparent !important;
+    border-style: dashed !important;
+    border-color: rgba(20, 184, 166, 0.45) !important;
+    color: #5eead4 !important;
+  }
+  a.pf-hero-btn--lang:hover {
+    background: rgba(20, 184, 166, 0.12) !important;
+    border-style: solid !important;
+  }
+
+  /* ── Section ── */
+  .pf-section {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 3.25rem 2rem 0;
+  }
+  .pf-section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    margin-bottom: 1.6rem;
+  }
+  .pf-section-num {
+    font-family: var(--font-app);
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--accent);
+  }
+  .pf-section-title {
+    margin: 0;
+    padding: 0;
+    border: none;
+    white-space: nowrap;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--foreground);
+  }
+  .pf-section-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--border), transparent);
+  }
+
+  /* ── About ── */
+  .pf-about-text {
+    margin: 0 0 1.4rem;
+    color: var(--muted-foreground);
+    font-size: 0.95rem;
+    line-height: 1.85;
+  }
+  .pf-about-text a {
+    color: var(--accent);
+    text-decoration: underline;
+    text-decoration-style: dashed;
+    text-underline-offset: 3px;
+  }
+  .pf-chips-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-top: 1.8rem;
+  }
+  .pf-chips-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .pf-chips-label {
+    min-width: 92px;
+    font-family: var(--font-app);
+    font-size: 0.66rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+  }
+  .pf-chip {
+    padding: 0.22rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.74rem;
+    font-weight: 500;
+    color: var(--accent);
+    background: var(--pf-tint);
+    border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+    transition:
+      transform 0.2s,
+      background 0.2s,
+      border-color 0.2s;
+  }
+  .pf-chip:hover {
+    background: var(--pf-tint-strong);
+    border-color: var(--pf-border-accent);
+    transform: translateY(-1px);
+  }
+
+  /* ── About layout ── */
+  .pf-about-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 58ch) 1fr;
+    gap: 2.5rem;
+    align-items: start;
+  }
+  .pf-about-narrative .pf-about-text:last-child {
+    margin-bottom: 0;
+  }
+  .pf-about-card {
+    padding: 1.5rem 1.6rem;
+    border-radius: 14px;
+    background: var(--pf-surface);
+    border: 1px solid var(--border);
+  }
+  .pf-about-card-label {
+    display: block;
+    margin-bottom: 1rem;
+    font-family: var(--font-app);
+    font-size: 0.66rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .pf-about-facts {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .pf-about-facts li {
+    display: flex;
+    gap: 0.9rem;
+    align-items: baseline;
+    padding: 0.55rem 0;
+    border-top: 1px solid var(--border);
+  }
+  .pf-about-facts li:first-child {
+    border-top: none;
+    padding-top: 0;
+  }
+  .pf-fact-k {
+    flex: none;
+    width: 3.2rem;
+    font-family: var(--font-app);
+    font-size: 0.67rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+  }
+  .pf-fact-v {
+    font-size: 0.83rem;
+    line-height: 1.45;
+    color: var(--foreground);
+  }
+  .pf-about-card-links {
+    display: flex;
+    gap: 0.6rem;
+    margin-top: 1.2rem;
+  }
+  .pf-about-card-links a {
+    flex: 1;
+    text-align: center;
+    padding: 0.42rem 0.5rem;
+    border-radius: 7px;
+    font-family: var(--font-app);
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--accent) !important;
+    background: var(--pf-tint);
+    border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+    text-decoration: none !important;
+    transition:
+      background 0.25s,
+      border-color 0.25s,
+      transform 0.25s;
+  }
+  .pf-about-card-links a:hover {
+    background: var(--pf-tint-strong);
+    border-color: var(--pf-border-accent);
+    transform: translateY(-1px);
+  }
+  .pf-about-side {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .pf-pdf-row {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+  }
+  .pf-pdf-cover {
+    flex: 0 0 44%;
+    display: block;
+    overflow: hidden;
+    border-radius: 7px;
+    border: 1px solid var(--border);
+    transition:
+      transform 0.25s,
+      box-shadow 0.25s;
+  }
+  .pf-pdf-cover img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .pf-pdf-cover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px var(--pf-shadow);
+  }
+  .pf-pdf-body {
+    flex: 1;
+    min-width: 0;
+  }
+  .pf-pdf-body .pf-about-card-label {
+    margin-bottom: 0.35rem;
+  }
+  .pf-pdf-meta {
+    margin: 0;
+    font-family: var(--font-app);
+    font-size: 0.7rem;
+    color: var(--muted-foreground);
+  }
+  .pf-pdf-body .pf-about-card-links {
+    margin-top: 0.7rem;
+  }
+  .pf-pdf-card {
+    padding: 1.1rem 1.3rem;
+  }
+  .pf-about-narrative .pf-chips-group {
+    margin-top: 1.8rem;
+  }
+  .pf-about-narrative .pf-chips-row {
+    position: relative;
+    padding-left: 96px;
+  }
+  .pf-about-narrative .pf-chips-label {
+    position: absolute;
+    left: 0;
+    top: 0.35rem;
+    min-width: 0;
+  }
+  @media (max-width: 520px) {
+    .pf-about-narrative .pf-chips-row {
+      padding-left: 0;
+    }
+    .pf-about-narrative .pf-chips-label {
+      position: static;
+      min-width: 100%;
+    }
+  }
+  .pf-pdf-body .pf-about-card-links a {
+    white-space: nowrap;
+  }
+  @media (max-width: 1200px) {
+    .pf-pdf-body .pf-about-card-links {
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+  }
+  @media (max-width: 860px) {
+    .pf-about-grid {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+  }
+
+  /* ── Expertise ── */
+  .pf-expertise-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+  }
+  .pf-expertise-card {
+    display: flex;
+    flex-direction: column;
+    padding: 1.35rem;
+    border-radius: 14px;
+    background: var(--pf-surface);
+    border: 1px solid var(--border);
+    color: inherit;
+    text-decoration: none !important;
+    position: relative;
+    overflow: hidden;
+    transition:
+      transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 0.35s,
+      box-shadow 0.35s,
+      background 0.35s;
+  }
+  .pf-expertise-card::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 12%;
+    right: 12%;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--accent) 45%, transparent),
+      transparent
+    );
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .pf-expertise-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--pf-border-accent);
+    background: var(--pf-surface-hover);
+    box-shadow: 0 12px 28px var(--pf-shadow);
+  }
+  .pf-expertise-card:hover::after {
+    opacity: 1;
+  }
+  .pf-expertise-icon {
+    width: 36px;
+    height: 36px;
+    color: var(--accent);
+    margin-bottom: 0.85rem;
+  }
+  .pf-expertise-icon svg {
+    width: 100%;
+    height: 100%;
+  }
+  .pf-expertise-card h3 {
+    margin: 0 0 0.4rem;
+    padding: 0;
+    border: none;
+    font-size: 0.96rem;
+    font-weight: 700;
+    color: var(--foreground);
+  }
+  .pf-card-count {
+    margin-bottom: 0.7rem;
+    font-family: var(--font-app);
+    font-size: 0.66rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .pf-card-techs {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    flex-grow: 1;
+  }
+  .pf-card-techs li {
+    position: relative;
+    padding-left: 0.85rem;
+    margin-bottom: 0.12rem;
+    font-size: 0.79rem;
+    line-height: 1.6;
+    color: var(--muted-foreground);
+  }
+  .pf-card-techs li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.62em;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--accent) 55%, transparent);
+  }
+
+  /* ── Projects ── */
+  .pf-project {
+    display: flex;
+    flex-direction: column;
+    padding: 1px;
+    border-radius: 14px;
+    background: var(--border);
+    position: relative;
+    overflow: hidden;
+    color: inherit;
+    text-decoration: none !important;
+    transition:
+      transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.35s;
+  }
+  .pf-project::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 0.4s;
+    background: radial-gradient(
+      500px circle at var(--mx, 50%) var(--my, 50%),
+      color-mix(in srgb, var(--accent) 30%, transparent),
+      transparent 40%
+    );
+  }
+  .pf-project:hover::before {
+    opacity: 1;
+  }
+  .pf-project:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  }
+  .pf-project-content {
+    position: relative;
+    z-index: 2;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 1.6rem;
+    border-radius: 13px;
+    background: var(--pf-surface);
+  }
+  .pf-project-content .pf-project-desc {
+    flex: 1;
+  }
+  .pf-project-glow {
+    display: none;
+  }
+  .pf-project--featured {
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, #0f766e, #14b8a6, #2dd4bf);
+  }
+  .pf-project--featured::before {
+    background: radial-gradient(
+      600px circle at var(--mx, 50%) var(--my, 50%),
+      rgba(255, 255, 255, 0.14),
+      transparent 40%
+    );
+  }
+  .pf-project--featured .pf-project-content {
+    background: color-mix(in srgb, var(--accent) 6%, var(--background));
+  }
+  .pf-project--featured h3 {
+    font-size: 1.22rem;
+    color: var(--foreground);
+  }
+  .pf-project-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.6rem;
+  }
+  .pf-project-label {
+    font-family: var(--font-app);
+    font-size: 0.66rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .pf-project h3 {
+    margin: 0 0 0.5rem;
+    padding: 0;
+    border: none;
+    font-size: 1.02rem;
+    font-weight: 700;
+    color: var(--foreground);
+  }
+  .pf-project-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-bottom: 0.6rem;
+  }
+  .pf-tag {
+    padding: 0.16rem 0.55rem;
+    border-radius: 100px;
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border: 1px solid transparent;
+  }
+  .pf-tag--search {
+    background: rgba(59, 130, 246, 0.13);
+    color: #3b82f6;
+    border-color: rgba(59, 130, 246, 0.28);
+  }
+  .pf-tag--ai {
+    background: rgba(168, 85, 247, 0.13);
+    color: #a855f7;
+    border-color: rgba(168, 85, 247, 0.28);
+  }
+  .pf-tag--fullstack {
+    background: rgba(34, 197, 94, 0.13);
+    color: #22c55e;
+    border-color: rgba(34, 197, 94, 0.28);
+  }
+  .pf-tag--devops {
+    background: rgba(249, 115, 22, 0.13);
+    color: #f97316;
+    border-color: rgba(249, 115, 22, 0.28);
+  }
+  .pf-project-desc {
+    margin: 0 0 0.85rem;
+    font-size: 0.86rem;
+    line-height: 1.7;
+    color: var(--muted-foreground);
+  }
+  .pf-project-posts {
+    font-family: var(--font-app);
+    font-size: 0.66rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--accent);
+  }
+  .pf-project-highlights {
+    list-style: none !important;
+    margin: 0 0 0.85rem !important;
+    padding: 0 !important;
+  }
+  .pf-project-highlights li {
+    position: relative;
+    list-style: none !important;
+    margin: 0 0 0.32rem !important;
+    padding-left: 1rem;
+    font-size: 0.81rem;
+    line-height: 1.65;
+    color: var(--muted-foreground);
+  }
+  .pf-project-highlights li::marker {
+    content: none !important;
+  }
+  .pf-project-highlights li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.6em;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .pf-project-highlights li strong {
+    color: var(--foreground);
+    font-weight: 700;
+  }
+  .pf-project-stack-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .pf-stack-item {
+    padding: 0.16rem 0.5rem;
+    border-radius: 5px;
+    font-family: var(--font-app);
+    font-size: 0.67rem;
+    color: var(--muted-foreground);
+    background: color-mix(in srgb, var(--foreground) 5%, transparent);
+    border: 1px solid var(--border);
+  }
+  .pf-project-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  /* ── Open Source ── */
+  .pf-oss-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.1rem;
+  }
+  a.pf-oss-card,
+  a.pf-oss-card:link,
+  a.pf-oss-card:visited {
+    display: flex;
+    flex-direction: column;
+    padding: 1.4rem;
+    border-radius: 14px;
+    background: var(--pf-surface);
+    border: 1px solid var(--border);
+    color: inherit !important;
+    text-decoration: none !important;
+    transition:
+      transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 0.3s,
+      box-shadow 0.3s;
+  }
+  a.pf-oss-card:hover {
+    border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 26px var(--pf-shadow);
+  }
+  .pf-oss-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.7rem;
+  }
+  .pf-oss-icon {
+    width: 22px;
+    height: 22px;
+    color: var(--accent);
+  }
+  .pf-oss-lang {
+    font-family: var(--font-app);
+    font-size: 0.68rem;
+    font-weight: 500;
+    color: var(--accent);
+    background: var(--pf-tint);
+    padding: 0.15rem 0.5rem;
+    border-radius: 5px;
+  }
+  .pf-oss-card h4 {
+    margin: 0 0 0.4rem;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--foreground);
+  }
+  .pf-oss-card p {
+    margin: 0 0 1rem;
+    flex-grow: 1;
+    font-size: 0.81rem;
+    line-height: 1.55;
+    color: var(--muted-foreground);
+  }
+  .pf-oss-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: auto;
+  }
+  .pf-oss-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: var(--font-app);
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: var(--accent);
+    background: var(--pf-tint);
+    border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+    padding: 0.3rem 0.65rem;
+    border-radius: 6px;
+  }
+  .pf-oss-badge::before {
+    content: "$";
+    opacity: 0.55;
+    font-weight: 600;
+  }
+
+  /* ── Tech Stack ── */
+  .pf-stack-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+  }
+  .pf-stack-col {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .pf-stack-label {
+    margin: 0 0 0.4rem;
+    padding: 0 0 0.45rem;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--font-app);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+  }
+  .pf-stack-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .pf-stack-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.3rem 0.7rem;
+    border-radius: 8px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--muted-foreground);
+    background: var(--pf-surface);
+    border: 1px solid var(--border);
+    cursor: default;
+    transition:
+      transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+      background 0.25s,
+      border-color 0.25s,
+      color 0.25s,
+      box-shadow 0.25s;
+  }
+  .pf-stack-chip:hover {
+    color: var(--accent);
+    background: var(--pf-tint);
+    border-color: var(--pf-border-accent);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px var(--pf-shadow);
+  }
+
+  /* ── Timeline ── */
+  .pf-timeline {
+    position: relative;
+    max-width: 720px;
+  }
+  .pf-timeline::before {
+    content: "";
+    position: absolute;
+    left: 6px;
+    top: 8px;
+    bottom: 8px;
+    width: 2px;
+    border-radius: 2px;
+    background: linear-gradient(
+      to bottom,
+      var(--accent),
+      color-mix(in srgb, var(--accent) 30%, transparent),
+      transparent
+    );
+  }
+  .pf-tl-item {
+    position: relative;
+    padding-left: 2.5rem;
+    margin-bottom: 2rem;
+  }
+  .pf-tl-item:last-child {
+    margin-bottom: 0;
+  }
+  .pf-tl-dot {
+    position: absolute;
+    left: 0;
+    top: 6px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 3px solid var(--background);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent);
+  }
+  .pf-tl-card {
+    padding: 1.25rem 1.5rem;
+    border-radius: 12px;
+    background: var(--pf-surface);
+    border: 1px solid var(--border);
+    transition:
+      transform 0.3s,
+      border-color 0.3s,
+      box-shadow 0.3s;
+  }
+  .pf-tl-card:hover {
+    border-color: var(--pf-border-accent);
+    box-shadow: 0 6px 18px var(--pf-shadow);
+    transform: translateX(4px);
+  }
+  .pf-tl-year {
+    display: block;
+    margin-bottom: 0.6rem;
+    font-family: var(--font-app);
+    font-size: 1.1rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--accent);
+    font-feature-settings: "tnum" 1;
+  }
+  .pf-tl-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .pf-tl-list li {
+    position: relative;
+    padding-left: 0.85rem;
+    margin-bottom: 0.35rem;
+    font-size: 0.86rem;
+    line-height: 1.6;
+    color: var(--muted-foreground);
+  }
+  .pf-tl-list li:last-child {
+    margin-bottom: 0;
+  }
+  .pf-tl-list li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.58em;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--accent) 50%, transparent);
+  }
+  .pf-tl-list a {
+    color: inherit;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .pf-tl-list a:hover {
+    color: var(--accent);
+  }
+
+  /* ── Experience ── */
+  .pf-exp-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .pf-exp-card {
+    padding: 1.5rem 1.6rem;
+    border-radius: 14px;
+    background: var(--pf-surface);
+    border: 1px solid var(--border);
+    transition:
+      transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 0.3s,
+      box-shadow 0.3s;
+  }
+  .pf-exp-card:hover {
+    border-color: var(--pf-border-accent);
+    box-shadow: 0 8px 20px var(--pf-shadow);
+    transform: translateY(-2px);
+  }
+  .pf-exp-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.3rem 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.15rem;
+  }
+  .pf-exp-role {
+    margin: 0;
+    padding: 0;
+    border: none;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--foreground);
+  }
+  .pf-exp-period {
+    font-family: var(--font-app);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+  .pf-exp-company {
+    display: block;
+    margin-bottom: 0.85rem;
+    font-size: 0.82rem;
+    color: var(--muted-foreground);
+  }
+  .pf-exp-card .pf-tl-list li {
+    margin-bottom: 0.4rem;
+  }
+
+  /* ── Education ── */
+  .pf-edu-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+  .pf-edu-card {
+    padding: 1.4rem;
+    border-radius: 14px;
+    background: var(--pf-surface);
+    border: 1px solid var(--border);
+    transition:
+      transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 0.3s,
+      box-shadow 0.3s;
+  }
+  .pf-edu-card:hover {
+    border-color: var(--pf-border-accent);
+    box-shadow: 0 8px 20px var(--pf-shadow);
+    transform: translateY(-2px);
+  }
+  .pf-edu-period {
+    font-family: var(--font-app);
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .pf-edu-school {
+    margin: 0.45rem 0 0.25rem;
+    padding: 0;
+    border: none;
+    font-size: 0.96rem;
+    font-weight: 700;
+    color: var(--foreground);
+  }
+  .pf-edu-degree {
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: var(--muted-foreground);
+  }
+  .pf-edu-extra {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-top: 1.4rem;
+  }
+  @media (max-width: 600px) {
+    .pf-edu-grid {
+      grid-template-columns: 1fr;
+    }
+    .pf-exp-card {
+      padding: 1.25rem 1.3rem;
+    }
+  }
+
+  /* ── By the Numbers ── */
+  .pf-numbers-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.1rem;
+  }
+  .pf-number-card {
+    text-align: center;
+    padding: 1.7rem 1rem;
+    border-radius: 14px;
+    background: var(--pf-surface);
+    border: 1px solid var(--border);
+    transition:
+      transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 0.3s,
+      box-shadow 0.3s;
+  }
+  .pf-number-card:hover {
+    border-color: var(--pf-border-accent);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px var(--pf-shadow);
+  }
+  .pf-number-value {
+    display: block;
+    margin-bottom: 0.3rem;
+    font-family: var(--font-app);
+    font-size: 1.85rem;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    color: var(--accent);
+    font-feature-settings: "tnum" 1;
+  }
+  .pf-number-label {
+    display: block;
+    font-size: 0.76rem;
+    line-height: 1.35;
+    color: var(--muted-foreground);
+  }
+
+  /* ── Footer ── */
+  .pf-footer {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 3.5rem 2rem 2.5rem;
+    text-align: center;
+  }
+  .pf-footer-stats {
+    margin-bottom: 1.1rem;
+    font-family: var(--font-app);
+    font-size: 0.78rem;
+    color: var(--muted-foreground);
+  }
+  .pf-footer-sep {
+    margin: 0 0.4rem;
+  }
+  .pf-footer-links {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+  }
+  a.pf-footer-btn,
+  a.pf-footer-btn:link,
+  a.pf-footer-btn:visited {
+    display: inline-block;
+    padding: 0.45rem 1.1rem;
+    border-radius: 8px;
+    font-family: var(--font-app);
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--accent) !important;
+    background: var(--pf-tint);
+    border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+    text-decoration: none !important;
+    transition:
+      transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+      background 0.3s,
+      border-color 0.3s,
+      box-shadow 0.3s;
+  }
+  a.pf-footer-btn:hover {
+    background: var(--pf-tint-strong);
+    border-color: var(--pf-border-accent);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px var(--pf-shadow);
+  }
+
+  /* ── Focus (a11y) ── */
+  .portfolio-root a:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 960px) {
+    .pf-expertise-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .pf-project-grid {
+      grid-template-columns: 1fr;
+    }
+    .pf-oss-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .pf-numbers-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+    .pf-stack-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .pf-hero-stats {
+      gap: 1.75rem;
+    }
+  }
+  @media (max-width: 600px) {
+    .pf-hero {
+      padding: 3rem 1.2rem 2.5rem;
+    }
+    .pf-hero-keywords {
+      font-size: 0.8rem;
+      word-spacing: -0.5px;
+    }
+    .pf-hero-stats {
+      gap: 1.4rem;
+    }
+    .pf-hero-stat-num {
+      font-size: 1.3rem;
+    }
+    .pf-hero-emails {
+      font-size: 0.7rem;
+      word-break: break-all;
+    }
+    .pf-hero-links {
+      gap: 0.5rem;
+    }
+    a.pf-hero-btn {
+      padding: 0.45rem 1rem;
+      font-size: 0.74rem;
+    }
+    .pf-section {
+      padding: 2.25rem 1.2rem 0;
+    }
+    .pf-section-header {
+      margin-bottom: 1.2rem;
+    }
+    .pf-section-line {
+      display: none;
+    }
+    .pf-about-text {
+      font-size: 0.88rem;
+      line-height: 1.78;
+    }
+    .pf-chips-label {
+      min-width: 100%;
+      margin-bottom: 0.1rem;
+    }
+    .pf-expertise-grid {
+      grid-template-columns: 1fr;
+      gap: 0.7rem;
+    }
+    .pf-oss-grid {
+      grid-template-columns: 1fr;
+    }
+    .pf-numbers-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .pf-stack-grid {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+    .pf-project-content {
+      padding: 1.25rem;
+    }
+    .pf-tl-card {
+      padding: 1rem 1.2rem;
+    }
+  }
+  @media (max-width: 400px) {
+    .pf-hero-greeting {
+      font-size: 0.74rem;
+    }
+    .pf-hero-stats {
+      gap: 1rem;
+    }
+    .pf-hero-stat-num {
+      font-size: 1.15rem;
+    }
+    .pf-hero-stat-label {
+      font-size: 0.64rem;
+    }
+    .pf-numbers-grid {
+      gap: 0.7rem;
+    }
+    .pf-number-value {
+      font-size: 1.5rem;
+    }
+  }
+
+  /* ── Recruiter-facing additions ── */
+  .pf-hero-role {
+    margin: 0 0 1rem;
+    color: #cbd5e1;
+    font-size: 0.92rem;
+    font-weight: 600;
+  }
+  .pf-hero-summary {
+    margin: 0 auto 0.3rem;
+    max-width: 640px;
+    color: #a1a6ae;
+    font-size: 0.95rem;
+    line-height: 1.7;
+  }
+  .pf-proof {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.8rem;
+    max-width: 920px;
+    margin: 2rem auto 2rem;
+  }
+  .pf-proof-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 1rem 0.9rem;
+    border-radius: 12px;
+    background: rgba(20, 184, 166, 0.06);
+    border: 1px solid rgba(20, 184, 166, 0.2);
+    text-align: left;
+  }
+  .pf-proof-value {
+    color: #f7f8f8;
+    font-family: var(--font-app);
+    font-size: 1.3rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    font-feature-settings: "tnum" 1;
+  }
+  .pf-proof-label {
+    color: #9aa3ad;
+    font-size: 0.74rem;
+    line-height: 1.45;
+  }
+  .pf-hero .pf-hero-inner {
+    max-width: 960px;
+  }
+  a.pf-hero-btn--primary,
+  a.pf-hero-btn--primary:link,
+  a.pf-hero-btn--primary:visited {
+    padding: 0.6rem 1.4rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+    background: #14b8a6 !important;
+    border-color: #14b8a6 !important;
+    color: #04201d !important;
+  }
+  .pf-hero-note {
+    margin: 1.2rem 0 0;
+    color: #8a8f98;
+    font-size: 0.8rem;
+  }
+  .pf-hero-note a {
+    color: #5eead4;
+  }
+
+  .pf-fit-list {
+    list-style: none;
+    counter-reset: fit;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .pf-fit-item {
+    counter-increment: fit;
+    position: relative;
+    padding: 1.2rem 1.3rem 1.2rem 3.4rem;
+    border-radius: 14px;
+    background: var(--pf-surface);
+    border: 1px solid var(--border);
+  }
+  .pf-fit-item::before {
+    content: counter(fit);
+    position: absolute;
+    left: 1.2rem;
+    top: 1.15rem;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-family: var(--font-app);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--pf-tint);
+  }
+  .pf-fit-item h3 {
+    margin: 0 0 0.35rem;
+    padding: 0;
+    border: none;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--foreground);
+  }
+  .pf-fit-item p {
+    margin: 0;
+    font-size: 0.88rem;
+    line-height: 1.7;
+    color: var(--muted-foreground);
+  }
+
+  article.pf-project {
+    margin-bottom: 1rem;
+  }
+  .pf-project-owner {
+    font-size: 0.72rem;
+    color: var(--muted-foreground);
+    text-align: right;
+  }
+  .pf-project-period {
+    display: block;
+    margin: -0.2rem 0 0.7rem;
+    font-family: var(--font-app);
+    font-size: 0.74rem;
+    color: var(--accent);
+  }
+  .pf-project-highlights--keyed li {
+    display: grid;
+    grid-template-columns: 3rem 1fr;
+    gap: 0.6rem;
+  }
+  .pf-project-highlights--keyed li::before {
+    display: none;
+  }
+  .pf-project-highlights b {
+    font-family: var(--font-app);
+    font-size: 0.74rem;
+    color: var(--accent);
+    padding-top: 0.1rem;
+  }
+  .pf-project-evidence a {
+    color: var(--accent);
+  }
+  .pf-project-evidence {
+    margin: 0.8rem 0 0;
+    font-family: var(--font-app);
+    font-size: 0.72rem;
+    color: var(--muted-foreground);
+  }
+  .pf-project-posts-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.35rem 0.9rem;
+    margin-top: 0.9rem;
+    font-size: 0.8rem;
+  }
+  .pf-project-posts-row span {
+    font-family: var(--font-app);
+    font-size: 0.66rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+  }
+  .pf-project-posts-row a {
+    color: var(--accent);
+    text-decoration: underline;
+    text-decoration-style: dashed;
+    text-underline-offset: 3px;
+  }
+  .pf-project-grid--cards .pf-project-content .pf-project-desc {
+    flex: none;
+  }
+  .pf-project-grid--cards .pf-project-posts-row {
+    margin-top: auto;
+    padding-top: 0.9rem;
+  }
+  .pf-project-grid--cards article.pf-project {
+    margin-bottom: 0;
+  }
+  .pf-project-stack-row {
+    margin-top: 0.9rem;
+  }
+  .pf-project-grid--cards {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .pf-oss-grid--3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .pf-writing {
+    margin-top: 1.6rem;
+    padding: 1.4rem 1.6rem;
+    border-radius: 14px;
+    background: var(--pf-surface);
+    border: 1px solid var(--border);
+  }
+  .pf-writing-head h3 {
+    margin: 0 0 0.25rem;
+    padding: 0;
+    border: none;
+    font-size: 1rem;
+    color: var(--foreground);
+  }
+  .pf-writing-head p {
+    margin: 0 0 0.9rem;
+    font-size: 0.84rem;
+    color: var(--muted-foreground);
+  }
+  .pf-writing-list {
+    list-style: none;
+    margin: 0 0 1.1rem;
+    padding: 0;
+  }
+  .pf-writing-list li {
+    display: flex;
+    gap: 0.9rem;
+    padding: 0.45rem 0;
+    border-top: 1px solid var(--border);
+    font-size: 0.86rem;
+  }
+  .pf-writing-list li:first-child {
+    border-top: none;
+  }
+  .pf-writing-date {
+    flex: none;
+    width: 4rem;
+    font-family: var(--font-app);
+    font-size: 0.74rem;
+    color: var(--muted-foreground);
+    padding-top: 0.1rem;
+  }
+  .pf-writing-list a {
+    color: var(--foreground);
+    text-decoration: none;
+  }
+  .pf-writing-list a:hover {
+    color: var(--accent);
+  }
+  .pf-chips-group--skills .pf-chips-row {
+    position: relative;
+    padding-left: 96px;
+  }
+  .pf-chips-group--skills .pf-chips-label {
+    position: absolute;
+    left: 0;
+    top: 0.35rem;
+    min-width: 0;
+  }
+  .pf-certs {
+    margin-top: 1.2rem;
+  }
+
+  .pf-cta {
+    max-width: 1200px;
+    margin: 3.5rem auto 0;
+    padding: 3rem 2rem 3.5rem;
+    text-align: center;
+    background: #0a0a0b;
+    border-radius: 18px 18px 0 0;
+  }
+  .pf-cta h2 {
+    margin: 0 0 0.8rem;
+    padding: 0;
+    border: none;
+    color: #f7f8f8 !important;
+    font-size: 1.4rem;
+    font-weight: 800;
+  }
+  .pf-cta p {
+    margin: 0 0 0.3rem;
+    color: #a1a6ae;
+    font-size: 0.92rem;
+  }
+  .pf-cta .pf-hero-links {
+    margin-top: 1.4rem;
+  }
+
+  @media (max-width: 860px) {
+    .pf-proof {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .pf-oss-grid--3 {
+      grid-template-columns: 1fr;
+    }
+    .pf-project-grid--cards {
+      grid-template-columns: 1fr;
+    }
+  }
+  @media (max-width: 520px) {
+    .pf-hero-summary {
+      font-size: 0.88rem;
+    }
+    .pf-proof-value {
+      font-size: 1.1rem;
+    }
+    .pf-project-top {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.2rem;
+    }
+    .pf-project-owner {
+      text-align: left;
+    }
+    .pf-project-highlights--keyed li {
+      grid-template-columns: 1fr;
+      gap: 0.1rem;
+    }
+    .pf-chips-group--skills .pf-chips-row {
+      padding-left: 0;
+    }
+    .pf-chips-group--skills .pf-chips-label {
+      position: static;
+      min-width: 100%;
+    }
+    .pf-writing-list li {
+      flex-direction: column;
+      gap: 0.1rem;
+    }
+    .pf-cta {
+      border-radius: 0;
+      padding: 2.4rem 1.2rem 2.8rem;
+    }
+  }
+</style>
