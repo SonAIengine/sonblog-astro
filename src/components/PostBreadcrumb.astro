@@ -61,9 +61,15 @@ const { items, class: className } = Astro.props;
 
   .post-breadcrumb li {
     display: flex;
+    flex: 0 0 auto;
     min-width: 0;
     align-items: center;
     gap: 0.45rem;
+  }
+
+  .post-breadcrumb li:last-child {
+    flex: 1 1 auto;
+    overflow: hidden;
   }
 
   .post-breadcrumb a {
@@ -71,6 +77,7 @@ const { items, class: className } = Astro.props;
     text-decoration: underline;
     text-decoration-style: dashed;
     text-underline-offset: 0.25rem;
+    white-space: nowrap;
   }
 
   .post-breadcrumb a:hover {
