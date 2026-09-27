@@ -156,7 +156,7 @@ export const ko: PortfolioCopy = {
       { k: "연락", v: "sonsj97@gmail.com" },
     ],
     mail: "이메일",
-    pdfLabel: "포트폴리오 PDF · 29쪽",
+    pdfLabel: "포트폴리오 PDF · 30쪽",
     pdfDesc: "프로젝트별 문제, 판단, 결과를 그림과 함께 정리 · 2026.09",
     pdfOpen: "새 창으로 보기",
     pdfDownload: "다운로드",
@@ -251,7 +251,7 @@ export const ko: PortfolioCopy = {
         period: "FDE (현장 배치 엔지니어)",
         ownership: "에이전트 개발 · 고객 커뮤니케이션 · 교육",
         summary:
-          "지방은행 생성형 AI 플랫폼에 들어가 에이전트를 직접 만들고, 고객 커뮤니케이션과 사용자 교육을 맡았습니다.",
+          "파트장이자 FDE로 지방은행 현장에 들어가 에이전트는 직접 만들고, 금융권 요건과 운영은 파트원들과 나눠 구축했습니다. 고객 커뮤니케이션과 사용자 교육은 직접 맡았습니다.",
         points: [
           {
             v: "에이전트 라우터, 실패 로그 화면, SQL 조회 결과를 답변에 결합",
@@ -331,18 +331,21 @@ export const ko: PortfolioCopy = {
         title: "LLM 파인튜닝",
         metric: {
           value: "14B",
-          label: "한국어 LLM POLAR, SFT·DPO(선호 데이터 1.23만 건)",
+          label: "AI Lab 4인 팀의 한국어 LLM POLAR, 나는 SFT 담당",
         },
         period: "2024.04 ~ 06 · 2026.09 ~",
-        ownership: "POLAR는 AI Lab 공동 개발, sev는 개인",
+        ownership: "POLAR는 AI Lab 4인 팀(SFT 담당), sev는 개인",
         summary:
-          "입사 직후 플래티어 AI Lab에서 한국어 LLM POLAR를 공동으로 만들었고, 지금은 작은 결정 모델을 LoRA로 학습하고 있습니다.",
+          "입사 직후 AI Lab 4인 팀으로 한국어 LLM POLAR를 만들어 베이스, SFT, DPO 모델을 공개했습니다. 지금은 작은 결정 모델을 LoRA로 학습하고 있습니다.",
         points: [
           {
-            v: "POLAR: SOLAR-10.7B 기반 14B 한국어 LLM, DeepSpeed로 SFT와 DPO(선호 데이터 1.23만 건) 학습, Hugging Face 공개와 리더보드 제출",
+            v: "팀: SOLAR-10.7B 기반 14B 베이스, DPO(선호 데이터 1.23만 건)까지 POLAR 모델 11개 공개, Open LLM Leaderboard 제출(2024.05)",
           },
           {
-            v: "sev(2026.09 ~): Eikos 기반 Qwen3.5-4B LoRA 결정 모델의 데이터셋, 학습, 서빙, 평가를 한 하네스로 관리",
+            v: "직접: TRL·DeepSpeed로 POLAR-7B·14B SFT 학습과 공개, 사전 실험 Mistral·Llama QLoRA",
+          },
+          {
+            v: "sev(2026.09 ~, 개인): Eikos 기반 Qwen3.5-4B LoRA 결정 모델의 데이터셋, 학습, 서빙, 평가를 한 하네스로 관리",
           },
         ],
         evidenceLink: {
@@ -362,7 +365,7 @@ export const ko: PortfolioCopy = {
           width: 1400,
           height: 269,
           alt: "구간별 응답 시간 막대 그래프",
-          caption: "구간별 응답 시간 · 포트폴리오 PDF 28쪽",
+          caption: "구간별 응답 시간 · 포트폴리오 PDF 29쪽",
         },
         period: "2024.07 ~ 2026.04 · 2025.06부터 XGEN과 병행",
         ownership: "하이브리드 쿼리 설계 · Rust 전환 색인 담당",
@@ -561,7 +564,7 @@ export const en: PortfolioCopy = {
       { k: "Contact", v: "sonsj97@gmail.com" },
     ],
     mail: "Email",
-    pdfLabel: "Portfolio PDF · 29 pages",
+    pdfLabel: "Portfolio PDF · 30 pages",
     pdfDesc:
       "Problem, decision, and result per project, with diagrams · Korean · 2026.09",
     pdfOpen: "Open",
@@ -660,7 +663,7 @@ export const en: PortfolioCopy = {
         period: "FDE (forward deployed engineer)",
         ownership: "Agent development · customer communication · training",
         summary:
-          "Went on site at a regional bank to build agents, handle customer communication, and train users.",
+          "As part leader and FDE at a regional bank, I built the agents myself and split banking requirements and operations with my part. I handled customer communication and user training.",
         points: [
           {
             v: "Agent router, failure log view, SQL query results merged into answers",
@@ -745,15 +748,18 @@ export const en: PortfolioCopy = {
         title: "LLM fine-tuning",
         metric: {
           value: "14B",
-          label: "Korean LLM POLAR, SFT and DPO (12,300 pairs)",
+          label: "Korean LLM POLAR by a 4-person AI Lab team, I led SFT",
         },
         period: "2024.04 to 06 · 2026.09 to present",
-        ownership: "POLAR co-developed at AI Lab, sev is personal",
+        ownership: "POLAR by a 4-person AI Lab team (SFT), sev is personal",
         summary:
-          "Right after joining Plateer I co-built the Korean LLM POLAR at AI Lab, and I am now training small decision models with LoRA.",
+          "Right after joining, our 4-person AI Lab team built the Korean LLM POLAR and published base, SFT, and DPO models. I am now training small decision models with LoRA.",
         points: [
           {
-            v: "POLAR: 14B Korean LLM on SOLAR-10.7B, SFT and DPO (12,300 preference pairs) with DeepSpeed, published on Hugging Face and submitted to the leaderboard",
+            v: "Team: 14B base on SOLAR-10.7B through DPO (12,300 preference pairs), 11 POLAR models published, submitted to the Open LLM Leaderboard (2024.05)",
+          },
+          {
+            v: "Mine: SFT training and release of POLAR-7B and 14B with TRL and DeepSpeed, earlier Mistral and Llama QLoRA experiments",
           },
           {
             v: "sev (2026.09 to present): one harness for data, LoRA training, serving, and evaluation of an Eikos-based Qwen3.5-4B decision model",
@@ -779,7 +785,7 @@ export const en: PortfolioCopy = {
           width: 1400,
           height: 269,
           alt: "Bar chart of latency per hop",
-          caption: "Latency per hop · PDF p.28 (Korean)",
+          caption: "Latency per hop · PDF p.29 (Korean)",
         },
         period: "2024.07 to 2026.04 · alongside XGEN from 2025.06",
         ownership: "Hybrid query design · indexing in the Rust rewrite",
