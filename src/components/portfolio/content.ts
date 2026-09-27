@@ -151,12 +151,12 @@ export const ko: PortfolioCopy = {
     rows: [
       { k: "현재", v: "(주)플래티어 AI R&D팀 파트장 (직급 대리), 2024.03 ~" },
       { k: "팀", v: "8명 파트 · 기술·컨설팅" },
-      { k: "경력", v: "2021.07 ~ 현재 (2021.07 ~ 2022.12 인턴)" },
+      { k: "경력", v: "2021.07 ~ 현재" },
       { k: "학력", v: "고려대 SW·AI융합대학원 인공지능융합학과 석사과정" },
       { k: "연락", v: "sonsj97@gmail.com" },
     ],
     mail: "이메일",
-    pdfLabel: "포트폴리오 PDF · 30쪽",
+    pdfLabel: "포트폴리오 PDF · 31쪽",
     pdfDesc: "프로젝트별 문제, 판단, 결과를 그림과 함께 정리 · 2026.09",
     pdfOpen: "새 창으로 보기",
     pdfDownload: "다운로드",
@@ -273,7 +273,7 @@ export const ko: PortfolioCopy = {
           width: 770,
           height: 980,
           alt: "작업당 AI 호출 횟수와 평가 점수 비교 차트",
-          caption: "작업당 AI 호출, 70과제 평균 · 포트폴리오 PDF 24쪽",
+          caption: "작업당 AI 호출, 70과제 평균 · 포트폴리오 PDF 25쪽",
         },
         period: "2026.08 ~ 현재",
         ownership: "튜닝·평가 담당 (실행 파이프라인 설계는 동료)",
@@ -300,6 +300,32 @@ export const ko: PortfolioCopy = {
         posts: [{ label: "대화 정체 감지와 재생 카나리", href: P.stall }],
       },
       {
+        title: "문서 RAG·온톨로지",
+        metric: {
+          value: "43 → 7",
+          label: "정보검색 노드 v2의 설정 파라미터 내재화",
+        },
+        period: "2025.12 ~ 현재",
+        ownership: "검색 노드·적재·임베딩 직접, 온톨로지 RAG는 파트",
+        summary:
+          "파트의 XGEN 문서 처리·검색 서비스와 워크플로 RAG 노드에서 검색 품질과 적재를 맡았습니다.",
+        points: [
+          {
+            v: "정보검색 노드 v2: 하이브리드 검색, 질문 확장형 반복 검색, agentic ReAct 심층검색 엔진",
+          },
+          {
+            v: "리랭킹·인용·그라운딩 수정, 인용·신뢰도·완결성을 재는 검증으로 점수 임계값 보정",
+          },
+          {
+            v: "컬렉션 인덱싱 노드, 컬렉션별 임베딩 모델, API·S3 외부 데이터 적재, 청크 크기 자동 조정",
+          },
+          {
+            v: "CAD 도면 PDF 청크 0건 해결과 병렬 OCR, 온톨로지 RAG의 증분 빌드와 지식 그래프 빌더 안전망",
+          },
+        ],
+        posts: [],
+      },
+      {
         title: "graph-tool-call",
         metric: { value: "9,094회", label: "최근 6개월 PyPI 다운로드" },
         figure: {
@@ -307,7 +333,7 @@ export const ko: PortfolioCopy = {
           width: 1400,
           height: 795,
           alt: "준비 단계 도구 발견율 14.3%에서 100%, 전달 토큰 1,476에서 160으로 줄어든 막대 그래프",
-          caption: "준비 단계 도구 발견율과 전달 토큰 · 포트폴리오 PDF 18쪽",
+          caption: "준비 단계 도구 발견율과 전달 토큰 · 포트폴리오 PDF 19쪽",
         },
         period: "2026.03 ~ · 오픈소스",
         ownership: "단독 설계·개발 (커밋 96%)",
@@ -365,7 +391,7 @@ export const ko: PortfolioCopy = {
           width: 1400,
           height: 269,
           alt: "구간별 응답 시간 막대 그래프",
-          caption: "구간별 응답 시간 · 포트폴리오 PDF 29쪽",
+          caption: "구간별 응답 시간 · 포트폴리오 PDF 30쪽",
         },
         period: "2024.07 ~ 2026.04 · 2025.06부터 XGEN과 병행",
         ownership: "하이브리드 쿼리 설계 · Rust 전환 색인 담당",
@@ -414,7 +440,7 @@ export const ko: PortfolioCopy = {
       },
       {
         company: "에이치제이브레인",
-        role: "데이터 엔지니어 (인턴)",
+        role: "데이터 엔지니어 (사원)",
         period: "2021.07 ~ 2022.12",
         bullets: [
           "뉴스·애널리스트 리포트·공시 크롤러 개발과 운영, 중복 기사 제거, 수집 모니터링 대시보드",
@@ -491,7 +517,6 @@ export const ko: PortfolioCopy = {
         school: "한양대학교",
         degree: "도시공학과 학사 (편입)",
       },
-      { period: "2019.08", school: "학점은행제", degree: "컴퓨터공학 학사" },
     ],
     certsLabel: "자격",
     certs: [
@@ -559,12 +584,12 @@ export const en: PortfolioCopy = {
         v: "Part Leader (Assistant Manager grade), AI R&D Team at Plateer, since 2024.03",
       },
       { k: "Team", v: "8-person part · Tech & Consulting" },
-      { k: "Career", v: "2021.07 to present (2021.07 to 2022.12 as intern)" },
+      { k: "Career", v: "2021.07 to present" },
       { k: "Edu", v: "M.S. student, AI Convergence, Korea University" },
       { k: "Contact", v: "sonsj97@gmail.com" },
     ],
     mail: "Email",
-    pdfLabel: "Portfolio PDF · 30 pages",
+    pdfLabel: "Portfolio PDF · 31 pages",
     pdfDesc:
       "Problem, decision, and result per project, with diagrams · Korean · 2026.09",
     pdfOpen: "Open",
@@ -685,7 +710,7 @@ export const en: PortfolioCopy = {
           width: 770,
           height: 980,
           alt: "Chart of AI calls per task and eval scores",
-          caption: "AI calls per task, 70-task average · PDF p.24 (Korean)",
+          caption: "AI calls per task, 70-task average · PDF p.25 (Korean)",
         },
         period: "2026.08 to present",
         ownership: "Tuning and evaluation (pipeline designed by a teammate)",
@@ -714,6 +739,33 @@ export const en: PortfolioCopy = {
         ],
       },
       {
+        title: "Document RAG and ontology",
+        metric: {
+          value: "43 → 7",
+          label: "settings internalized in retrieval node v2",
+        },
+        period: "2025.12 to present",
+        ownership:
+          "Retrieval node, ingestion, embeddings by me; ontology RAG by my part",
+        summary:
+          "I own retrieval quality and ingestion in XGEN's document service and the workflow RAG nodes built by my part.",
+        points: [
+          {
+            v: "Retrieval node v2: hybrid search, query-expansion iterative search, agentic ReAct deep search",
+          },
+          {
+            v: "Fixed reranking, citation, and grounding; tuned the score threshold with citation, confidence, and completeness checks",
+          },
+          {
+            v: "Collection indexing node, per-collection embedding models, API and S3 ingestion, automatic chunk resizing",
+          },
+          {
+            v: "Fixed CAD drawing PDFs producing zero chunks with parallel OCR; incremental builds and KG builder safeguards for ontology RAG",
+          },
+        ],
+        posts: [],
+      },
+      {
         title: "graph-tool-call",
         metric: { value: "9,094", label: "PyPI downloads in 6 months" },
         figure: {
@@ -722,7 +774,7 @@ export const en: PortfolioCopy = {
           height: 795,
           alt: "Bar charts: prerequisite tool recall 14.3% to 100%, tokens sent 1,476 to 160",
           caption:
-            "Prerequisite tool recall and tokens sent · PDF p.18 (Korean)",
+            "Prerequisite tool recall and tokens sent · PDF p.19 (Korean)",
         },
         period: "2026.03 to present · open source",
         ownership: "Sole designer and developer (96% of commits)",
@@ -785,7 +837,7 @@ export const en: PortfolioCopy = {
           width: 1400,
           height: 269,
           alt: "Bar chart of latency per hop",
-          caption: "Latency per hop · PDF p.29 (Korean)",
+          caption: "Latency per hop · PDF p.30 (Korean)",
         },
         period: "2024.07 to 2026.04 · alongside XGEN from 2025.06",
         ownership: "Hybrid query design · indexing in the Rust rewrite",
@@ -837,7 +889,7 @@ export const en: PortfolioCopy = {
       },
       {
         company: "HJ Brain",
-        role: "Data Engineer (Intern)",
+        role: "Data Engineer",
         period: "2021.07 to 2022.12",
         bullets: [
           "Built and ran crawlers for news, analyst reports, and disclosures, with dedup and a collection monitoring dashboard",
@@ -913,11 +965,6 @@ export const en: PortfolioCopy = {
         period: "2021.02 ~ 2023.02",
         school: "Hanyang University",
         degree: "B.S. Urban Planning (transfer)",
-      },
-      {
-        period: "2019.08",
-        school: "Academic Credit Bank System",
-        degree: "B.S. Computer Engineering",
       },
     ],
     certsLabel: "Certs",
