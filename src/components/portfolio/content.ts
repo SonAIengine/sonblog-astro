@@ -199,6 +199,7 @@ export const ko: PortfolioCopy = {
         { label: "멀티노드 GPU 서빙 구조", href: P.multinode },
       ],
       stack: [
+        "FastAPI",
         "K3s",
         "Helm",
         "ArgoCD",
@@ -226,7 +227,7 @@ export const ko: PortfolioCopy = {
             v: "작업당 LLM 호출 평균 8.21회 → 4.5회대(개발 환경, 평가 점수는 같은 설정 4회 반복 범위 안), 거짓 완료 보고 60회 검사 중 0건, 기본 프롬프트 37% 축소",
           },
           {
-            v: '"도구를 묶어 호출하라" 같은 지시문은 38과제 중 1번만 지켜져 기각하고, 구조로 강제하는 변경 5건만 채택',
+            v: '"도구를 묶어 호출하라" 같은 지시문은 38과제 중 1번만 지켜져 기각하고, 구조로 강제하는 변경 5건만 채택. 빠른 경로는 초안을 AI 코딩 도구(Claude Code, Codex)로 만들고 이식·검증·배포는 직접 함',
           },
           {
             v: "실행 로그 2만 건을 점검해 비밀번호·토큰 노출 34건을 가림 처리",
@@ -246,7 +247,7 @@ export const ko: PortfolioCopy = {
           "사용자 500명 규모 서비스에 들어가 에이전트를 직접 만들고, 사용자 교육을 5회 진행했습니다.",
         points: [
           {
-            v: "에이전트 라우터, 실패 로그 화면, DB 조회 결과 결합, 쓰기 쿼리 차단, Oracle 연동",
+            v: "에이전트 라우터, 실패 로그 화면, SQL 조회 결과 결합, 쓰기 SQL 차단(DML 가드), Oracle 연동",
           },
           {
             v: "금융권 요건: 권한 체계 개편, 감사 로그, 관리자 IP 접근 제어, SSO 연동",
@@ -552,6 +553,7 @@ export const en: PortfolioCopy = {
         { label: "Multi-node GPU serving (KO)", href: P.multinode },
       ],
       stack: [
+        "FastAPI",
         "K3s",
         "Helm",
         "ArgoCD",
@@ -579,7 +581,7 @@ export const en: PortfolioCopy = {
             v: "LLM calls per task 8.21 → about 4.5 on average (dev environment, eval score within the range of 4 repeated runs), 0 false completions in 60 checks, base prompt 37% shorter",
           },
           {
-            v: "Dropped prompt instructions (followed in 1 of 38 tasks) and adopted only 5 structural changes",
+            v: "Dropped prompt instructions (followed in 1 of 38 tasks) and adopted only 5 structural changes. Drafted the fast path with AI coding tools (Claude Code, Codex), then ported, verified, and shipped it myself",
           },
           {
             v: "Audited 20,000 run logs and masked 34 exposed passwords and tokens",
@@ -601,7 +603,7 @@ export const en: PortfolioCopy = {
           "Built agents on site for a 500-user service and ran 5 user training sessions.",
         points: [
           {
-            v: "Agent router, failure log view, merged DB query results, write-query blocking, Oracle integration",
+            v: "Agent router, failure log view, merged SQL query results, write-SQL blocking (DML guard), Oracle integration",
           },
           {
             v: "Banking requirements: permission model rework, audit logs, admin IP allowlist, SSO",
