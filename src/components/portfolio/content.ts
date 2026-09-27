@@ -23,7 +23,6 @@ export type PortfolioCopy = {
     name: string;
     role: string;
     summary: string[];
-    stats: Stat[];
     mailSubject: string;
     ctaMail: string;
     ctaPdf: string;
@@ -110,22 +109,6 @@ export const ko: PortfolioCopy = {
     summary: [
       "AI 에이전트 플랫폼 XGEN의 모델 서빙과 배포를 맡고 있습니다.",
       "고객사 서버와 폐쇄망에서 LLM 에이전트가 실제로 돌아가게 만드는 일을 합니다.",
-    ],
-    stats: [
-      {
-        value: "8개 환경",
-        label: "Helm 차트 하나로 운영하는 서버 (고객사 3 + 사내 5)",
-      },
-      { value: "30여 곳", label: "시연·PoC를 맡은 고객사, 이 중 5곳 계약" },
-      {
-        value: "8.21 → 4.5회",
-        label:
-          "에이전트 작업당 LLM 호출 (개발 환경, 평가 점수는 반복 측정 범위 안)",
-      },
-      {
-        value: "9,094회",
-        label: "오픈소스 graph-tool-call 최근 6개월 다운로드",
-      },
     ],
     mailSubject: "[포트폴리오 보고 연락] ",
     ctaMail: "이메일로 연락하기",
@@ -447,26 +430,6 @@ export const en: PortfolioCopy = {
     summary: [
       "I run model serving and deployment for XGEN, an enterprise AI agent platform.",
       "My job is making LLM agents actually work on customer servers and air-gapped networks.",
-    ],
-    stats: [
-      {
-        value: "8 environments",
-        label: "Servers run from one Helm chart (3 customer + 5 internal)",
-      },
-      {
-        value: "30+ customers",
-        label: "Demos and PoCs I led, 5 turned into contracts",
-      },
-      {
-        value: "8.21 → 4.5",
-        label:
-          "LLM calls per agent task (dev environment, eval score within repeat-run range)",
-      },
-      {
-        value: "9,094",
-        label:
-          "Downloads of my open-source graph-tool-call in the last 6 months",
-      },
     ],
     mailSubject: "[From your portfolio] ",
     ctaMail: "Email me",

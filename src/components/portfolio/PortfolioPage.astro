@@ -70,16 +70,6 @@ const num = (title: string) =>
         <h1 class="pf-hero-name">{t.hero.name}</h1>
         <p class="pf-hero-role">{t.hero.role}</p>
         {t.hero.summary.map(line => <p class="pf-hero-summary">{line}</p>)}
-        <div class="pf-proof">
-          {
-            t.hero.stats.map(s => (
-              <div class="pf-proof-item">
-                <span class="pf-proof-value">{s.value}</span>
-                <span class="pf-proof-label">{s.label}</span>
-              </div>
-            ))
-          }
-        </div>
         <div class="pf-hero-links">
           <a href={mailto} class="pf-hero-btn pf-hero-btn--primary"
             >{t.hero.ctaMail}</a
@@ -1789,36 +1779,6 @@ const num = (title: string) =>
     font-size: 0.95rem;
     line-height: 1.7;
   }
-  .pf-proof {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 0.8rem;
-    max-width: 920px;
-    margin: 2rem auto 2rem;
-  }
-  .pf-proof-item {
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-    padding: 1rem 0.9rem;
-    border-radius: 12px;
-    background: rgba(20, 184, 166, 0.06);
-    border: 1px solid rgba(20, 184, 166, 0.2);
-    text-align: left;
-  }
-  .pf-proof-value {
-    color: #f7f8f8;
-    font-family: var(--font-app);
-    font-size: 1.3rem;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    font-feature-settings: "tnum" 1;
-  }
-  .pf-proof-label {
-    color: #9aa3ad;
-    font-size: 0.74rem;
-    line-height: 1.45;
-  }
   .pf-hero .pf-hero-inner {
     max-width: 960px;
   }
@@ -1831,6 +1791,9 @@ const num = (title: string) =>
     background: #14b8a6 !important;
     border-color: #14b8a6 !important;
     color: #04201d !important;
+  }
+  .pf-hero .pf-hero-links {
+    margin-top: 1.8rem;
   }
   .pf-hero-note {
     margin: 1.2rem 0 0;
@@ -2060,9 +2023,6 @@ const num = (title: string) =>
   }
 
   @media (max-width: 860px) {
-    .pf-proof {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
     .pf-oss-grid--3 {
       grid-template-columns: 1fr;
     }
@@ -2073,9 +2033,6 @@ const num = (title: string) =>
   @media (max-width: 520px) {
     .pf-hero-summary {
       font-size: 0.88rem;
-    }
-    .pf-proof-value {
-      font-size: 1.1rem;
     }
     .pf-project-top {
       flex-direction: column;
