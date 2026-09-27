@@ -444,6 +444,26 @@ const num = (title: string) =>
 
 <script>
   function initPortfolio() {
+    // In-app browsers (KakaoTalk, LinkedIn, app webviews) often block target=_blank,
+    // so the tap does nothing. Normal browsers still get a new tab; only when the
+    // new tab is refused does the link open in the same view. Download links keep
+    // their default behaviour.
+    document
+      .querySelectorAll<HTMLAnchorElement>(
+        ".portfolio-root a[target='_blank']:not([data-lightbox])"
+      )
+      .forEach(a => {
+        if (a.dataset.openBound) return;
+        a.dataset.openBound = "1";
+        a.addEventListener("click", e => {
+          e.preventDefault();
+          // "noopener" would make window.open return null even on success.
+          const w = window.open(a.href, "_blank");
+          if (w) w.opener = null;
+          else window.location.href = a.href;
+        });
+      });
+
     // Floating mail button only when neither the hero nor the closing CTA is on screen.
     const mail = document.querySelector<HTMLElement>(".pf-float-mail");
     const anchors = [".pf-hero", ".pf-cta"]
