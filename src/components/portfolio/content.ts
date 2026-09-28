@@ -80,7 +80,7 @@ export type PortfolioCopy = {
   skills: { title: string; rows: { label: string; items: string[] }[] };
   edu: {
     title: string;
-    schools: { period: string; school: string; degree: string }[];
+    schools: { school: string; degree: string }[];
     certsLabel: string;
     certs: string[];
   };
@@ -507,12 +507,10 @@ export const ko: PortfolioCopy = {
     title: "학력과 자격",
     schools: [
       {
-        period: "2026.03 ~",
         school: "고려대학교 SW·AI융합대학원",
         degree: "인공지능융합학과 석사과정",
       },
       {
-        period: "2021.02 ~ 2023.02",
         school: "한양대학교",
         degree: "도시공학과 학사",
       },
@@ -955,12 +953,10 @@ export const en: PortfolioCopy = {
     title: "Education and certificates",
     schools: [
       {
-        period: "2026.03 ~",
         school: "Korea University, Graduate School of SW·AI Convergence",
         degree: "M.S. student, AI Convergence",
       },
       {
-        period: "2021.02 ~ 2023.02",
         school: "Hanyang University",
         degree: "B.S. Urban Planning",
       },

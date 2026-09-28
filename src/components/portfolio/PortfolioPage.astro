@@ -401,18 +401,15 @@ const num = (title: string) =>
         <h2 class="pf-section-title">{t.edu.title}</h2>
         <div class="pf-section-line"></div>
       </div>
-      <dl class="pf-edu">
+      <ul class="pf-edu">
         {
           t.edu.schools.map(e => (
-            <div>
-              <dt>{e.period}</dt>
-              <dd>
-                <b>{e.school}</b> {e.degree}
-              </dd>
-            </div>
+            <li>
+              <b>{e.school}</b> {e.degree}
+            </li>
           ))
         }
-      </dl>
+      </ul>
       <div class="pf-chips-row pf-certs">
         <span class="pf-chips-label">{t.edu.certsLabel}</span>
         {t.edu.certs.map(c => <span class="pf-chip">{c}</span>)}
@@ -2394,28 +2391,19 @@ const num = (title: string) =>
   }
   .pf-edu {
     margin: 0;
+    padding: 0;
+    list-style: none;
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
   }
-  .pf-edu > div {
-    display: grid;
-    grid-template-columns: 9rem 1fr;
-    gap: 1rem;
+  .pf-edu > li {
     padding: 0.6rem 0;
     border-bottom: 1px solid var(--border);
-  }
-  .pf-edu dt {
-    font-family: var(--font-app);
-    font-size: 0.78rem;
-    color: var(--accent);
-  }
-  .pf-edu dd {
-    margin: 0;
     font-size: 0.92rem;
     color: var(--muted-foreground);
   }
-  .pf-edu dd b {
+  .pf-edu b {
     color: var(--foreground);
     margin-right: 0.4rem;
   }
@@ -2470,10 +2458,6 @@ const num = (title: string) =>
     }
   }
   @media (max-width: 520px) {
-    .pf-edu > div {
-      grid-template-columns: 1fr;
-      gap: 0.1rem;
-    }
     .pf-hero-greeting {
       letter-spacing: 0.1em;
     }
