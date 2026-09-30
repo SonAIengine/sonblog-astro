@@ -80,6 +80,7 @@ src/content/posts/
 - 2026-09 URL 복구 전환 동안에는 과거 MkDocs가 공개했던 경로를 우선 canonical로 유지한다. 디렉터리 대소문자도 바꾸지 않는다.
 - legacy 카테고리 landing URL은 topic hub로 리다이렉트한다.
 - `src/redirects.generated.json`은 `scripts/build-redirects.mjs`가 생성한다.
+- 공개 edge의 실제 HTTP 301 규칙은 `scripts/build-edge-redirects.mjs`가 `ops/caddy/sonblog-edge.caddy`로 생성한다.
 - sitemap에는 redirect page가 들어가면 안 된다.
 - URL 정책 변경 후에는 반드시 `pnpm run build` 또는 `pnpm run audit:urls`를 실행한다.
 - 검색엔진, AI 검색 crawler, IndexNow, DNS 운영 기준은 `docs/DISCOVERABILITY.md`를 따른다.

@@ -45,6 +45,8 @@ Search Console API는 sitemap 제출과 검색 실적 조회에는 사용할 수
 - 이전 경로는 가능한 한 최종 URL로 한 번에 연결한다. redirect chain, canonical 충돌, redirect URL의 sitemap 포함은 `scripts/audit-urls.mjs`가 실패 처리한다.
 - URL 복구 배포 순서는 현재 사이트의 canonical 본문 배포, 구 GitHub Pages의 이동 페이지 배포, sitemap 1회 제출 순서다.
 
+GitHub Pages의 정적 redirect page는 HTTP 상태가 `200`이고 HTML의 meta refresh로 이동한다. 검색엔진이 이를 soft redirect나 중복 페이지로 처리할 수 있으므로 공개 트래픽은 홈 서버 Caddy를 먼저 통과한다. Caddy는 `/posts/<글 경로>/`와 `src/redirects.generated.json`의 과거 주소를 실제 HTTP `301`로 응답하고, 나머지는 GitHub Pages 원본으로 전달한다. `pnpm run edge:redirects`가 `ops/caddy/sonblog-edge.caddy`를 생성하고 `pnpm run edge:check`가 두 파일의 일치를 검증한다.
+
 ## 콘텐츠 기준
 
 - 첫 문단에서 문제, 기존 방식의 한계, 결과를 설명한다.
@@ -56,11 +58,12 @@ Search Console API는 sitemap 제출과 검색 실적 조회에는 사용할 수
 
 ## DNS와 도메인
 
-외부 네트워크 접근성을 위해 아래 DNS 상태를 유지한다.
+외부 네트워크 접근성과 실제 HTTP redirect를 위해 아래 DNS 상태를 유지한다.
 
-- apex A: GitHub Pages가 안내하는 IPv4 네 개
-- apex AAAA: GitHub Pages가 안내하는 IPv6 네 개
+- apex A: 홈 서버 Caddy의 공인 IPv4
+- apex AAAA: 홈 서버에 외부 IPv6 ingress가 없으므로 두지 않는다.
 - `www`: Technitium A 레코드로 홈 서버 Caddy를 가리키며 `https://infoedu.co.kr{uri}`로 301 이동한다.
+- Caddy의 canonical 요청 upstream은 DNS 순환을 피하도록 GitHub Pages IPv4를 직접 사용하고 `Host`와 TLS server name은 `infoedu.co.kr`로 유지한다.
 - parent와 authoritative zone의 NS 집합 일치
 - HTTPS 강제 적용
 
