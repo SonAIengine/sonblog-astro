@@ -4,6 +4,12 @@ import redirects from "../src/redirects.generated.json" with { type: "json" };
 
 const DIST = path.resolve("dist");
 const SITE_ORIGIN = "https://infoedu.co.kr";
+const EDGE_CONFIG = fs.readFileSync("ops/caddy/sonblog-edge.caddy", "utf8");
+const compatibilityRedirects = new Map(
+  [...EDGE_CONFIG.matchAll(/@compat_(\d{4}) path ("(?:\\.|[^"\\])*")\n\s*redir @compat_\1 ("(?:\\.|[^"\\])*") 301/g)].map(
+    match => [JSON.parse(match[2]), JSON.parse(match[3])]
+  )
+);
 
 function walk(dir) {
   const files = [];
@@ -207,6 +213,36 @@ if (duplicatedCanonicalContent.length) {
 }
 
 const routeSet = new Set(pages.map(page => page.route));
+const compatibilityPages = pages.filter(
+  page => page.route.startsWith("/posts/") && page.redirect
+);
+const brokenCompatibilityRedirects = compatibilityPages.filter(page => {
+  const destination = compatibilityRedirects.get(page.route);
+  return destination !== new URL(page.canonical).pathname;
+});
+if (
+  compatibilityRedirects.size !== compatibilityPages.length ||
+  brokenCompatibilityRedirects.length
+) {
+  failures.push(
+    `Compatibility redirects disagree with built pages: ${compatibilityRedirects.size} edge rules, ${compatibilityPages.length} pages; mismatches: ${brokenCompatibilityRedirects
+      .slice(0, 10)
+      .map(page => page.route)
+      .join(", ")}`
+  );
+}
+
+const missingCompatibilityTargets = [...compatibilityRedirects.values()].filter(
+  destination => !routeSet.has(destination)
+);
+if (missingCompatibilityTargets.length) {
+  failures.push(
+    `Compatibility redirects target missing pages: ${missingCompatibilityTargets
+      .slice(0, 10)
+      .join(", ")}`
+  );
+}
+
 const internalHrefFailures = [];
 
 for (const page of pages) {
@@ -270,6 +306,7 @@ console.log(
       canonicalContentDuplicates: duplicatedCanonicalContent.length,
       brokenInternalHrefs: internalHrefFailures.length,
       redirectRoutes: redirectRoutes.size,
+      compatibilityRedirects: compatibilityRedirects.size,
     },
     null,
     2

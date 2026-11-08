@@ -11,6 +11,11 @@ const config = fs.readFileSync(
   path.join(ROOT, "ops/caddy/sonblog-edge.caddy"),
   "utf8"
 );
+const compatibilityRules = new Map(
+  [...config.matchAll(/@compat_(\d{4}) path ("(?:\\.|[^"\\])*")\n\s*redir @compat_\1 ("(?:\\.|[^"\\])*") 301/g)].map(
+    match => [JSON.parse(match[2]), JSON.parse(match[3])]
+  )
+);
 
 test("edge config includes every generated redirect exactly once", () => {
   const entries = Object.entries(redirects).sort(([left], [right]) =>
@@ -33,10 +38,45 @@ test("edge config includes every generated redirect exactly once", () => {
   }
 });
 
-test("edge config handles compatibility post URLs before proxying", () => {
-  const redirect = "redir @compat_posts /{re.compat_posts.1} 301";
-  assert.ok(config.includes("^/posts/(.+)$"));
-  assert.ok(config.indexOf(redirect) < config.indexOf("reverse_proxy"));
+test("every compatibility post route reaches its exact-case canonical page", () => {
+  const postsRoot = path.join(ROOT, "src/content/posts");
+  const files = [];
+  function visit(dir) {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const file = path.join(dir, entry.name);
+      if (entry.isDirectory()) visit(file);
+      else if (/\.(md|mdx)$/i.test(entry.name) && !entry.name.startsWith("_")) {
+        files.push(file);
+      }
+    }
+  }
+  visit(postsRoot);
+
+  const canonicalPaths = files
+    .filter(file => !/^draft:\s*true\b/m.test(fs.readFileSync(file, "utf8")))
+    .map(file =>
+      `/${path.relative(postsRoot, file).split(path.sep).join("/").replace(/\.(md|mdx)$/i, "")}/`
+    );
+  assert.equal(compatibilityRules.size, canonicalPaths.length);
+  assert.deepEqual(
+    [...compatibilityRules.values()].sort(),
+    canonicalPaths.sort()
+  );
+
+  assert.equal(
+    compatibilityRules.get("/posts/search-engine/qdrant/semantic-search-tutorials/"),
+    "/search-engine/Qdrant/semantic-search-tutorials/"
+  );
+  assert.equal(
+    compatibilityRules.get("/posts/ai/xgen/qdrant-hybrid-search-sparse-dense-vector-integration/"),
+    "/ai/XGEN/qdrant-hybrid-search-sparse-dense-vector-integration/"
+  );
+  assert.equal(
+    compatibilityRules.get("/posts/search-engine/opensearch/vector-indexing/"),
+    "/search-engine/OpenSearch/vector-indexing/"
+  );
+  assert.ok(config.indexOf("@compat_0001") < config.indexOf("reverse_proxy"));
+  assert.ok(!config.includes("^/posts/(.+)$"));
 });
 
 test("edge proxy pins GitHub Pages while preserving the canonical host", () => {
