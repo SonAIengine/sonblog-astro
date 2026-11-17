@@ -7,12 +7,23 @@ const ROOT = path.resolve(import.meta.dirname, "..");
 const redirects = JSON.parse(
   fs.readFileSync(path.join(ROOT, "src/redirects.generated.json"), "utf8")
 );
+const edgeOnlyRedirects = JSON.parse(
+  fs.readFileSync(
+    path.join(ROOT, "ops/caddy/edge-only-redirects.generated.json"),
+    "utf8"
+  )
+);
 const config = fs.readFileSync(
   path.join(ROOT, "ops/caddy/sonblog-edge.caddy"),
   "utf8"
 );
 const compatibilityRules = new Map(
   [...config.matchAll(/@compat_(\d{4}) path ("(?:\\.|[^"\\])*")\n\s*redir @compat_\1 ("(?:\\.|[^"\\])*") 301/g)].map(
+    match => [JSON.parse(match[2]), JSON.parse(match[3])]
+  )
+);
+const edgeOnlyRules = new Map(
+  [...config.matchAll(/@edge_(\d{4}) path ("(?:\\.|[^"\\])*")\n\s*redir @edge_\1 ("(?:\\.|[^"\\])*") 301/g)].map(
     match => [JSON.parse(match[2]), JSON.parse(match[3])]
   )
 );
@@ -77,6 +88,45 @@ test("every compatibility post route reaches its exact-case canonical page", () 
   );
   assert.ok(config.indexOf("@compat_0001") < config.indexOf("reverse_proxy"));
   assert.ok(!config.includes("^/posts/(.+)$"));
+});
+
+test("historical case-only URLs redirect at the edge without shadowing posts", () => {
+  assert.deepEqual(edgeOnlyRules, new Map(Object.entries(edgeOnlyRedirects).sort(
+    ([left], [right]) => left.localeCompare(right, "en")
+  )));
+
+  for (const [source, destination] of edgeOnlyRules) {
+    assert.notEqual(source, destination);
+    assert.equal(source.toLowerCase(), destination.toLowerCase());
+    assert.ok(!(source in redirects));
+    const relative = destination.replace(/^\/+|\/+$/g, "");
+    assert.ok(
+      [".md", ".mdx"].some(ext =>
+        fs.existsSync(path.join(ROOT, "src/content/posts", `${relative}${ext}`))
+      ),
+      destination
+    );
+  }
+
+  assert.equal(
+    edgeOnlyRules.get("/search-engine/Qdrant/Indexing/"),
+    "/search-engine/Qdrant/indexing/"
+  );
+  assert.equal(
+    edgeOnlyRules.get("/search-engine/Qdrant/Storage/"),
+    "/search-engine/Qdrant/storage/"
+  );
+});
+
+test("historical section URLs lead to existing topic hubs", () => {
+  for (const [source, destination] of [
+    ["/search-engine/시맨틱 검색/", "/topics/search-engine/"],
+    ["/ai/Model Serve/", "/topics/ai/"],
+    ["/full-stack/python/기초/", "/topics/full-stack/"],
+  ]) {
+    assert.equal(redirects[source], destination);
+    assert.ok(config.includes(`path ${JSON.stringify(source)}`));
+  }
 });
 
 test("edge proxy pins GitHub Pages while preserving the canonical host", () => {

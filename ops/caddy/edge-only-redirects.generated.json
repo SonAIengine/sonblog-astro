@@ -1,0 +1,12 @@
+{
+  "/search-engine/Qdrant/Collection/": "/search-engine/Qdrant/collection/",
+  "/search-engine/Qdrant/FastEmbed/": "/search-engine/Qdrant/fastembed/",
+  "/search-engine/Qdrant/Filtering/": "/search-engine/Qdrant/filtering/",
+  "/search-engine/Qdrant/Indexing/": "/search-engine/Qdrant/indexing/",
+  "/search-engine/Qdrant/Payload/": "/search-engine/Qdrant/payload/",
+  "/search-engine/Qdrant/Points/": "/search-engine/Qdrant/points/",
+  "/search-engine/Qdrant/Qptimizer/": "/search-engine/Qdrant/qptimizer/",
+  "/search-engine/Qdrant/Storage/": "/search-engine/Qdrant/storage/",
+  "/search-engine/Qdrant/Vectors/": "/search-engine/Qdrant/vectors/",
+  "/search-engine/RAG/Chunker/": "/search-engine/RAG/chunker/"
+}

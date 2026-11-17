@@ -1,12 +1,18 @@
 import fs from "node:fs";
 import path from "node:path";
 import redirects from "../src/redirects.generated.json" with { type: "json" };
+import edgeOnlyRedirects from "../ops/caddy/edge-only-redirects.generated.json" with { type: "json" };
 
 const DIST = path.resolve("dist");
 const SITE_ORIGIN = "https://infoedu.co.kr";
 const EDGE_CONFIG = fs.readFileSync("ops/caddy/sonblog-edge.caddy", "utf8");
 const compatibilityRedirects = new Map(
   [...EDGE_CONFIG.matchAll(/@compat_(\d{4}) path ("(?:\\.|[^"\\])*")\n\s*redir @compat_\1 ("(?:\\.|[^"\\])*") 301/g)].map(
+    match => [JSON.parse(match[2]), JSON.parse(match[3])]
+  )
+);
+const edgeOnlyRules = new Map(
+  [...EDGE_CONFIG.matchAll(/@edge_(\d{4}) path ("(?:\\.|[^"\\])*")\n\s*redir @edge_\1 ("(?:\\.|[^"\\])*") 301/g)].map(
     match => [JSON.parse(match[2]), JSON.parse(match[3])]
   )
 );
@@ -243,6 +249,25 @@ if (missingCompatibilityTargets.length) {
   );
 }
 
+const brokenEdgeOnlyRedirects = Object.entries(edgeOnlyRedirects).filter(
+  ([source, destination]) =>
+    edgeOnlyRules.get(source) !== destination ||
+    !routeSet.has(destination) ||
+    redirectRoutes.has(source) ||
+    urls.includes(source)
+);
+if (
+  edgeOnlyRules.size !== Object.keys(edgeOnlyRedirects).length ||
+  brokenEdgeOnlyRedirects.length
+) {
+  failures.push(
+    `Edge-only redirects disagree with canonical pages: ${edgeOnlyRules.size} edge rules, ${Object.keys(edgeOnlyRedirects).length} aliases; mismatches: ${brokenEdgeOnlyRedirects
+      .slice(0, 10)
+      .map(([source]) => source)
+      .join(", ")}`
+  );
+}
+
 const internalHrefFailures = [];
 
 for (const page of pages) {
@@ -307,6 +332,7 @@ console.log(
       brokenInternalHrefs: internalHrefFailures.length,
       redirectRoutes: redirectRoutes.size,
       compatibilityRedirects: compatibilityRedirects.size,
+      edgeOnlyRedirects: edgeOnlyRules.size,
     },
     null,
     2

@@ -45,7 +45,7 @@ Search Console API는 sitemap 제출과 검색 실적 조회에는 사용할 수
 - 이전 경로는 가능한 한 최종 URL로 한 번에 연결한다. redirect chain, canonical 충돌, redirect URL의 sitemap 포함은 `scripts/audit-urls.mjs`가 실패 처리한다.
 - URL 복구 배포 순서는 현재 사이트의 canonical 본문 배포, 구 GitHub Pages의 이동 페이지 배포, sitemap 1회 제출 순서다.
 
-GitHub Pages의 정적 redirect page는 HTTP 상태가 `200`이고 HTML의 meta refresh로 이동한다. 검색엔진이 이를 soft redirect나 중복 페이지로 처리할 수 있으므로 공개 트래픽은 홈 서버 Caddy를 먼저 통과한다. Caddy는 공개 글마다 `/posts/<글 경로>/`의 정확한 호환 주소를 실제 canonical 주소로 `301` 이동시키고, `src/redirects.generated.json`의 과거 주소도 `301`로 응답한다. 디렉터리 대소문자가 다른 글이 있으므로 `/posts/` 접두만 제거하는 일괄 규칙을 쓰지 않는다. `pnpm run edge:redirects`가 `ops/caddy/sonblog-edge.caddy`를 생성하고 `pnpm run edge:check`가 두 파일의 일치를 검증한다. 빌드의 URL audit은 생성된 글과 Caddy의 목적지를 대조한다.
+GitHub Pages의 정적 redirect page는 HTTP 상태가 `200`이고 HTML의 meta refresh로 이동한다. 검색엔진이 이를 soft redirect나 중복 페이지로 처리할 수 있으므로 공개 트래픽은 홈 서버 Caddy를 먼저 통과한다. Caddy는 공개 글마다 `/posts/<글 경로>/`의 정확한 호환 주소를 실제 canonical 주소로 `301` 이동시키고, `src/redirects.generated.json`의 과거 주소도 `301`로 응답한다. 현재 글과 대소문자만 다른 과거 주소는 정적 라우트가 충돌하므로 `ops/caddy/edge-only-redirects.generated.json`에서 관리하고 Caddy에서만 이동시킨다. 예전 글 경로의 상위 카테고리 URL도 해당 topic hub로 이동시킨다. 디렉터리 대소문자가 다른 글이 있으므로 `/posts/` 접두만 제거하는 일괄 규칙을 쓰지 않는다. `pnpm run edge:redirects`가 `ops/caddy/sonblog-edge.caddy`를 생성하고 `pnpm run edge:check`가 생성 결과의 일치를 검증한다. 빌드의 URL audit은 생성된 글과 Caddy의 목적지를 대조한다.
 
 ## 콘텐츠 기준
 

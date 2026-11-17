@@ -12,6 +12,9 @@ const DOCS = process.env.MKDOCS_DOCS || "/home/son/projects/blog/sonblog/docs";
 const DOCS_REPO = path.resolve(DOCS, "..");
 const POSTS = path.resolve("src/content/posts");
 const OUT = path.resolve("src/redirects.generated.json");
+const EDGE_ONLY_OUT = path.resolve(
+  "ops/caddy/edge-only-redirects.generated.json"
+);
 
 function norm(s) {
   return (s || "")
@@ -130,6 +133,7 @@ const newByTitle = new Map(newDocs.map(doc => [norm(doc.title), doc.url]));
 const newUrlSet = new Set(newDocs.map(doc => doc.url));
 
 const redirects = {};
+const edgeOnlyRedirects = {};
 let matched = 0,
   fallback = 0,
   historical = 0,
@@ -162,13 +166,15 @@ const redirectRouteKeys = new Set(
   Object.keys(redirects).map(url => url.toLowerCase())
 );
 
+const historicalAliases = historicalRenames();
+
 // Git 이력에만 남은 예전 한글/대문자 파일명도 현재 글로 연결한다.
 // 파일을 정리하면서 URL까지 바뀐 경우 기존 외부 링크와 Google 발견 신호를 보존한다.
-for (const { oldUrl, currentAbs, currentRel } of historicalRenames()) {
+for (const { oldUrl, currentAbs, currentRel } of historicalAliases) {
   // Astro는 경로를 디코딩하고 대소문자 구분 없이 비교한다. URL 구분 문자가
   // 파일명에 있거나 대소문자만 다른 별칭은 유효한 정적 route가 될 수 없다.
   const routeKey = oldUrl.toLowerCase();
-  if (/[?#%]/.test(oldUrl) || redirectRouteKeys.has(routeKey)) continue;
+  if (/[?#%]/.test(oldUrl)) continue;
 
   const title = titleOf(currentAbs);
   let newUrl = title ? newByTitle.get(norm(title)) : null;
@@ -177,7 +183,9 @@ for (const { oldUrl, currentAbs, currentRel } of historicalRenames()) {
     if (newUrlSet.has(candidate)) newUrl = candidate;
   }
 
-  if (newUrl && newUrl !== oldUrl) {
+  if (newUrl && newUrl !== oldUrl && routeKey === newUrl.toLowerCase()) {
+    edgeOnlyRedirects[oldUrl] = newUrl;
+  } else if (newUrl && newUrl !== oldUrl && !redirectRouteKeys.has(routeKey)) {
     redirects[oldUrl] = newUrl;
     redirectRouteKeys.add(routeKey);
     historical++;
@@ -189,6 +197,14 @@ for (const { oldUrl, currentAbs, currentRel } of historicalRenames()) {
 // 상위 주제는 새 topic hub로 보내고, 세부 디렉토리는 대응 태그 페이지를 우선한다.
 // 태그가 없으면 상위 topic hub, 그것도 없으면 /posts/.
 const TOPIC_SLUGS = new Set(["ai", "search-engine", "full-stack", "devops"]);
+const historicalDirs = historicalAliases.flatMap(({ oldUrl }) => {
+  const segments = oldUrl.split("/").filter(Boolean);
+  segments.pop();
+  if (!TOPIC_SLUGS.has(segments[0]) && segments[0] !== "portfolio") {
+    return [];
+  }
+  return segments.map((_, index) => segments.slice(0, index + 1).join("/"));
+});
 function walkDirs(dir, rel = "") {
   const out = [];
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -199,7 +215,7 @@ function walkDirs(dir, rel = "") {
   }
   return out;
 }
-for (const rel of walkDirs(DOCS)) {
+for (const rel of new Set([...walkDirs(DOCS), ...historicalDirs])) {
   if (/^(notes\/draft)/.test(rel)) continue;
   const oldUrl = `/${rel}/`;
   if (redirects[oldUrl]) continue;
@@ -260,7 +276,12 @@ for (const source of Object.keys(redirects)) {
 }
 
 fs.writeFileSync(OUT, `${JSON.stringify(redirects, null, 2)}\n`);
+fs.mkdirSync(path.dirname(EDGE_ONLY_OUT), { recursive: true });
+fs.writeFileSync(
+  EDGE_ONLY_OUT,
+  `${JSON.stringify(edgeOnlyRedirects, null, 2)}\n`
+);
 console.log(
-  `redirects: ${Object.keys(redirects).length} (글 title매칭 ${matched}, 경로폴백 ${fallback}, Git 이력 ${historical}, 미매칭 ${missed})`
+  `redirects: ${Object.keys(redirects).length} (글 title매칭 ${matched}, 경로폴백 ${fallback}, Git 이력 ${historical}, edge 전용 ${Object.keys(edgeOnlyRedirects).length}, 미매칭 ${missed})`
 );
 if (misses.length) console.log("글 미매칭 샘플:\n  " + misses.join("\n  "));

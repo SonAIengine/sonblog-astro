@@ -1,6 +1,6 @@
 # SON BLOG Edge
 
-`sonblog-edge.caddy`는 `src/redirects.generated.json`의 과거 URL과 공개 글의 `/posts/<글 경로>/` 호환 URL을 실제 HTTP `301`로 응답한다. 호환 URL은 글마다 정확한 canonical 경로로 매핑해 디렉터리 대소문자를 보존한다. 그 외 요청은 GitHub Pages IPv4 원본으로 전달한다.
+`sonblog-edge.caddy`는 `src/redirects.generated.json`의 과거 URL과 공개 글의 `/posts/<글 경로>/` 호환 URL을 실제 HTTP `301`로 응답한다. 호환 URL은 글마다 정확한 canonical 경로로 매핑해 디렉터리 대소문자를 보존한다. 과거 경로가 현재 글과 대소문자만 다른 경우에는 Astro의 정적 페이지 경로와 충돌하므로 `edge-only-redirects.generated.json`에서 별도로 관리하고 Caddy에서만 `301`로 응답한다. 그 외 요청은 GitHub Pages IPv4 원본으로 전달한다.
 
 ## 생성과 배치
 
@@ -11,6 +11,8 @@ mv ~/.config/sonblog/caddy/sonblog-edge.pending ~/.config/sonblog/caddy/sonblog-
 docker exec caddy caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
 docker exec caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile
 ```
+
+과거 경로 목록은 `node scripts/build-redirects.mjs`가 생성한다. URL 정책을 바꾼 뒤에는 `pnpm run verify`와 `pnpm run build`를 실행하고 Caddy를 갱신한다. Caddy 재적용 후 `curl -I`로 과거 대소문자 경로가 한 번에 canonical 글 URL로 `301` 이동하고 최종 URL이 `200`인지 확인한다.
 
 운영 Caddy compose는 `~/.config/sonblog/caddy`를 `/etc/caddy/sonblog`에 읽기 전용으로 mount하고, 기본 Caddyfile에서 `/etc/caddy/sonblog/*.caddy`를 import해야 한다.
 
