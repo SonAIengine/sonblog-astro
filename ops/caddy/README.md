@@ -1,6 +1,6 @@
 # SON BLOG Edge
 
-`sonblog-edge.caddy`는 `src/redirects.generated.json`의 과거 URL과 공개 글의 `/posts/<글 경로>/` 호환 URL을 실제 HTTP `301`로 응답한다. 호환 URL은 글마다 정확한 canonical 경로로 매핑해 디렉터리 대소문자를 보존한다. 과거 경로가 현재 글과 대소문자만 다른 경우에는 Astro의 정적 페이지 경로와 충돌하므로 `edge-only-redirects.generated.json`에서 별도로 관리하고 Caddy에서만 `301`로 응답한다. 그 외 요청은 GitHub Pages IPv4 원본으로 전달한다.
+`sonblog-edge.caddy`는 `src/redirects.generated.json`의 과거 URL과 공개 글의 `/posts/<글 경로>/` 호환 URL을 실제 HTTP `301`로 응답한다. 호환 URL은 글마다 정확한 canonical 경로로 매핑해 디렉터리 대소문자를 보존한다. 과거 경로가 현재 글과 대소문자만 다른 경우에는 Astro의 정적 페이지 경로와 충돌하므로 `edge-only-redirects.generated.json`에서 별도로 관리한다. Caddy의 `path`는 대소문자를 구분하지 않으므로 이 별칭은 `path_regexp`로 정확한 대소문자만 매칭한다. 그 외 요청은 GitHub Pages IPv4 원본으로 전달한다.
 
 ## 생성과 배치
 

@@ -105,7 +105,8 @@ function buildConfig(redirects, edgeOnlyRedirects, compatibilityEntries) {
 
   for (const [index, [source, destination]] of edgeOnlyEntries.entries()) {
     const matcher = `edge_${String(index + 1).padStart(4, "0")}`;
-    lines.push(`\t@${matcher} path ${quote(source)}`);
+    const exactCasePath = `^${source.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`;
+    lines.push(`\t@${matcher} path_regexp ${quote(exactCasePath)}`);
     lines.push(`\tredir @${matcher} ${quote(destination)} 301`);
   }
 

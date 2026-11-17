@@ -12,7 +12,7 @@ const compatibilityRedirects = new Map(
   )
 );
 const edgeOnlyRules = new Map(
-  [...EDGE_CONFIG.matchAll(/@edge_(\d{4}) path ("(?:\\.|[^"\\])*")\n\s*redir @edge_\1 ("(?:\\.|[^"\\])*") 301/g)].map(
+  [...EDGE_CONFIG.matchAll(/@edge_(\d{4}) path_regexp ("(?:\\.|[^"\\])*")\n\s*redir @edge_\1 ("(?:\\.|[^"\\])*") 301/g)].map(
     match => [JSON.parse(match[2]), JSON.parse(match[3])]
   )
 );
@@ -250,11 +250,15 @@ if (missingCompatibilityTargets.length) {
 }
 
 const brokenEdgeOnlyRedirects = Object.entries(edgeOnlyRedirects).filter(
-  ([source, destination]) =>
-    edgeOnlyRules.get(source) !== destination ||
+  ([source, destination]) => {
+    const exactCasePath = `^${source.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`;
+    return (
+    edgeOnlyRules.get(exactCasePath) !== destination ||
     !routeSet.has(destination) ||
     redirectRoutes.has(source) ||
     urls.includes(source)
+    );
+  }
 );
 if (
   edgeOnlyRules.size !== Object.keys(edgeOnlyRedirects).length ||

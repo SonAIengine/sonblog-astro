@@ -23,7 +23,7 @@ const compatibilityRules = new Map(
   )
 );
 const edgeOnlyRules = new Map(
-  [...config.matchAll(/@edge_(\d{4}) path ("(?:\\.|[^"\\])*")\n\s*redir @edge_\1 ("(?:\\.|[^"\\])*") 301/g)].map(
+  [...config.matchAll(/@edge_(\d{4}) path_regexp ("(?:\\.|[^"\\])*")\n\s*redir @edge_\1 ("(?:\\.|[^"\\])*") 301/g)].map(
     match => [JSON.parse(match[2]), JSON.parse(match[3])]
   )
 );
@@ -91,11 +91,13 @@ test("every compatibility post route reaches its exact-case canonical page", () 
 });
 
 test("historical case-only URLs redirect at the edge without shadowing posts", () => {
-  assert.deepEqual(edgeOnlyRules, new Map(Object.entries(edgeOnlyRedirects).sort(
-    ([left], [right]) => left.localeCompare(right, "en")
-  )));
+  assert.equal(edgeOnlyRules.size, Object.keys(edgeOnlyRedirects).length);
 
-  for (const [source, destination] of edgeOnlyRules) {
+  for (const [source, destination] of Object.entries(edgeOnlyRedirects)) {
+    const exactCasePath = `^${source.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`;
+    assert.equal(edgeOnlyRules.get(exactCasePath), destination);
+    assert.ok(new RegExp(exactCasePath).test(source));
+    assert.ok(!new RegExp(exactCasePath).test(destination));
     assert.notEqual(source, destination);
     assert.equal(source.toLowerCase(), destination.toLowerCase());
     assert.ok(!(source in redirects));
@@ -109,11 +111,11 @@ test("historical case-only URLs redirect at the edge without shadowing posts", (
   }
 
   assert.equal(
-    edgeOnlyRules.get("/search-engine/Qdrant/Indexing/"),
+    edgeOnlyRules.get("^/search-engine/Qdrant/Indexing/$"),
     "/search-engine/Qdrant/indexing/"
   );
   assert.equal(
-    edgeOnlyRules.get("/search-engine/Qdrant/Storage/"),
+    edgeOnlyRules.get("^/search-engine/Qdrant/Storage/$"),
     "/search-engine/Qdrant/storage/"
   );
 });

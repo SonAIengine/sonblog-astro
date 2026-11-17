@@ -1825,25 +1825,25 @@ infoedu.co.kr {
 	@legacy_0622 path "/z.잡동사니/tauri/"
 	redir @legacy_0622 "/full-stack/poc/tauri/" 301
 
-	@edge_0001 path "/search-engine/Qdrant/Collection/"
+	@edge_0001 path_regexp "^/search-engine/Qdrant/Collection/$"
 	redir @edge_0001 "/search-engine/Qdrant/collection/" 301
-	@edge_0002 path "/search-engine/Qdrant/FastEmbed/"
+	@edge_0002 path_regexp "^/search-engine/Qdrant/FastEmbed/$"
 	redir @edge_0002 "/search-engine/Qdrant/fastembed/" 301
-	@edge_0003 path "/search-engine/Qdrant/Filtering/"
+	@edge_0003 path_regexp "^/search-engine/Qdrant/Filtering/$"
 	redir @edge_0003 "/search-engine/Qdrant/filtering/" 301
-	@edge_0004 path "/search-engine/Qdrant/Indexing/"
+	@edge_0004 path_regexp "^/search-engine/Qdrant/Indexing/$"
 	redir @edge_0004 "/search-engine/Qdrant/indexing/" 301
-	@edge_0005 path "/search-engine/Qdrant/Payload/"
+	@edge_0005 path_regexp "^/search-engine/Qdrant/Payload/$"
 	redir @edge_0005 "/search-engine/Qdrant/payload/" 301
-	@edge_0006 path "/search-engine/Qdrant/Points/"
+	@edge_0006 path_regexp "^/search-engine/Qdrant/Points/$"
 	redir @edge_0006 "/search-engine/Qdrant/points/" 301
-	@edge_0007 path "/search-engine/Qdrant/Qptimizer/"
+	@edge_0007 path_regexp "^/search-engine/Qdrant/Qptimizer/$"
 	redir @edge_0007 "/search-engine/Qdrant/qptimizer/" 301
-	@edge_0008 path "/search-engine/Qdrant/Storage/"
+	@edge_0008 path_regexp "^/search-engine/Qdrant/Storage/$"
 	redir @edge_0008 "/search-engine/Qdrant/storage/" 301
-	@edge_0009 path "/search-engine/Qdrant/Vectors/"
+	@edge_0009 path_regexp "^/search-engine/Qdrant/Vectors/$"
 	redir @edge_0009 "/search-engine/Qdrant/vectors/" 301
-	@edge_0010 path "/search-engine/RAG/Chunker/"
+	@edge_0010 path_regexp "^/search-engine/RAG/Chunker/$"
 	redir @edge_0010 "/search-engine/RAG/chunker/" 301
 
 	reverse_proxy https://185.199.108.153 https://185.199.109.153 https://185.199.110.153 https://185.199.111.153 {
