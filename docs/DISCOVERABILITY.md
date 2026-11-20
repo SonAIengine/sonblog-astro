@@ -63,7 +63,7 @@ GitHub Pages의 정적 redirect page는 HTTP 상태가 `200`이고 HTML의 meta 
 - apex A: 홈 서버 Caddy의 공인 IPv4
 - apex AAAA: 홈 서버에 외부 IPv6 ingress가 없으므로 두지 않는다.
 - `www`: Technitium A 레코드로 홈 서버 Caddy를 가리키며 `https://infoedu.co.kr{uri}`로 301 이동한다.
-- Caddy의 canonical 요청 upstream은 DNS 순환을 피하도록 GitHub Pages IPv4를 직접 사용하고 `Host`와 TLS server name은 `infoedu.co.kr`로 유지한다.
+- Caddy의 canonical 요청 upstream은 DNS 순환을 피하도록 GitHub Pages IPv4를 직접 사용한다. HTTP `Host`는 `infoedu.co.kr`로 유지하고 TLS server name은 유효한 GitHub Pages 인증서를 가진 `sonaiengine.github.io`로 설정한다. 운영 중 원본 인증서 만료로 502가 발생하면 두 이름의 인증서 상태와 원본 응답을 각각 확인한다.
 - parent와 authoritative zone의 NS 집합 일치
 - HTTPS 강제 적용
 

@@ -117,7 +117,7 @@ function buildConfig(redirects, edgeOnlyRedirects, compatibilityEntries) {
       " {",
     "\t\theader_up Host infoedu.co.kr",
     "\t\ttransport http {",
-    "\t\t\ttls_server_name infoedu.co.kr",
+    "\t\t\ttls_server_name sonaiengine.github.io",
     "\t\t}",
     "\t}",
     "}",

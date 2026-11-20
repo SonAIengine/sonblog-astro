@@ -25,4 +25,4 @@ curl -I https://infoedu.co.kr/posts/search-engine/qdrant/semantic-search-tutoria
 curl -I https://infoedu.co.kr/sitemap.xml
 ```
 
-첫 번째와 마지막 요청은 `200`, 두 호환 URL은 대소문자가 보존된 canonical URL을 가리키는 `301`이어야 한다. `curl -L`로 최종 응답도 `200`인지 확인한다. apex DNS는 홈 서버 Caddy의 IPv4 A 레코드만 사용한다. 외부 IPv6 ingress가 없으면 apex AAAA 레코드를 추가하지 않는다.
+첫 번째와 마지막 요청은 `200`, 두 호환 URL은 대소문자가 보존된 canonical URL을 가리키는 `301`이어야 한다. `curl -L`로 최종 응답도 `200`인지 확인한다. GitHub Pages 원본은 `Host: infoedu.co.kr`로 라우팅하지만 TLS는 `sonaiengine.github.io` 인증서로 검증한다. apex DNS는 홈 서버 Caddy의 IPv4 A 레코드만 사용한다. 외부 IPv6 ingress가 없으면 apex AAAA 레코드를 추가하지 않는다.

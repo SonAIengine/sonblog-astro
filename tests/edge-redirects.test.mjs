@@ -136,5 +136,5 @@ test("edge proxy pins GitHub Pages while preserving the canonical host", () => {
     assert.ok(config.includes(`https://185.199.${suffix}.153`));
   }
   assert.ok(config.includes("header_up Host infoedu.co.kr"));
-  assert.ok(config.includes("tls_server_name infoedu.co.kr"));
+  assert.ok(config.includes("tls_server_name sonaiengine.github.io"));
 });

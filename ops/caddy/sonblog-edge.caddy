@@ -1849,7 +1849,7 @@ infoedu.co.kr {
 	reverse_proxy https://185.199.108.153 https://185.199.109.153 https://185.199.110.153 https://185.199.111.153 {
 		header_up Host infoedu.co.kr
 		transport http {
-			tls_server_name infoedu.co.kr
+			tls_server_name sonaiengine.github.io
 		}
 	}
 }
